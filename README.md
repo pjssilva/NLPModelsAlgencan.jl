@@ -5,6 +5,11 @@ Algencan.jl
 *[Algencan](https://www.ime.usp.br/~egbirgin/tango/codes.php)
 *nonlinear solver.
 
+**Status**
+
+At this point this is pre-alpha software. The main structure will change and
+only unconstrained optimization is possible.
+
 **Installation**:
 
 I have not yet created a Package out of it. Up to now it is only a module,  so
