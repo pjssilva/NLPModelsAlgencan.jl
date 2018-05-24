@@ -39,6 +39,8 @@ module Algencan
 # Globals to avoid closures as Algencan does not allow to send user information
 # back to call backs. Long names to avoid conflicts.
 global current_algencan_problem
+const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"],
+    "libalgencan.so"))
 
 # Imports
 import MathProgBase
@@ -294,9 +296,9 @@ function solveProblem(prob::AlgencanProblem)
     inform = Vector{Cint}([0])
 
     b = ccall(
-        (:c_algencan, "algencan-3.1.1/lib/libalgencan.so"), # library
-        Void,                                               # Return type
-        (                                    # Parameters types
+        (:c_algencan, algencan_lib_path),                # library
+        Void,                                            # Return type
+        (                                                # Parameters types
             Ptr{Void},                                   # *myevalf,
             Ptr{Void},                                   # *myevalg,
             Ptr{Void},                                   # *myevalh,

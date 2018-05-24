@@ -1,5 +1,5 @@
 
-push!(LOAD_PATH, ".")
+push!(LOAD_PATH, "../src")
 using JuMP
 import Algencan
 
