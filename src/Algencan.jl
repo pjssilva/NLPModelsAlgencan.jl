@@ -286,7 +286,7 @@ function solveProblem(prob::AlgencanProblem)
     linear = Vector{UInt8}(m)
 
     coded = zeros(UInt8, 11)
-    coded[1:1] = 1
+    coded[1:3] = 1
     checkder = UInt8(0)
     f = [0.0]
     cnorm = [0.0]
