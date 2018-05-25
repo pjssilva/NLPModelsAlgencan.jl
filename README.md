@@ -2,8 +2,8 @@ Algencan.jl
 ===========
 
 **Algencan.jl** is a [Julia](http://julialang.org/) interface to the
-*[Algencan](https://www.ime.usp.br/~egbirgin/tango/codes.php)
-*nonlinear solver.
+[Algencan](https://www.ime.usp.br/~egbirgin/tango/codes.php)
+nonlinear solver.
 
 **Status**
 

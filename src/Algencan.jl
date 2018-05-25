@@ -13,7 +13,7 @@ optimization methods defined in JuMP.
 Algencan is a high performance and large scale Augmented Lagrangian solver
 written by Ernesto Birgin and Mario Martínez. It has many special features like
 being able to use HSL librarry functions to speed up linear algebra with sparse
-matrices and some smart accelaration strategies. To use it, at least for now,
+matrices and some smart acceleration strategies. To use it, at least for now,
 you need to compile Algencan yourself. Go to Tango's project
 [website](https://www.ime.usp.br/~egbirgin/tango/codes.php) grab Algencan and
 compile it. However, you need to make the small changes below to be able to get
@@ -72,10 +72,10 @@ mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
     ub::Vector{Float64}             # Upper bounds on var
     g_ub::Vector{Float64}           # Upper bounds on constraints
     g_lb::Vector{Float64}           # Lower bound on constrains
-    sense::Symbol                   # max or min
+    sense::Float64                  # 1.0 for :Min and -1 for :Max
     evaluator::AbstractNLPEvaluator # Evaluator for functions
-    g_row_inds::Vector{Int}         # NNZ row indexes of sparse const. Jacobian.
-    g_col_inds::Vector{Int}         # NNZ col indexes of sparse const. Jacobian.
+    j_row_inds::Vector{Int}         # NNZ row indexes of sparse const. Jacobian.
+    j_col_inds::Vector{Int}         # NNZ col indexes of sparse const. Jacobian.
     h_row_inds::Vector{Int}         # NNZ row indexes of sparse Lag. Hessian.
     h_col_inds::Vector{Int}         # NNZ col indexes of sparse Lag. Hessian.
 
@@ -97,8 +97,8 @@ mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
         model.n, model.m = 0, 0
         model.lb, model.ub = Float64[], Float64[]
         model.g_lb, model.g_ub = Float64[], Float64[]
-        model.sense = :Min
-        model.g_row_inds, model.g_col_inds = Int[], Int[]
+        model.sense = 1.0
+        model.j_row_inds, model.j_col_inds = Int[], Int[]
         model.h_row_inds, model.h_col_inds = Int[], Int[]
         model.x, model.g, model.mult_g = Float64[], Float64[], Float64[]
         model.obj_val, model.status = 0.0, 0
@@ -134,14 +134,14 @@ function loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     model.m = numConstr
     model.lb, model.ub = float(x_l), float(x_u)
     model.g_lb, model.g_ub = float(g_lb), float(g_ub)
-    model.sense = sense
+    model.sense = sense == :Min ? 1.0 : -1.0
     model.evaluator = d
 
     # Get strutural indices of Jacobian and Hessian.
-    g_row_inds, g_col_inds = MathProgBase.jac_structure(d)
+    j_row_inds, j_col_inds = MathProgBase.jac_structure(d)
     h_row_inds, h_col_inds = MathProgBase.hesslag_structure(d)
 
-    model.g_row_inds, model.g_col_inds = g_row_inds, g_col_inds
+    model.j_row_inds, model.j_col_inds = j_row_inds, j_col_inds
     model.h_row_inds, model.h_col_inds = h_row_inds, h_col_inds
     model.x, model.g, model.mult_g = zeros(numVar), zeros(numConstr),
         zeros(numConstr)
@@ -244,32 +244,67 @@ function optimize!(model::AlgencanMathProgModel)
     # Algencan callback function wrappers
     ###########################################################################
     # TODO: Use model.sense to define "direction" of optimization
-    function my_f(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
-        flag_ptr::Ptr{Cint})
+    function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
+        m::Cint, g_ptr::Ptr{Float64}, flag_ptr::Ptr{Cint})
         x = unsafe_wrap(Array, x_ptr, Int(n))
         obj_val = MathProgBase.eval_f(current_algencan_model.evaluator, x)
-        unsafe_store!(obj_ptr, obj_val)
+        unsafe_store!(obj_ptr, current_algencan_model.sense*obj_val)
+        g = unsafe_wrap(Array, g_ptr, Int(m))
+        MathProgBase.eval_g(current_algencan_model.evaluator, g, x)
+        g .-= current_algencan_model.g_ub
         unsafe_store!(flag_ptr, 0)
         nothing
     end
 
-    const my_f_c = cfunction(my_f, Void, (Cint, Ptr{Float64}, Ptr{Float64},
-        Ptr{Cint}))
+    const c_julia_fc = cfunction(julia_fc, Void, (Cint, Ptr{Float64},
+        Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Cint}))
 
-    function my_evalg(n::Cint, x_ptr::Ptr{Float64}, g_ptr::Ptr{Float64},
-        flag_ptr::Ptr{Cint})
+    function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
+        m::Cint, jrow_ptr::Ptr{Cint}, jcol_ptr::Ptr{Cint},
+        jval_ptr::Ptr{Float64}, jnnz_ptr::Ptr{Cint}, lim::Cint,
+        lmem_ptr::Ptr{UInt8}, flag_ptr::Ptr{Cint})
+
+        # Compute gradient of the objective
         x = unsafe_wrap(Array, x_ptr, Int(n))
-        g = unsafe_wrap(Array, g_ptr, Int(n))
-        MathProgBase.eval_grad_f(current_algencan_model.evaluator, g, x)
+        f_grad = unsafe_wrap(Array, f_grad_ptr, Int(n))
+        MathProgBase.eval_grad_f(current_algencan_model.evaluator, f_grad, x)
+        scale!(f_grad, current_algencan_model.sense)
+
+        # Find structure of the constraints Jacobian
+        nnz = length(current_algencan_model.j_row_inds)
+        if nnz > Int(lim)
+            unsafe_store!(lmem_ptr, 1)
+            unsafe_store!(flag_ptr, 1)
+            return nothing
+        else
+            unsafe_store!(lmem_ptr, 0)
+        end
+        unsafe_store!(jnnz_ptr, nnz)
+        jcol_ind = unsafe_wrap(Array, jcol_ptr, Int(lim))
+        jrow_ind = unsafe_wrap(Array, jrow_ptr, Int(lim))
+
+        # TODO: This is extra work tha only happens because I am calling C instead
+        # of Fortran.
+        # TODO: Try to move to direct fortran calling.
+        jrow_ind[1:nnz] = current_algencan_model.j_row_inds - 1
+        jcol_ind[1:nnz] = current_algencan_model.j_col_inds - 1
+
+        # Compute the constraints Jacobian
+        J = unsafe_wrap(Array, jval_ptr, Int(lim))
+        MathProgBase.eval_jac_g(current_algencan_model.evaluator, J, x)
+
         unsafe_store!(flag_ptr, 0)
         nothing
     end
 
-    const my_evalg_c = cfunction(my_evalg, Void, (Cint, Ptr{Float64}, Ptr{Float64},
-        Ptr{Cint}))
+    const c_julia_gjac = cfunction(julia_gjac, Void, (Cint, Ptr{Float64},
+        Ptr{Float64}, Cint, Ptr{Cint}, Ptr{Cint}, Ptr{Float64}, Ptr{Cint}, Cint,
+        Ptr{UInt8}, Ptr{Cint}))
 
-    function my_evalh(n::Cint, x_ptr::Ptr{Float64}, hrow_ptr::Ptr{Cint},
-        hcol_ptr::Ptr{Cint}, hval_ptr::Ptr{Float64}, hnnz_ptr::Ptr{Cint}, lim::Cint,
+    function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
+        mult_ptr::Ptr{Float64}, scale_f::Float64, scale_g_ptr::Ptr{Float64},
+        hrow_ptr::Ptr{Cint}, hcol_ptr::Ptr{Cint},
+        hval_ptr::Ptr{Float64}, hnnz_ptr::Ptr{Cint}, lim::Cint,
         lmem_ptr::Ptr{UInt8}, flag_ptr::Ptr{Cint})
         # Get nonzero indexes.
         nnz = length(current_algencan_model.h_row_inds)
@@ -277,6 +312,8 @@ function optimize!(model::AlgencanMathProgModel)
             unsafe_store!(lmem_ptr, 1)
             unsafe_store!(flag_ptr, 1)
             return nothing
+        else
+            unsafe_store!(lmem_ptr, 0)
         end
         unsafe_store!(hnnz_ptr, nnz)
         hcol_ind = unsafe_wrap(Array, hcol_ptr, Int(lim))
@@ -288,8 +325,10 @@ function optimize!(model::AlgencanMathProgModel)
         hcol_ind[1:nnz] = current_algencan_model.h_col_inds - 1
 
         # Compute the Hessian (for now objective function only)
-        σ = 1.0
-        μ = Vector{Float64}(0)
+        σ = scale_f*current_algencan_model.sense
+        μ = unsafe_wrap(Array, mult_ptr, Int(m))
+        scale_g = unsafe_wrap(Array, scale_g_ptr, Int(m))
+        μ .*= scale_g
         x = unsafe_wrap(Array, x_ptr, Int(n))
         H = unsafe_wrap(Array, hval_ptr, Int(lim))
         MathProgBase.eval_hesslag(current_algencan_model.evaluator, H, x, σ, μ)
@@ -297,24 +336,29 @@ function optimize!(model::AlgencanMathProgModel)
         nothing
     end
 
-    const my_evalh_c = cfunction(my_evalh, Void, (Cint, Ptr{Float64}, Ptr{Cint},
-        Ptr{Cint}, Ptr{Float64}, Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
+    const c_julia_hl = cfunction(julia_hl, Void, (Cint, Ptr{Float64}, Cint,
+        Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Cint}, Ptr{Cint}, Ptr{Float64},
+        Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
 
     # Now CallAlgencan. I will do it slowly, first I create variables for all
     # Algencan's parameters, that are a lot, and then I call it.
-    myevalf = my_f_c
-    myevalg = my_evalg_c
-    myevalh = my_evalh_c
+    myevalf = C_NULL
+    myevalg = C_NULL
+    myevalh = C_NULL
     myevalc = C_NULL
     myevaljac = C_NULL
     myevalhc = C_NULL
-    myevalfc = C_NULL
-    myevalgjac = C_NULL
+    myevalfc = c_julia_fc
+    myevalgjac = c_julia_gjac
     myevalgjacp = C_NULL
-    myevalhl = C_NULL
+    myevalhl = c_julia_hl
     myevalhlp = C_NULL
-    jcnnzmax = length(model.g_row_inds)
+    jcnnzmax = length(model.j_row_inds)
     hnnzmax = length(model.h_row_inds)
+    coded = zeros(UInt8, 11)
+    coded[7] = 1
+    coded[8] = 1
+    coded[10] = 1
 
     # Parameters setting
     epsfeas = [1.0e-08]
@@ -324,10 +368,10 @@ function optimize!(model::AlgencanMathProgModel)
     efacc   = sqrt.(epsfeas)
     eoacc   = sqrt.(epsopt)
 
-    outputfnm = "algencan.out"
+    outputfnm = ""
     specfnm   = ""
 
-    vparam = ["ITERATIONS-OUTPUT-DETAIL 1"] #Vector{String}(nvparam)
+    vparam = Vector{String}(0) #["ITERATIONS-OUTPUT-DETAIL 1"] #
     nvparam = length(vparam)
 
     n = model.n
@@ -336,12 +380,11 @@ function optimize!(model::AlgencanMathProgModel)
 
     # Information on the constraints that do not exist
     m = model.m
-    lambda = Vector{Float64}(m)
-    equatn = Vector{UInt8}(m)
-    linear = Vector{UInt8}(m)
+    lambda = zeros(Float64, m)
+    equatn = zeros(UInt8, m)
+    equatn[model.g_lb .== model.g_ub] = 1
+    linear = zeros(UInt8, m)
 
-    coded = zeros(UInt8, 11)
-    coded[1:3] = 1
     checkder = UInt8(0)
     f = [0.0]
     cnorm = [0.0]
@@ -432,7 +475,6 @@ function optimize!(model::AlgencanMathProgModel)
         nlpsupn,
         inform
     )
-    println("x final ", model.x)
 
     model.obj_val = f[1]
     model.status = inform[1]
