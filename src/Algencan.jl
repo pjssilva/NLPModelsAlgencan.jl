@@ -53,6 +53,7 @@ const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"],
     "libalgencan.so"))
 
 # Standard LP interface
+import MathProgBase
 importall MathProgBase.SolverInterface
 
 ###############################################################################
@@ -113,7 +114,7 @@ LinearQuadraticModel(s::AlgencanSolver) = NonlinearToLPQPBridge(NonlinearModel(s
 # Begin interface implementation
 
 # generic nonlinear interface
-function loadproblem!(m::AlgencanMathProgModel, numVar::Integer,
+function loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     numConstr::Integer, x_l, x_u, g_lb, g_ub, sense::Symbol,
     d::AbstractNLPEvaluator)
 
@@ -132,13 +133,13 @@ function loadproblem!(m::AlgencanMathProgModel, numVar::Integer,
     model.n = numVar
     model.m = numConstr
     model.lb, model.ub = float(x_l), float(x_u)
-    model.g_lb, mode.g_ub = float(g_lb), float(g_ub)
+    model.g_lb, model.g_ub = float(g_lb), float(g_ub)
     model.sense = sense
     model.evaluator = d
 
     # Get strutural indices of Jacobian and Hessian.
-    g_row_inds, g_col_inds = MathProgBase.jac_structure(evaluator)
-    h_row_inds, h_col_inds = MathProgBase.hesslag_structure(evaluator)
+    g_row_inds, g_col_inds = MathProgBase.jac_structure(d)
+    h_row_inds, h_col_inds = MathProgBase.hesslag_structure(d)
 
     model.g_row_inds, model.g_col_inds = g_row_inds, g_col_inds
     model.h_row_inds, model.h_col_inds = h_row_inds, h_col_inds
@@ -149,25 +150,25 @@ function loadproblem!(m::AlgencanMathProgModel, numVar::Integer,
 end
 
 # Simple functions
-getsense(m::AlgencanMathProgModel) = m.sense
+getsense(model::AlgencanMathProgModel) = model.sense
 
-numvar(m::AlgencanMathProgModel) = m.n
+numvar(model::AlgencanMathProgModel) = model.n
 
-numconstr(m::AlgencanMathProgModel) = m.m
+numconstr(model::AlgencanMathProgModel) = model.m
 
 # TODO: Implement this
-numlinconstr(m::AlgencanMathProgModel) = 0
+numlinconstr(model::AlgencanMathProgModel) = 0
 
-numquadconstr(m::AlgencanMathProgModel) = 0
+numquadconstr(model::AlgencanMathProgModel) = 0
 
-function status(m::AlgencanMathProgModel)
+function status(model::AlgencanMathProgModel)
     # TODO: I still need to map status, return that everyhing was OK
     return :Optimal
 
     # # Map all the possible return codes, as enumerated in
     # # Ipopt.ApplicationReturnStatus, to the MPB statuses:
     # # :Optimal, :Infeasible, :Unbounded, :UserLimit, and :Error
-    # stat_sym = ApplicationReturnStatus[m.inner.status]
+    # stat_sym = ApplicationReturnStatus[model.inner.status]
     # if  stat_sym == :Solve_Succeeded ||
     #     stat_sym == :Solved_To_Acceptable_Level
     #     return :Optimal
@@ -203,41 +204,41 @@ function status(m::AlgencanMathProgModel)
     #
 end
 
-getobjval(m::AlgencanMathProgModel) = m.obj_val * (m.inner.sense == :Max ? -1 : +1)
+getobjval(model::AlgencanMathProgModel) = model.obj_val * (model.sense == :Max ? -1 : +1)
 
-getsolution(m::AlgencanMathProgModel) = m.x
+getsolution(model::AlgencanMathProgModel) = model.x
 
-function getreducedcosts(m::AlgencanMathProgModel)
+function getreducedcosts(model::AlgencanMathProgModel)
     # TODO: Verify, I am not thinking about constraints yet.
-    # sense = m.inner.sense
-    # redcost = m.inner.mult_x_U - m.inner.mult_x_L
+    # sense = model.inner.sense
+    # redcost = model.inner.mult_x_U - model.inner.mult_x_L
     # return sense == :Max ? redcost : -redcost
-    return zeros(m.inner.m)
+    return zeros(model.m)
 end
 
-function getconstrduals(m::AlgencanMathProgModel)
+function getconstrduals(model::AlgencanMathProgModel)
     # TODO: Verify, I am not thinking about constraints yet.
 
-    v = m.mult_g # return multipliers for all constraints
-    return m.inner.sense == :Max ? copy(v) : -v
+    v = model.mult_g # return multipliers for all constraints
+    return model.sense == :Max ? copy(v) : -v
 end
 
-getrawsolver(m::AlgencanMathProgModel) = nothing
+getrawsolver(model::AlgencanMathProgModel) = nothing
 
-setwarmstart!(m::AlgencanMathProgModel, x) = (m.x = x)
+setwarmstart!(model::AlgencanMathProgModel, x) = (model.x = x)
 
-function optimize!(m::AlgencanMathProgModel)
+function optimize!(model::AlgencanMathProgModel)
     # TODO: Allow warm start primal and specially dual
-    #copy!(m.inner.x, m.warmstart) # set warmstart
+    #copy!(model.inner.x, model.warmstart) # set warmstart
     # TODO: No options for now
-    # for (name,value) in m.options
+    # for (name,value) in model.options
     #     sname = string(name)
     #     if match(r"(^resto_)", sname) != nothing
     #         sname = replace(sname, r"(^resto_)", "resto.")
     #     end
-    #     addOption(m.inner, sname, value)
+    #     addOption(model.inner, sname, value)
     # end
-    global current_algencan_model = m
+    global current_algencan_model = model
 
     ###########################################################################
     # Algencan callback function wrappers
@@ -283,15 +284,15 @@ function optimize!(m::AlgencanMathProgModel)
         # TODO: This is extra work tha only happens because I am calling C instead
         # of Fortran.
         # TODO: Try to move to direct fortran calling.
-        hrow_ind[1:nnz] = current_algencan_problem.h_row_inds - 1
-        hcol_ind[1:nnz] = current_algencan_problem.h_col_inds - 1
+        hrow_ind[1:nnz] = current_algencan_model.h_row_inds - 1
+        hcol_ind[1:nnz] = current_algencan_model.h_col_inds - 1
 
         # Compute the Hessian (for now objective function only)
         σ = 1.0
         μ = Vector{Float64}(0)
         x = unsafe_wrap(Array, x_ptr, Int(n))
         H = unsafe_wrap(Array, hval_ptr, Int(lim))
-        MathProgBase.eval_hesslag(current_algencan_problem.evaluator, H, x, σ, μ)
+        MathProgBase.eval_hesslag(current_algencan_model.evaluator, H, x, σ, μ)
         unsafe_store!(flag_ptr, 0)
         nothing
     end
@@ -312,8 +313,8 @@ function optimize!(m::AlgencanMathProgModel)
     myevalgjacp = C_NULL
     myevalhl = C_NULL
     myevalhlp = C_NULL
-    jcnnzmax = length(prob.g_row_inds)
-    hnnzmax = length(prob.h_row_inds)
+    jcnnzmax = length(model.g_row_inds)
+    hnnzmax = length(model.h_row_inds)
 
     # Parameters setting
     epsfeas = [1.0e-08]
@@ -329,12 +330,12 @@ function optimize!(m::AlgencanMathProgModel)
     vparam = ["ITERATIONS-OUTPUT-DETAIL 1"] #Vector{String}(nvparam)
     nvparam = length(vparam)
 
-    n = prob.n
-    l = prob.lb
-    u = prob.ub
+    n = model.n
+    l = model.lb
+    u = model.ub
 
     # Information on the constraints that do not exist
-    m = prob.m
+    m = model.m
     lambda = Vector{Float64}(m)
     equatn = Vector{UInt8}(m)
     linear = Vector{UInt8}(m)
@@ -416,9 +417,9 @@ function optimize!(m::AlgencanMathProgModel)
         nvparam,
         vparam,
         n,
-        prob.x,
-        prob.lb,
-        prob.ub,
+        model.x,
+        model.lb,
+        model.ub,
         m,
         lambda,
         equatn,
@@ -431,10 +432,12 @@ function optimize!(m::AlgencanMathProgModel)
         nlpsupn,
         inform
     )
-    println("x final ", prob.x)
+    println("x final ", model.x)
 
-    prob.obj_val = f[1]
-    prob.status = inform[1]
+    model.obj_val = f[1]
+    model.status = inform[1]
 
     return inform[1]
 end
+
+end # module
