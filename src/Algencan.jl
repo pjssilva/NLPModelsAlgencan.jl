@@ -36,16 +36,6 @@ It should create a file named `libalgencan.so` in the `lib` dir.
 """
 module Algencan
 
-# Globals to avoid closures as Algencan does not allow to send user information
-# back to call backs. Long names to avoid conflicts.
-global current_algencan_problem
-const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"],
-    "libalgencan.so"))
-
-# Imports
-import MathProgBase
-import MathProgBase.AbstractNLPEvaluator
-
 # TODO: This looks like things to allow for automatic download and
 #       compilation of dependencies. Deal with it later.
 # if isfile(joinpath(dirname(@__FILE__),"..","deps","deps.jl"))
@@ -55,21 +45,32 @@ import MathProgBase.AbstractNLPEvaluator
 # end
 # amplexe = joinpath(dirname(libipopt), "..", "bin", "ipopt")
 
-# Exports
-export createProblem, addOption
-export openOutputFile, setProblemScaling
-export solveProblem
-export AlgencanProblem
 
-"""
-Represents an optimization problem that is solvable by Algencan.
-"""
-mutable struct AlgencanProblem
+# Globals to avoid closures as Algencan does not allow to send user information
+# back to call backs. Long names to avoid conflicts.
+global current_algencan_problem
+const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"],
+    "libalgencan.so"))
+
+# Standard LP interface
+importall MathProgBase.SolverInterface
+
+###############################################################################
+# Solver objects
+export AlgencanSolver
+struct AlgencanSolver <: AbstractMathProgSolver
+    options
+end
+AlgencanSolver(;kwargs...) = AlgencanSolver(kwargs)
+
+mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
     # Problem data
     n::Int                          # Num variables
     m::Int                          # Num constraints
-    lb::Vector{Float64}             # Lower bound on vars
-    ub::Vector{Float64}             # Upper bound on var
+    lb::Vector{Float64}             # Lower bounds on vars
+    ub::Vector{Float64}             # Upper bounds on var
+    g_ub::Vector{Float64}           # Upper bounds on constraints
+    g_lb::Vector{Float64}           # Lower bound on constrains
     sense::Symbol                   # max or min
     evaluator::AbstractNLPEvaluator # Evaluator for functions
     g_row_inds::Vector{Int}         # NNZ row indexes of sparse const. Jacobian.
@@ -85,114 +86,167 @@ mutable struct AlgencanProblem
     obj_val::Float64                # Final objective
     status::Int                     # Final status
 
-    function AlgencanProblem(n, m, lb, ub, sense, evaluator)
-        # Get strutural indices of Jacobian and Hessian.
-        g_row_inds, g_col_inds = MathProgBase.jac_structure(evaluator)
-        h_row_inds, h_col_inds = MathProgBase.hesslag_structure(evaluator)
+    # Options to be passed to the solver
+    options
 
-        # TODO: Verify if I should allow initial points here.
-        prob = new(n, m, lb, ub, sense, evaluator, g_row_inds, g_col_inds,
-            h_row_inds, h_col_inds, zeros(n), zeros(m), zeros(m), 0.0, 0)
-        # Return the object we just made
-        prob
+    function AlgencanMathProgModel(;options...)
+        model = new()
+
+        # Set up model with dummy values to mark that is not initialized
+        model.n, model.m = 0, 0
+        model.lb, model.ub = Float64[], Float64[]
+        model.g_lb, model.g_ub = Float64[], Float64[]
+        model.sense = :Min
+        model.g_row_inds, model.g_col_inds = Int[], Int[]
+        model.h_row_inds, model.h_col_inds = Int[], Int[]
+        model.x, model.g, model.mult_g = Float64[], Float64[], Float64[]
+        model.obj_val, model.status = 0.0, 0
+        # Pass on the options
+        model.options = options
+        model
     end
 end
+NonlinearModel(s::AlgencanSolver) = AlgencanMathProgModel(;s.options...)
+LinearQuadraticModel(s::AlgencanSolver) = NonlinearToLPQPBridge(NonlinearModel(s))
 
-# TODO: I have to create this dictionary
-# # From Ipopt/src/Interfaces/IpReturnCodes_inc.h
-# ApplicationReturnStatus = Dict(
-# 0=>:Solve_Succeeded,
-# 1=>:Solved_To_Acceptable_Level,
-# 2=>:Infeasible_Problem_Detected,
-# 3=>:Search_Direction_Becomes_Too_Small,
-# 4=>:Diverging_Iterates,
-# 5=>:User_Requested_Stop,
-# 6=>:Feasible_Point_Found,
-# -1=>:Maximum_Iterations_Exceeded,
-# -2=>:Restoration_Failed,
-# -3=>:Error_In_Step_Computation,
-# -4=>:Maximum_CpuTime_Exceeded,
-# -10=>:Not_Enough_Degrees_Of_Freedom,
-# -11=>:Invalid_Problem_Definition,
-# -12=>:Invalid_Option,
-# -13=>:Invalid_Number_Detected,
-# -100=>:Unrecoverable_Exception,
-# -101=>:NonIpopt_Exception_Thrown,
-# -102=>:Insufficient_Memory,
-# -199=>:Internal_Error)
+###############################################################################
+# Begin interface implementation
 
-function createProblem(n::Int, x_L::Vector{Float64}, x_U::Vector{Float64},
-    m::Int, g_L::Vector{Float64}, g_U::Vector{Float64}, sense::Symbol,
+# generic nonlinear interface
+function loadproblem!(m::AlgencanMathProgModel, numVar::Integer,
+    numConstr::Integer, x_l, x_u, g_lb, g_ub, sense::Symbol,
     d::AbstractNLPEvaluator)
-    @assert n == length(x_L) == length(x_U)
-    @assert m == length(g_L) == length(g_U)
 
-    return(AlgencanProblem(n, m, x_L, x_U, sense, d))
+    # Initialize the evaluator with the right features
+    features = features_available(d)
+    has_hessian = (:Hess in features)
+    init_feat = [:Grad]
+    has_hessian && push!(init_feat, :Hess)
+    numConstr > 0 && push!(init_feat, :Jac)
+    initialize(d, init_feat)
+
+    # Link the model with the problem representation
+    @assert sense == :Min || sense == :Max
+
+    # Copy data
+    model.n = numVar
+    model.m = numConstr
+    model.lb, model.ub = float(x_l), float(x_u)
+    model.g_lb, mode.g_ub = float(g_lb), float(g_ub)
+    model.sense = sense
+    model.evaluator = d
+
+    # Get strutural indices of Jacobian and Hessian.
+    g_row_inds, g_col_inds = MathProgBase.jac_structure(evaluator)
+    h_row_inds, h_col_inds = MathProgBase.hesslag_structure(evaluator)
+
+    model.g_row_inds, model.g_col_inds = g_row_inds, g_col_inds
+    model.h_row_inds, model.h_col_inds = h_row_inds, h_col_inds
+    model.x, model.g, model.mult_g = zeros(numVar), zeros(numConstr),
+        zeros(numConstr)
+    model.obj_val, model.status = 0.0, 0
+
 end
 
-# TODO: Implement add option functions
-function addOption(prob::AlgencanProblem, keyword::String, value::String)
-    # #/** Function for adding a string option.  Returns FALSE the option
-    # # *  could not be set (e.g., if keyword is unknown) */
-    # if !(isascii(keyword) && isascii(value))
-    #     error("IPOPT: Non ASCII parameters not supported")
+# Simple functions
+getsense(m::AlgencanMathProgModel) = m.sense
+
+numvar(m::AlgencanMathProgModel) = m.n
+
+numconstr(m::AlgencanMathProgModel) = m.m
+
+# TODO: Implement this
+numlinconstr(m::AlgencanMathProgModel) = 0
+
+numquadconstr(m::AlgencanMathProgModel) = 0
+
+function status(m::AlgencanMathProgModel)
+    # TODO: I still need to map status, return that everyhing was OK
+    return :Optimal
+
+    # # Map all the possible return codes, as enumerated in
+    # # Ipopt.ApplicationReturnStatus, to the MPB statuses:
+    # # :Optimal, :Infeasible, :Unbounded, :UserLimit, and :Error
+    # stat_sym = ApplicationReturnStatus[m.inner.status]
+    # if  stat_sym == :Solve_Succeeded ||
+    #     stat_sym == :Solved_To_Acceptable_Level
+    #     return :Optimal
+    # elseif stat_sym == :Infeasible_Problem_Detected
+    #     return :Infeasible
+    # elseif stat_sym == :Diverging_Iterates
+    #     return :Unbounded
+    #     # Things that are more likely to be fixable by changing
+    #     # a parameter will be treated as UserLimit, although
+    #     # some are error-like too.
+    # elseif stat_sym == :User_Requested_Stop ||
+    #     stat_sym == :Maximum_Iterations_Exceeded ||
+    #     stat_sym == :Maximum_CpuTime_Exceeded
+    #     return :UserLimit
+    # else
+    #     # Default is to not mislead user that it worked
+    #     # Includes:
+    #     #   :Search_Direction_Becomes_Too_Small
+    #     #   :Feasible_Point_Found
+    #     #   :Restoration_Failed
+    #     #   :Error_In_Step_Computation
+    #     #   :Not_Enough_Degrees_Of_Freedom
+    #     #   :Invalid_Problem_Definition
+    #     #   :Invalid_Option
+    #     #   :Invalid_Number_Detected
+    #     #   :Unrecoverable_Exception
+    #     #   :NonIpopt_Exception_Thrown
+    #     #   :Insufficient_Memory
+    #     #   :Internal_Error
+    #     warn("Ipopt finished with status $stat_sym")
+    #     return :Error
     # end
-    # ret = ccall((:AddIpoptStrOption, libipopt),
-    # Cint, (Ptr{Void}, Ptr{UInt8}, Ptr{UInt8}),
-    # prob.ref, keyword, value)
-    # if ret == 0
-    #     error("IPOPT: Couldn't set option '$keyword' to value '$value'.")
-    # end
-    nothing
+    #
 end
 
-# TODO: Do I need this?
-function openOutputFile(prob::AlgencanProblem, file_name::String, print_level::Int)
-    # #/** Function for opening an output file for a given name with given
-    # # *  printlevel.  Returns false, if there was a problem opening the
-    # # *  file. */
-    # if !isascii(file_name)
-    #     error("IPOPT: Non ASCII parameters not supported")
-    # end
-    # ret = ccall((:OpenIpoptOutputFile, libipopt),
-    # Cint, (Ptr{Void}, Ptr{UInt8}, Cint),
-    # prob.ref, file_name, print_level)
-    # if ret == 0
-    #     error("IPOPT: Couldn't open output file.")
-    # end
-    nothing
+getobjval(m::AlgencanMathProgModel) = m.obj_val * (m.inner.sense == :Max ? -1 : +1)
+
+getsolution(m::AlgencanMathProgModel) = m.x
+
+function getreducedcosts(m::AlgencanMathProgModel)
+    # TODO: Verify, I am not thinking about constraints yet.
+    # sense = m.inner.sense
+    # redcost = m.inner.mult_x_U - m.inner.mult_x_L
+    # return sense == :Max ? redcost : -redcost
+    return zeros(m.inner.m)
 end
 
-# TODO: Do I need this?
-function setProblemScaling(prob::AlgencanProblem, obj_scaling::Float64,
-    x_scaling = nothing,
-    g_scaling = nothing)
-    # #/** Optional function for setting scaling parameter for the NLP.
-    # # *  This corresponds to the get_scaling_parameters method in TNLP.
-    # # *  If the pointers x_scaling or g_scaling are NULL, then no scaling
-    # # *  for x resp. g is done. */
-    # x_scale_arg = (x_scaling == nothing) ? C_NULL : x_scaling
-    # g_scale_arg = (g_scaling == nothing) ? C_NULL : g_scaling
-    # ret = ccall((:SetIpoptProblemScaling, libipopt),
-    # Cint, (Ptr{Void}, Float64, Ptr{Float64}, Ptr{Float64}),
-    # prob.ref, obj_scaling, x_scale_arg, g_scale_arg)
-    # if ret == 0
-    #     error("IPOPT: Error setting problem scaling.")
-    # end
-    nothing
+function getconstrduals(m::AlgencanMathProgModel)
+    # TODO: Verify, I am not thinking about constraints yet.
+
+    v = m.mult_g # return multipliers for all constraints
+    return m.inner.sense == :Max ? copy(v) : -v
 end
 
-function solveProblem(prob::AlgencanProblem)
-    global current_algencan_problem = prob
+getrawsolver(m::AlgencanMathProgModel) = nothing
+
+setwarmstart!(m::AlgencanMathProgModel, x) = (m.x = x)
+
+function optimize!(m::AlgencanMathProgModel)
+    # TODO: Allow warm start primal and specially dual
+    #copy!(m.inner.x, m.warmstart) # set warmstart
+    # TODO: No options for now
+    # for (name,value) in m.options
+    #     sname = string(name)
+    #     if match(r"(^resto_)", sname) != nothing
+    #         sname = replace(sname, r"(^resto_)", "resto.")
+    #     end
+    #     addOption(m.inner, sname, value)
+    # end
+    global current_algencan_model = m
 
     ###########################################################################
     # Algencan callback function wrappers
     ###########################################################################
-    # TODO: Use prob.sense to define "direction" of optimization
+    # TODO: Use model.sense to define "direction" of optimization
     function my_f(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
         flag_ptr::Ptr{Cint})
         x = unsafe_wrap(Array, x_ptr, Int(n))
-        obj_val = MathProgBase.eval_f(current_algencan_problem.evaluator, x)
+        obj_val = MathProgBase.eval_f(current_algencan_model.evaluator, x)
         unsafe_store!(obj_ptr, obj_val)
         unsafe_store!(flag_ptr, 0)
         nothing
@@ -205,7 +259,7 @@ function solveProblem(prob::AlgencanProblem)
         flag_ptr::Ptr{Cint})
         x = unsafe_wrap(Array, x_ptr, Int(n))
         g = unsafe_wrap(Array, g_ptr, Int(n))
-        MathProgBase.eval_grad_f(current_algencan_problem.evaluator, g, x)
+        MathProgBase.eval_grad_f(current_algencan_model.evaluator, g, x)
         unsafe_store!(flag_ptr, 0)
         nothing
     end
@@ -217,7 +271,7 @@ function solveProblem(prob::AlgencanProblem)
         hcol_ptr::Ptr{Cint}, hval_ptr::Ptr{Float64}, hnnz_ptr::Ptr{Cint}, lim::Cint,
         lmem_ptr::Ptr{UInt8}, flag_ptr::Ptr{Cint})
         # Get nonzero indexes.
-        nnz = length(current_algencan_problem.h_row_inds)
+        nnz = length(current_algencan_model.h_row_inds)
         if nnz > Int(lim)
             unsafe_store!(lmem_ptr, 1)
             unsafe_store!(flag_ptr, 1)
@@ -384,7 +438,3 @@ function solveProblem(prob::AlgencanProblem)
 
     return inform[1]
 end
-
-include("AlgencanSolverInterface.jl")
-
-end # module
