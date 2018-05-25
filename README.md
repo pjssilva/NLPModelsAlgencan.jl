@@ -8,7 +8,7 @@ nonlinear solver.
 **Status**
 
 At this point this is pre-alpha software. The main structure will change and
-only unconstrained optimization is possible.
+there is no support for lower bounds in inequality constraints.
 
 **Installation**:
 
