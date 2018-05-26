@@ -3,36 +3,7 @@ __precompile__()
 """
 Algencan interface to MathProgBase and JuMP.
 
-WARNING: This module is not threadsafe, you can not solve two models at
-the same time. BAD THINGS WILL HAPPEN IF YOU TRY TO DO IT.
-
-This modules creates an interface to allow you to use
-[Algencan](https://www.ime.usp.br/~egbirgin/tango/codes.php) to solve nonlinear
-optimization methods defined in JuMP.
-
-Algencan is a high performance and large scale Augmented Lagrangian solver
-written by Ernesto Birgin and Mario Martínez. It has many special features like
-being able to use HSL librarry functions to speed up linear algebra with sparse
-matrices and some smart acceleration strategies. To use it, at least for now,
-you need to compile Algencan yourself. Go to Tango's project
-[website](https://www.ime.usp.br/~egbirgin/tango/codes.php) grab Algencan and
-compile it. However, you need to make the small changes below to be able to get
-a dynamic library from it as Algencan creates a static library by default.
-
-1. Add the option `-f PIC` to  `CFLAGS` in the top of the main Makefile.
-
-2. After compiling, you'll get a libalgencan.a file in the `lib` subdir. In
-order to create a dynamic library try the following:
-
-```
-gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
-    -Wl,--no-whole-archive -lgfortran
-```
-
-It should create a file named `libalgencan.so` in the `lib` dir.
-
-3. Create a environmental library named `ALGENCAN_LIB_DIR` pointing to the
-`lib` dir path.
+See its [Git hub page](https://github.com/pjssilva/Algencan.jl)
 """
 module Algencan
 
@@ -45,12 +16,13 @@ module Algencan
 # end
 # amplexe = joinpath(dirname(libipopt), "..", "bin", "ipopt")
 
-
-# Globals to avoid closures as Algencan does not allow to send user information
-# back to call backs. Long names to avoid conflicts.
-global current_algencan_problem
+# Compiles to the *static* path of the algencan library
 const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"],
     "libalgencan.so"))
+
+# Global to avoid closures as Algencan does not allow to send user information
+# back to call backs. Long names to avoid conflicts.
+global current_algencan_problem
 
 # Standard LP interface
 import MathProgBase
@@ -81,7 +53,7 @@ mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
 
     # Decision variables and constraints values.
     x::Vector{Float64}              # Starting and final solution
-    # TODO: No constraints for now and see how to allow for initial multiplies
+    # TODO: See how to allow for initial multiplies
     g::Vector{Float64}              # Final constraint values
     mult_g::Vector{Float64}         # Final Lagrange multipliers on constraints
     obj_val::Float64                # Final objective
@@ -162,46 +134,9 @@ numlinconstr(model::AlgencanMathProgModel) = 0
 numquadconstr(model::AlgencanMathProgModel) = 0
 
 function status(model::AlgencanMathProgModel)
-    # TODO: I still need to map status, return that everyhing was OK
+    # TODO: I need to actually verify the KKT conditions to define the final
+    # status as Algencan does not inform it (it only appears in the screen)
     return :Optimal
-
-    # # Map all the possible return codes, as enumerated in
-    # # Ipopt.ApplicationReturnStatus, to the MPB statuses:
-    # # :Optimal, :Infeasible, :Unbounded, :UserLimit, and :Error
-    # stat_sym = ApplicationReturnStatus[model.inner.status]
-    # if  stat_sym == :Solve_Succeeded ||
-    #     stat_sym == :Solved_To_Acceptable_Level
-    #     return :Optimal
-    # elseif stat_sym == :Infeasible_Problem_Detected
-    #     return :Infeasible
-    # elseif stat_sym == :Diverging_Iterates
-    #     return :Unbounded
-    #     # Things that are more likely to be fixable by changing
-    #     # a parameter will be treated as UserLimit, although
-    #     # some are error-like too.
-    # elseif stat_sym == :User_Requested_Stop ||
-    #     stat_sym == :Maximum_Iterations_Exceeded ||
-    #     stat_sym == :Maximum_CpuTime_Exceeded
-    #     return :UserLimit
-    # else
-    #     # Default is to not mislead user that it worked
-    #     # Includes:
-    #     #   :Search_Direction_Becomes_Too_Small
-    #     #   :Feasible_Point_Found
-    #     #   :Restoration_Failed
-    #     #   :Error_In_Step_Computation
-    #     #   :Not_Enough_Degrees_Of_Freedom
-    #     #   :Invalid_Problem_Definition
-    #     #   :Invalid_Option
-    #     #   :Invalid_Number_Detected
-    #     #   :Unrecoverable_Exception
-    #     #   :NonIpopt_Exception_Thrown
-    #     #   :Insufficient_Memory
-    #     #   :Internal_Error
-    #     warn("Ipopt finished with status $stat_sym")
-    #     return :Error
-    # end
-    #
 end
 
 getobjval(model::AlgencanMathProgModel) = model.obj_val * (model.sense == :Max ? -1 : +1)
@@ -226,6 +161,17 @@ end
 getrawsolver(model::AlgencanMathProgModel) = nothing
 
 setwarmstart!(model::AlgencanMathProgModel, x) = (model.x = x)
+
+"Transform the option dictionariy to a vparam string array"
+function option2vparam(model::AlgencanMathProgModel)
+    vparam = Vector{String}(0)
+    for option in model.options
+        key, value = option
+        key = replace(string(key), "_", "-")
+        push!(vparam, "$key $value")
+    end
+    return vparam
+end
 
 function optimize!(model::AlgencanMathProgModel)
     # TODO: Allow warm start primal and specially dual
@@ -371,7 +317,7 @@ function optimize!(model::AlgencanMathProgModel)
     outputfnm = ""
     specfnm   = ""
 
-    vparam = Vector{String}(0) #["ITERATIONS-OUTPUT-DETAIL 1"] #
+    vparam = option2vparam(model)
     nvparam = length(vparam)
 
     n = model.n
@@ -478,6 +424,8 @@ function optimize!(model::AlgencanMathProgModel)
 
     model.obj_val = f[1]
     model.status = inform[1]
+
+    println("Direct inform = ", inform)
 
     return inform[1]
 end
