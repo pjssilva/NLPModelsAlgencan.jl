@@ -31,7 +31,7 @@ compile it. However, you need to make the small changes below to be able to get
 a dynamic library from it as Algencan creates a static library by default.
 
 1. Add the option `-f PIC` to  `CFLAGS` and `FFLAGS` in the top of the main
-Makefile. Now we have two cases.
+Makefile. Now we have two cases:
 
     * You are not going to use HSL libraries (this may preclude good performance)
     in some problems:
