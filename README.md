@@ -7,8 +7,13 @@ nonlinear solver.
 
 **Status**
 
-At this point this is pre-alpha software. The main structure will change and
-there is no support for lower bounds in inequality constraints.
+At this point this is pre-alpha software. It has the following limitations:
+
+1. Lower bounds on the inequality constraints are ignored.
+
+1. Options can only be passed for the solver when creating it.
+
+1. You have to compile Algencan yourself. See details below.
 
 **Installation**:
 
@@ -25,17 +30,37 @@ you need to compile Algencan yourself. Go to Tango's project
 compile it. However, you need to make the small changes below to be able to get
 a dynamic library from it as Algencan creates a static library by default.
 
-1. Add the option `-f PIC` to  `CFLAGS` in the top of the main Makefile.
+1. Add the option `-f PIC` to  `CFLAGS` and `FFLAGS` in the top of the main
+Makefile. Now we have two cases.
 
-2. After compiling, you'll get a libalgencan.a file in the `lib` subdir. In
-order to create a dynamic library try the following:
+  * You are not going to use HSL libraries (this may preclude good performance)
+  in some problems:
 
-```
-gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
-    -Wl,--no-whole-archive -lgfortran
-```
+    1. Just type `make` to compile Algencan.
 
-It should create a file named `libalgencan.so` in the `lib` dir.
+    1. Move to the `lib` directory, where you can find the `libalgencan.a` file
+    and type:
+    ```bash
+    gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
+        -Wl,--no-whole-archive -lgfortran
+    ```
+  * You are going to use HSL.
+
+    1. Prepare your HSL code as instructed in the `README` file you got from
+    Algencan. It should be located in `sources\hsl`.
+
+    1. Go back to the initial Algencan dir.
+
+    1. Type `make` and compile Algencan.
+
+    1.  Move to the `lib` directory, where you can find the `libalgencan.a` file
+    and type:
+    ```bash
+    gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
+        -Wl,--no-whole-archive -lgfortran -L$PWD -lhsl
+    ```
+
+1. You should now have a file named `libalgencan.so` in the `lib` directory.
 
 3. Create a environmental library named `ALGENCAN_LIB_DIR` pointing to the
-`lib` path.
+`lib` directory. You can proceed to use Algencan.jl.
