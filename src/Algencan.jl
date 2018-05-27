@@ -81,7 +81,7 @@ mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
     g::Vector{Float64}              # Final constraint values
     mult::Vector{Float64}           # Final Lagrange multipliers on constraints
     obj_val::Float64                # Final objective
-    status::Int                     # Final status
+    status::Symbol                  # Final status
 
     # Options to be passed to the solver
     options
@@ -97,7 +97,7 @@ mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
         model.j_row_inds, model.j_col_inds = Int[], Int[]
         model.h_row_inds, model.h_col_inds = Int[], Int[]
         model.x, model.g, model.mult = Float64[], Float64[], Float64[]
-        model.obj_val, model.status = 0.0, 0
+        model.obj_val, model.status = 0.0, :Undefined
         model.options = options
         model
     end
@@ -154,7 +154,7 @@ function loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     # Initial values
     model.x = zeros(numVar)
     model.g, model.mult = zeros(numConstr), zeros(numConstr)
-    model.obj_val, model.status = 0.0, 0
+    model.obj_val, model.status = 0.0, :Undefined
 end
 
 # Simple functions
@@ -164,11 +164,7 @@ numvar(model::AlgencanMathProgModel) = model.n
 
 numconstr(model::AlgencanMathProgModel) = model.m
 
-function status(model::AlgencanMathProgModel)
-    # TODO: I need to actually verify the KKT conditions to define the final
-    # status as Algencan does not inform it (it only appears in the screen)
-    return :Optimal
-end
+status(model::AlgencanMathProgModel) = model.status
 
 getobjval(model::AlgencanMathProgModel) = model.obj_val * model.sense
 
@@ -412,9 +408,48 @@ function optimize!(model::AlgencanMathProgModel)
         coded, checkder, f, cnorm, snorm, nlpsupn, inform
     )
 
-    model.obj_val = f[1]
-    model.status = inform[1]
-    return inform[1]
+    model.obj_val = model.sense*f[1]
+    model.status = find_status(model, cnorm[1], snorm[1], nlpsupn[1],
+        Int(inform[1]))
+    return Int(inform[1])
+end
+
+function find_status(model::AlgencanMathProgModel, cnorm::Float64, snorm::Float64,
+    nlpsupn::Float64, inform::Int)
+
+    if inform != 0
+        return :Error
+    end
+
+    # Constant comes from Algencan code
+    max_multiplier, fmin = 1.0e+20, -1.0e+20
+    bounded_obj = model.sense*model.obj_val > fmin
+
+    # Optimality thresholds
+    epsopt, epsfeas = model.options[:epsopt], model.options[:epsfeas]
+
+    # Conditions for constrained problems
+    if model.m > 0
+        bounded_mult = maximum(abs.(model.mult)) < max_multiplier
+        feasible = cnorm <= epsfeas
+        if feasible && (!bounded_mult || !bounded_obj)
+            return :Unbounded
+        elseif feasible && nlpsupn <= epsopt && snorm <= epsopt
+            return :Optimal
+        elseif !feasible
+            return :Infeasible
+        else
+            return :Error
+        end
+    else
+        if nlpsupn <= epsopt
+            return :Optimal
+        elseif !bounded_obj
+            return :Unbounded
+        else
+            return :Error
+        end
+    end
 end
 
 end # module
