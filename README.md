@@ -33,32 +33,32 @@ a dynamic library from it as Algencan creates a static library by default.
 1. Add the option `-f PIC` to  `CFLAGS` and `FFLAGS` in the top of the main
 Makefile. Now we have two cases.
 
-  * You are not going to use HSL libraries (this may preclude good performance)
-  in some problems:
+    * You are not going to use HSL libraries (this may preclude good performance)
+    in some problems:
 
-    1. Just type `make` to compile Algencan.
+      1. Just type `make` to compile Algencan.
 
-    1. Move to the `lib` directory, where you can find the `libalgencan.a` file
-    and type:
-    ```bash
-    gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
-        -Wl,--no-whole-archive -lgfortran
-    ```
-  * You are going to use HSL.
+      1. Move to the `lib` directory, where you can find the `libalgencan.a` file
+      and type:
+      ```bash
+      gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
+          -Wl,--no-whole-archive -lgfortran
+      ```
+    * You are going to use HSL.
 
-    1. Prepare your HSL code as instructed in the `README` file you got from
-    Algencan. It should be located in `sources\hsl`.
+      1. Prepare your HSL code as instructed in the `README` file you got from
+      Algencan. It should be located in `sources\hsl`.
 
-    1. Go back to the initial Algencan dir.
+      1. Go back to the initial Algencan dir.
 
-    1. Type `make` and compile Algencan.
+      1. Type `make` and compile Algencan.
 
-    1.  Move to the `lib` directory, where you can find the `libalgencan.a` file
-    and type:
-    ```bash
-    gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
-        -Wl,--no-whole-archive -lgfortran -L$PWD -lhsl
-    ```
+      1.  Move to the `lib` directory, where you can find the `libalgencan.a` file
+      and type:
+      ```bash
+      gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
+          -Wl,--no-whole-archive -lgfortran -L$PWD -lhsl
+      ```
 
 1. You should now have a file named `libalgencan.so` in the `lib` directory.
 
