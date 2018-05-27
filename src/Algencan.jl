@@ -57,6 +57,11 @@ end
 "Store keyworded argments as options"
 AlgencanSolver(;kwargs...) = AlgencanSolver(kwargs)
 
+###############################################################################
+# Model objects objects
+
+export getconstrduals
+
 "Algencan model, that storing solution data"
 mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
     # Problem data
