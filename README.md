@@ -1,8 +1,8 @@
 Algencan.jl
 ===========
 
-**Algencan.jl** is a [Julia](http://julialang.org/) interface to the
-[Algencan](https://www.ime.usp.br/~egbirgin/tango/codes.php)
+**Algencan.jl** is a [JuMP / MathProgBase](https://www.juliaopt.org/) interface
+to the [Algencan](https://www.ime.usp.br/~egbirgin/tango/codes.php)
 nonlinear solver.
 
 **Status**
@@ -38,5 +38,4 @@ gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
 It should create a file named `libalgencan.so` in the `lib` dir.
 
 3. Create a environmental library named `ALGENCAN_LIB_DIR` pointing to the
-`lib` dir path.
-"""
+`lib` path.

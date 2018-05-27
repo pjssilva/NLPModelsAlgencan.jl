@@ -442,7 +442,7 @@ function find_status(model::AlgencanMathProgModel, cnorm::Float64, snorm::Float6
             return :Error
         end
     else
-        if nlpsupn <= epsopt
+        if nlpsupn <= epsopt && bounded_obj
             return :Optimal
         elseif !bounded_obj
             return :Unbounded
