@@ -209,6 +209,10 @@ function option2vparam(model::AlgencanMathProgModel)
     return vparam
 end
 
+###########################################################################
+# Algencan callbacks
+###########################################################################
+
 "Compute objective and constraints as required by Algencan"
 function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
     m::Cint, g_ptr::Ptr{Float64}, flag_ptr::Ptr{Cint})
@@ -218,7 +222,7 @@ function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
     g = unsafe_wrap(Array, g_ptr, Int(m))
     MathProgBase.eval_g(current_algencan_model.evaluator, g, x)
     g .-= current_algencan_model.g_ub
-    unsafe_store!(flag_ptr, 0)
+    unsafe_store!(flag_ptr, Cint(0))
     nothing
 end
 
@@ -237,11 +241,11 @@ function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
     # Find structure of the constraints Jacobian
     nnz = length(current_algencan_model.j_row_inds)
     if nnz > Int(lim)
-        unsafe_store!(lmem_ptr, 1)
-        unsafe_store!(flag_ptr, 1)
+        unsafe_store!(lmem_ptr, Cint(1))
+        unsafe_store!(flag_ptr, Cint(1))
         return nothing
     else
-        unsafe_store!(lmem_ptr, 0)
+        unsafe_store!(lmem_ptr, Cint(0))
     end
     unsafe_store!(jnnz_ptr, nnz)
     jcol_ind = unsafe_wrap(Array, jcol_ptr, Int(lim))
@@ -253,11 +257,11 @@ function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
     J = unsafe_wrap(Array, jval_ptr, Int(lim))
     MathProgBase.eval_jac_g(current_algencan_model.evaluator, J, x)
 
-    unsafe_store!(flag_ptr, 0)
+    unsafe_store!(flag_ptr, Cint(0))
     nothing
 end
 
-" Compute the Hessian of the Lagrangian as required by Algencan"
+"Compute the Hessian of the Lagrangian as required by Algencan"
 function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     mult_ptr::Ptr{Float64}, scale_f::Float64, scale_g_ptr::Ptr{Float64},
     hrow_ptr::Ptr{Cint}, hcol_ptr::Ptr{Cint},
@@ -272,7 +276,7 @@ function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     else
         unsafe_store!(lmem_ptr, 0)
     end
-    unsafe_store!(hnnz_ptr, nnz)
+    unsafe_store!(hnnz_ptr, Cint(nnz))
     hcol_ind = unsafe_wrap(Array, hcol_ptr, Int(lim))
     hrow_ind = unsafe_wrap(Array, hrow_ptr, Int(lim))
     hrow_ind[1:nnz] = current_algencan_model.h_row_inds
@@ -286,7 +290,7 @@ function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     x = unsafe_wrap(Array, x_ptr, Int(n))
     H = unsafe_wrap(Array, hval_ptr, Int(lim))
     MathProgBase.eval_hesslag(current_algencan_model.evaluator, H, x, σ, μ)
-    unsafe_store!(flag_ptr, 0)
+    unsafe_store!(flag_ptr, Cint(0))
     nothing
 end
 
@@ -306,7 +310,6 @@ function optimize!(model::AlgencanMathProgModel)
     ###########################################################################
     # Algencan callback function wrappers
     ###########################################################################
-
     const c_julia_fc = cfunction(julia_fc, Void, (Cint, Ptr{Float64},
         Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Cint}))
 
@@ -334,11 +337,11 @@ function optimize!(model::AlgencanMathProgModel)
     myevalhl = c_julia_hl
     myevalhlp = C_NULL
     jcnnzmax = length(model.j_row_inds)
-    hnnzmax = length(model.h_row_inds)
+    hnnzmax = length(model.h_row_inds) + 10*jcnnzmax
     coded = zeros(UInt8, 11)
-    coded[7] = 1
-    coded[8] = 1
-    coded[10] = 1
+    coded[7] = UInt8(1)
+    coded[8] = UInt8(1)
+    coded[10] = UInt8(1)
     checkder = UInt8(0)
 
     # Parameters controling precision
@@ -352,7 +355,7 @@ function optimize!(model::AlgencanMathProgModel)
     # Extra parameters
     outputfnm = model.options[:outputfnm]
     specfnm   = model.options[:specfnm]
-    vparam = option2vparam(model)
+    vparam = Vector{String}(0) # option2vparam(model)
     nvparam = length(vparam)
 
     # Return information
@@ -417,6 +420,7 @@ function optimize!(model::AlgencanMathProgModel)
     model.status = find_status(model, cnorm[1], snorm[1], nlpsupn[1],
         Int(inform[1]))
     return Int(inform[1])
+
 end
 
 function find_status(model::AlgencanMathProgModel, cnorm::Float64, snorm::Float64,
