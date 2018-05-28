@@ -337,6 +337,7 @@ function optimize!(model::AlgencanMathProgModel)
     myevalhl = c_julia_hl
     myevalhlp = C_NULL
     jcnnzmax = length(model.j_row_inds)
+    # TODO: Compute the right value here
     hnnzmax = length(model.h_row_inds) + 10*jcnnzmax
     coded = zeros(UInt8, 11)
     coded[7] = UInt8(1)
@@ -355,7 +356,7 @@ function optimize!(model::AlgencanMathProgModel)
     # Extra parameters
     outputfnm = model.options[:outputfnm]
     specfnm   = model.options[:specfnm]
-    vparam = Vector{String}(0) # option2vparam(model)
+    vparam = option2vparam(model)
     nvparam = length(vparam)
 
     # Return information
