@@ -30,8 +30,11 @@ you need to compile Algencan yourself. Go to Tango's project
 compile it. However, you need to make the small changes below to be able to get
 a dynamic library from it as Algencan creates a static library by default.
 
-Obs: I have had problems using the 7.3.0 version of gcc compilers from Ubuuntu
+Obs: I have had problems using the 7.3.0 version of gcc compilers from Ubuntu
 18.04. I suggest that you install the 8.0.1 and compile with it.
+
+*Obs2: Using Algencan without HSL is quite limited. You should compile it with
+*HSL whenever possible.*
 
 1. Add the option `-f PIC` to  `CFLAGS` and `FFLAGS` in the top of the main
 Makefile. Change `gcc`, `g++`, and `gfortran` to `gcc-8`, `g++-8`, and
@@ -45,7 +48,7 @@ Makefile. Change `gcc`, `g++`, and `gfortran` to `gcc-8`, `g++-8`, and
       1. Move to the `lib` directory, where you can find the `libalgencan.a` file
       and type:
       ```bash
-      gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
+      gcc-8 -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
           -Wl,--no-whole-archive -lgfortran
       ```
     * You are going to use HSL.
@@ -60,7 +63,7 @@ Makefile. Change `gcc`, `g++`, and `gfortran` to `gcc-8`, `g++-8`, and
       1.  Move to the `lib` directory, where you can find the `libalgencan.a` file
       and type:
       ```bash
-      gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
+      gcc-8 -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
           -Wl,--no-whole-archive -lgfortran -L$PWD -lhsl
       ```
 
