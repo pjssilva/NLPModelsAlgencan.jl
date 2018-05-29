@@ -30,8 +30,12 @@ you need to compile Algencan yourself. Go to Tango's project
 compile it. However, you need to make the small changes below to be able to get
 a dynamic library from it as Algencan creates a static library by default.
 
+Obs: I have had problems using the 7.3.0 version of gcc compilers from Ubuuntu
+18.04. I suggest that you install the 8.0.1 and compile with it.
+
 1. Add the option `-f PIC` to  `CFLAGS` and `FFLAGS` in the top of the main
-Makefile. Now we have two cases:
+Makefile. Change `gcc`, `g++`, and `gfortran` to `gcc-8`, `g++-8`, and
+`gfortran-8`. Now we have two cases:
 
     * You are not going to use HSL libraries (this may preclude good performance)
     in some problems:
