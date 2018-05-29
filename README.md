@@ -40,8 +40,8 @@ HSL whenever possible.**
 Makefile. Change `gcc`, `g++`, and `gfortran` to `gcc-8`, `g++-8`, and
 `gfortran-8`. Now we have two cases:
 
-    * You are not going to use HSL libraries (this may preclude good performance)
-    in some problems:
+    * You are not going to use HSL libraries (this may preclude good performance
+    in some problems, see obs2 above):
 
       1. Just type `make` to compile Algencan.
 
