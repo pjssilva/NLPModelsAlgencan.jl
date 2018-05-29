@@ -33,8 +33,8 @@ a dynamic library from it as Algencan creates a static library by default.
 Obs: I have had problems using the 7.3.0 version of gcc compilers from Ubuntu
 18.04. I suggest that you install the 8.0.1 and compile with it.
 
-*Obs2: Using Algencan without HSL is quite limited. You should compile it with
-*HSL whenever possible.*
+**Obs2: Using Algencan without HSL is quite limited. You should compile it with
+HSL whenever possible.**
 
 1. Add the option `-f PIC` to  `CFLAGS` and `FFLAGS` in the top of the main
 Makefile. Change `gcc`, `g++`, and `gfortran` to `gcc-8`, `g++-8`, and
