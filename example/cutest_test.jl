@@ -19,8 +19,9 @@ function cutest_bench(name)
 
     solvers = [
         IpoptSolver(tol=1.0e-7, constr_viol_tol=1.0e-5, compl_inf_tol=1.0e-5,
-            print_level=0),
+            print_level=2),
         AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5,
+            INNER_ITERATIONS_LIMIT=1000,
             ITERATIONS_OUTPUT_DETAIL=0,
             NUMBER_OF_ARRAYS_COMPONENTS_IN_OUTPUT=0)
     ]
@@ -65,23 +66,21 @@ for i = 1:n_tests
     nlp = CUTEstModel(name)
     skip = has_lb_const(nlp.meta.lcon, nlp.meta.ucon)
     finalize(nlp)
-    if skip
+    if !skip
         println("\n*************************************************************")
-        println("Skipping the solution of $name, ")
-        println("it has lower bound constraints which is not")
-        println("yet implemented in Algencan.jl")
-        println("*************************************************************\n")
-    else
-        t, s, v = cutest_bench(name)
-        times = [times; t]
-        status = [status; s]
-        values = [values; v]
-        println("\n*************************************************************")
-        println("Times = ", t)
-        println("Status = ", s)
-        println("Obj values = ", v)
+        println("Problem $name ")
+        println("it has lower bound constraints check result")
         println("*************************************************************\n")
     end
+    t, s, v = cutest_bench(name)
+    times = [times; t]
+    status = [status; s]
+    values = [values; v]
+    println("\n*************************************************************")
+    println("Times = ", t)
+    println("Status = ", s)
+    println("Obj values = ", v)
+    println("*************************************************************\n")
 end
 println("Solved ", size(times)[1], " problems.")
 
