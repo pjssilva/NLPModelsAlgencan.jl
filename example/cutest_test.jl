@@ -1,42 +1,43 @@
-push!(LOAD_PATH, "../src/")
-using Ipopt
+# Run a series of CUTEst model to test a solver.
+#
+# Generates the report solvername_cutest.txt that can be used to create a simple
+# performance profile comparing solvers. However it should be taken into
+# account that the stopping criterion need to be somewhat similar for a
+# meaninful comparison.
+#
+# Obs: It is set to run Algencan now, but you should easily adapt to other
+# solvers.
+
 using MathProgBase
 using NLPModels
 using CUTEst
+
+# Define the solver (you may want to edit here)
+push!(LOAD_PATH, "../src/")
 using Algencan
-using BenchmarkProfiles
-using Plots
+# Algencan tolerances
+const solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5,
+    efstin=sqrt(1.0e-5), eostin=1.0e-5^1.5, efacc=sqrt(1.0e-5),
+    eoacc=sqrt(1.0e-5),
+    ITERATIONS_OUTPUT_DETAIL=10, NUMBER_OF_ARRAYS_COMPONENTS_IN_OUTPUT=0)
+const solver_name = "algencan"
+
+# # Alternative definition to run Ipopt
+# using Ipopt
+# const solver = IpoptSolver(tol=1.0e-7, constr_viol_tol=1.0e-5,
+#     compl_inf_tol=1.0e-5, print_level=5, print_frequency_iter=100,
+#     max_iter=10000, max_cpu_time=3600.0),
+# const solver_name = "ipopt"
 
 function cutest_bench(name)
-    times, status, values = zeros(1, 2), Array{Symbol}(1, 2), zeros(1, 2)
-
-    # DISCLAIMER: I have chosen the values below to make the stopping criteria
-    # closer to each other. However both methods have different stopping
-    # criteria as Algencan uses always unscaled versions while Ipopt
-    # uses scaled version in the tol criteria. Therefore this benchmarks can
-    # only give an idea on how the methods compare and it is not intended to
-    # be a definite (note even close) comparison.
-
-    solvers = [
-        IpoptSolver(tol=1.0e-7, constr_viol_tol=1.0e-5, compl_inf_tol=1.0e-5,
-            print_level=2),
-        AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5,
-            INNER_ITERATIONS_LIMIT=1000,
-            ITERATIONS_OUTPUT_DETAIL=0,
-            NUMBER_OF_ARRAYS_COMPONENTS_IN_OUTPUT=0)
-    ]
-
-    for i in 1:length(solvers)
-        solver = solvers[i]
-        nlp = CUTEstModel(name)
-        model = NLPtoMPB(nlp, solver)
-        bench_data = @timed MathProgBase.optimize!(model)
-        times[1, i] = bench_data[2]
-        status[1, i] = MathProgBase.status(model)
-        values[1, i] = MathProgBase.getobjval(model)
-        finalize(nlp)
-    end
-    return times, status, values
+    nlp = CUTEstModel(name)
+    model = NLPtoMPB(nlp, solver)
+    bench_data = @timed MathProgBase.optimize!(model)
+    time = bench_data[2]
+    status = MathProgBase.status(model)
+    objval = MathProgBase.getobjval(model)
+    finalize(nlp)
+    return time, status, objval
 end
 
 function has_lb_const(lb, ub)
@@ -49,16 +50,18 @@ end
 cutest_bench("HS6")
 
 # Grab a list of CUTEst tests
-test_problems = CUTEst.select(;min_var=10, max_var=1000, min_con=10, max_con=1000)
+test_problems = CUTEst.select(;min_var=200, max_var=2000, min_con=10)
+# Exclude tests that are known to take too long
+filter(name -> name ∉ ["SMMPSF", "NUFFIELD"], test_problems)
 n_tests = length(test_problems)
 
-# Alocate matrices to store test results
-n_solvers = 2
-times = Array{Float64}(0, n_solvers)
-status = Array{Symbol}(0, n_solvers)
-values = Array{Float64}(0, n_solvers)
+# Create vector to store result
+times = Array{Float64}(0)
+status = Array{Symbol}(0)
+values = Array{Float64}(0)
 
 # Run benchmarks
+report = open(string(solver_name, "_cutest.txt"), "w")
 for i = 1:n_tests
     name = test_problems[i]
     println("\nSolving Problem $name - $i of $n_tests.\n")
@@ -73,20 +76,20 @@ for i = 1:n_tests
         println("*************************************************************\n")
     end
     t, s, v = cutest_bench(name)
-    times = [times; t]
-    status = [status; s]
-    values = [values; v]
+    push!(times, t)
+    push!(status, s)
+    push!(values, v)
     println("\n*************************************************************")
+    println("Problem name = ", name)
     println("Times = ", t)
     println("Status = ", s)
     println("Obj values = ", v)
     println("*************************************************************\n")
+    line = @sprintf("%-14s%-14s%12.4e\t%12.4e\t%12.4e\n", name, s, t,
+        (s == :Optimal ? t : -t), v)
+    write(report, line)
+    flush(report)
 end
-println("Solved ", size(times)[1], " problems.")
+close(report)
 
-# Generate a simple performance profile
-T = copy(times)
-T[status[:,1] .!= :Optimal, 1] *= -1
-T[status[:,2] .!= :Optimal, 2] *= -1
-performance_profile(T, ["Ipopt", "Algencan"], title="Simple test")
-savefig("profile.png")
+println("Solved ", size(times)[1], " problems.")

@@ -283,7 +283,8 @@ function loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     g_lb, g_ub = float(g_lb), float(g_ub)
     model.g_sense, model.g_two_sides, model.g_two_smap = treat_lower_bounds(
         g_lb, g_ub)
-    model.g_has_lb = (minimum(model.g_sense) == -1)||maximum(model.g_two_sides)
+    model.g_has_lb = (model.m > 0 && (minimum(model.g_sense) == -1 ||
+        maximum(model.g_two_sides)))
     g_only_low = (model.g_sense .== -1.0)
     model.g_lb, model.g_ub = g_lb, g_ub
     # println("lb = ", g_lb[model.g_two_sides])
