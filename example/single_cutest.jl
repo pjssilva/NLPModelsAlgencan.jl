@@ -10,7 +10,10 @@ model = NLPtoMPB(nlp, solver)
 MathProgBase.optimize!(model)
 finalize(nlp)
 
-solver = AlgencanSolver(ITERATIONS_OUTPUT_DETAIL=10,epsfeas=1.0e-5, epsopt=1.0e-5)
+solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5,
+    efstain=sqrt(1.0e-5), eostain=1.0e-5^1.5, efacc=sqrt(1.0e-5),
+    eoacc=sqrt(1.0e-5),
+    ITERATIONS_OUTPUT_DETAIL=15, NUMBER_OF_ARRAYS_COMPONENTS_IN_OUTPUT=0)
 nlp = CUTEstModel("MPC7")
 model = NLPtoMPB(nlp, solver)
 MathProgBase.optimize!(model)

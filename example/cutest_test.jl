@@ -17,16 +17,17 @@ push!(LOAD_PATH, "../src/")
 using Algencan
 # Algencan tolerances
 const solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5,
-    efstin=sqrt(1.0e-5), eostin=1.0e-5^1.5, efacc=sqrt(1.0e-5),
+    efstain=sqrt(1.0e-5), eostain=1.0e-5^1.5, efacc=sqrt(1.0e-5),
     eoacc=sqrt(1.0e-5),
-    ITERATIONS_OUTPUT_DETAIL=10, NUMBER_OF_ARRAYS_COMPONENTS_IN_OUTPUT=0)
-const solver_name = "algencan"
+    ITERATIONS_OUTPUT_DETAIL=0, NUMBER_OF_ARRAYS_COMPONENTS_IN_OUTPUT=0)
+    # SKIP_ACCELERATION_PROCESS=1)
+const solver_name = "algencan_hsl_accel"
 
 # # Alternative definition to run Ipopt
 # using Ipopt
 # const solver = IpoptSolver(tol=1.0e-7, constr_viol_tol=1.0e-5,
 #     compl_inf_tol=1.0e-5, print_level=5, print_frequency_iter=100,
-#     max_iter=10000, max_cpu_time=3600.0),
+#     max_iter=10000, max_cpu_time=3600.0)
 # const solver_name = "ipopt"
 
 function cutest_bench(name)
@@ -52,7 +53,7 @@ cutest_bench("HS6")
 # Grab a list of CUTEst tests
 test_problems = CUTEst.select(;min_var=200, max_var=2000, min_con=10)
 # Exclude tests that are known to take too long
-filter(name -> name ∉ ["SMMPSF", "NUFFIELD"], test_problems)
+test_problems = filter(name -> name ∉ ["SPINOP"], test_problems)
 n_tests = length(test_problems)
 
 # Create vector to store result

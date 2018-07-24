@@ -41,8 +41,8 @@ struct AlgencanSolver <: AbstractMathProgSolver
         options = Dict(
             :epsfeas=>1.0e-08,
             :epsopt=>1.0e-08,
-            :efstin=>sqrt.(1.0e-8),
-            :eostin=>(1.0e-8)^1.5,
+            :efstain=>sqrt.(1.0e-8),
+            :eostain=>(1.0e-8)^1.5,
             :efacc=>sqrt(1.0e-8),
             :eoacc=>sqrt(1.0e-8),
             :outputfnm=>"",
@@ -190,7 +190,7 @@ export getvartype
 Set parameter for a solver, that will be default for all next models
 
 You can use any Algencan parameter that can be set in a specification file plus
-:epsfeas, :epsopt, :efstin, :eostin, efacc, :eoac, :outputfnm, :specfnm.
+:epsfeas, :epsopt, :efstain, :eostain, efacc, :eoac, :outputfnm, :specfnm.
 
 See more details in Algencan documentation.
 """
@@ -400,8 +400,8 @@ function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
     end
     jcol_ind = unsafe_wrap(Array, jcol_ptr, Int(lim))
     jrow_ind = unsafe_wrap(Array, jrow_ptr, Int(lim))
-    jrow_ind[1:nnz] = model.j_row_inds
-    jcol_ind[1:nnz] = model.j_col_inds
+    jrow_ind[1:nnz] .= model.j_row_inds
+    jcol_ind[1:nnz] .= model.j_col_inds
 
     # Compute the constraints Jacobian
     J = unsafe_wrap(Array, jval_ptr, Int(lim))
@@ -409,7 +409,7 @@ function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
 
     # Treat the presence of lower bound in the constraints
     if model.g_has_lb
-        for i = 1:length(model.j_row_inds)
+        @inbounds for i = 1:length(model.j_row_inds)
             # +1, -1 to translate from C indexing to Julia indexing
             rind, cind = model.j_row_inds[i] + 1, model.j_col_inds[i]
             if model.g_two_sides[rind]
@@ -449,8 +449,8 @@ function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     unsafe_store!(hnnz_ptr, Cint(nnz))
     hcol_ind = unsafe_wrap(Array, hcol_ptr, Int(lim))
     hrow_ind = unsafe_wrap(Array, hrow_ptr, Int(lim))
-    hrow_ind[1:nnz] = model.h_row_inds
-    hcol_ind[1:nnz] = model.h_col_inds
+    hrow_ind[1:nnz] .= model.h_row_inds
+    hcol_ind[1:nnz] .= model.h_col_inds
 
     # Compute scaled multipliers
     σ = scale_f*model.sense
@@ -568,8 +568,8 @@ function optimize!(model::AlgencanMathProgModel)
     # Parameters controling precision
     epsfeas = [model.options[:epsfeas]]
     epsopt = [model.options[:epsopt]]
-    efstin = [model.options[:efstin]]
-    eostin = [model.options[:eostin]]
+    efstain = [model.options[:efstain]]
+    eostain = [model.options[:eostain]]
     efacc  = [model.options[:efacc]]
     eoacc  = [model.options[:eoacc]]
 
@@ -605,8 +605,8 @@ function optimize!(model::AlgencanMathProgModel)
             Cint,                                        # hnnzmax,
             Ref{Cdouble},                                # *epsfeas,
             Ref{Cdouble},                                # *epsopt,
-            Ref{Cdouble},                                # *efstin,
-            Ref{Cdouble},                                # *eostin,
+            Ref{Cdouble},                                # *efstain,
+            Ref{Cdouble},                                # *eostain,
             Ref{Cdouble},                                # *efacc,
             Ref{Cdouble},                                # *eoacc,
             Cstring,                                     # *outputfnm,
@@ -631,7 +631,7 @@ function optimize!(model::AlgencanMathProgModel)
         ),
         myevalf, myevalg, myevalh, myevalc, myevaljac, myevalhc, myevalfc,
         myevalgjac, myevalgjacp, myevalhl, myevalhlp, jcnnzmax, hnnzmax,
-        epsfeas, epsopt, efstin, eostin, efacc, eoacc, outputfnm, specfnm,
+        epsfeas, epsopt, efstain, eostain, efacc, eoacc, outputfnm, specfnm,
         nvparam, vparam, model.n, model.x, model.lb, model.ub, m, mult,
         is_equality, is_g_linear, coded, checkder, f, cnorm, snorm,
         nlpsupn, inform
@@ -658,7 +658,7 @@ export optimize!
 
 "Transform the option dictionary into a vparam string array"
 function option2vparam(model::AlgencanMathProgModel)
-    parameters = [:epsfeas, :epsopt, :efstin, :eostin, :efacc, :eoacc,
+    parameters = [:epsfeas, :epsopt, :efstain, :eostain, :efacc, :eoacc,
         :outputfnm, :specfnm]
     vparam = Vector{String}(0)
     for option in model.options
