@@ -20,7 +20,7 @@ provides(SimpleBuild,
             CreateDirectory("src")
             CreateDirectory("usr")
             CreateDirectory("usr/lib")
-            `tar -zxf downloads/algencan-3.0.0-beta.tgz -C src/` # Remove this later
+            `tar -zxf downloads/algencan-3.1.1-beta.tgz -C src/` # Remove this later
             @build_steps begin
               ChangeDirectory(algencan_dirname)
               # Compile with Makefile and flags
