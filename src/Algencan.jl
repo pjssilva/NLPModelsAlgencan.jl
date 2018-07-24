@@ -3,7 +3,7 @@ __precompile__()
 """
 Algencan interface to MathProgBase and JuMP.
 
-See its [Git hub page](https://github.com/pjssilva/Algencan.jl)
+See its [GitHub page](https://github.com/pjssilva/Algencan.jl)
 """
 module Algencan
 
@@ -21,7 +21,7 @@ if isfile(joinpath(dirname(@__FILE__),"..","deps","deps.jl"))
     include("../deps/deps.jl")
     const algencan_lib_path = libalgencan
 else
-    const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"], 
+    const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"],
         "libalgencan.so"))
 end
 
