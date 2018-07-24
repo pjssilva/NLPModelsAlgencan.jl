@@ -1,0 +1,34 @@
+language: julia
+
+# TODO: Check if OSX steps are all necessary
+
+matrix:
+  include:
+    - os: linux
+      julia: 0.6
+    - os: osx
+      julia: 0.6
+
+addons:
+  apt_packages:
+    - gfortran
+
+branches:
+  only:
+    - master
+
+before_install:
+  - if [ `uname` == "Linux" ]; then unset DY_LIBRARY_PATH; fi
+  - if [ `uname` == "Darwin" ]; then brew update && brew install gcc; fi
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+
+install:
+  - julia -e 'versioninfo()'
+  - julia -E 'Pkg.clone(pwd());'
+  - julia -E 'Pkg.build("Algencan");'
+
+script:
+  - julia --check-bounds=yes -E 'Pkg.test("Algencan"; coverage=true)'
+
+after_success:
+  - julia -e 'cd(Pkg.dir("Algencan")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
