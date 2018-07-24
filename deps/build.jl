@@ -21,7 +21,7 @@ provides(SimpleBuild,
               CreateDirectory("src")
               CreateDirectory("usr")
               CreateDirectory("usr/lib")
-              `tar -zxf downloads/algencan-3.1.1-beta.tgz -C src/` # Remove this later                
+              `tar -zxf downloads/algencan-3.1.1.tgz -C src/` # Remove this later                
             end
             @build_steps begin
               ChangeDirectory(algencan_dirname)
