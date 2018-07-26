@@ -17,12 +17,12 @@ module Algencan
 # amplexe = joinpath(dirname(libipopt), "..", "bin", "ipopt")
 
 # Compiles to the *static* path of the algencan library
-if isfile(joinpath(dirname(@__FILE__),"..","deps","deps.jl"))
-    include("../deps/deps.jl")
-    const algencan_lib_path = libalgencan
-else
+if "ALGENCAN_LIB_DIR" in keys(ENV)
     const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"],
         "libalgencan.so"))
+elseif isfile(joinpath(dirname(@__FILE__),"..","deps","deps.jl"))
+    include("../deps/deps.jl")
+    const algencan_lib_path = libalgencan
 end
 
 
