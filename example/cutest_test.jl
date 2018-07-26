@@ -12,8 +12,6 @@ using MathProgBase
 using NLPModels
 using CUTEst
 
-# Define the solver (you may want to edit here)
-push!(LOAD_PATH, "../src/")
 using Algencan
 # Algencan tolerances
 const solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5,

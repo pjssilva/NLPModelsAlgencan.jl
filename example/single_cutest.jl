@@ -1,4 +1,3 @@
-push!(LOAD_PATH, "../src/")
 using MathProgBase
 using NLPModels
 using CUTEst

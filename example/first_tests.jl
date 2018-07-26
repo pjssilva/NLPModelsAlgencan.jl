@@ -1,5 +1,3 @@
-
-push!(LOAD_PATH, "../src")
 using JuMP
 using Ipopt
 using Algencan
