@@ -49,9 +49,13 @@ end
 cutest_bench("HS6")
 
 # Grab a list of CUTEst tests
+
+# Tests that generete error in Algencan, probably it tries to compute values
+# outside the functions domains.
+tests_with_error = ["SPINOP", "DITTERT", "LEUVEN4", "KTMODEL"]
 test_problems = CUTEst.select(;min_var=200, max_var=2000, min_con=10)
 # Exclude tests that are known to take too long
-test_problems = filter(name -> name ∉ ["SPINOP"], test_problems)
+test_problems = filter(name -> name ∉ tests_with_error, test_problems)
 n_tests = length(test_problems)
 
 # Create vector to store result

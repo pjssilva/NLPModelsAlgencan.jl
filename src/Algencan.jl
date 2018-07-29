@@ -379,6 +379,13 @@ function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
 
     # Report that evaluation of successful
     unsafe_store!(flag_ptr, Cint(0))
+
+    # println("Values")
+    # @printf("%.16e\n", obj_val)
+    # for i =1:length(g)
+    #     @printf("%.16e\n", g[i])
+    # end
+    # println()
     nothing
 end
 
@@ -430,6 +437,17 @@ function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
     end
     unsafe_store!(jnnz_ptr, nnz)
 
+    # println("Jacobian")
+    # for i=1:length(x)
+    #     @printf("%.16e\t%.16e\n", x[i], f_grad[i])
+    # end
+    # println()
+
+    # for i=1:nnz
+    #     @printf("(%d,%d) %.16e\n", jrow_ind[i], jcol_ind[i], J[i])
+    # end
+    # println()
+
     # Declare success
     unsafe_store!(flag_ptr, Cint(0))
     nothing
@@ -463,9 +481,9 @@ function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     alg_mult = unsafe_wrap(Array, mult_ptr, Int(m))
     scale_g = unsafe_wrap(Array, scale_g_ptr, Int(m))
     if !model.g_has_lb
-        μ = alg_mult .* scale_g
+        μ = model.g_sense .* scale_g .* alg_mult
     else
-        μ = alg_mult[1:model.m] .* scale_g[1:model.m]
+        μ = model.g_sense .* scale_g[1:model.m] .* alg_mult[1:model.m] 
         μ[model.g_two_sides] -= scale_g[model.m + 1:m] .* alg_mult[model.m + 1:m]
     end
 
@@ -475,6 +493,17 @@ function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     MathProgBase.eval_hesslag(model.evaluator, H, x, σ, μ)
     unsafe_store!(flag_ptr, Cint(0))
     nothing
+
+    # println("Hessian")
+    # for i=1:length(μ)
+    #     @printf("%.16e\n",  μ[i])
+    # end
+    # println()
+
+    # for i=1:nnz
+    #     @printf("(%d,%d) %.16e\n", hrow_ind[i], hcol_ind[i], H[i])
+    # end
+    # println("_______________________________________________________")
 end
 
 "Compute the Hessian of the Lagrangian times p as required by Algencan"
