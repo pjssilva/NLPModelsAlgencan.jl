@@ -52,7 +52,7 @@ cutest_bench("HS6")
 
 # Tests that generete error in Algencan, probably it tries to compute values
 # outside the functions domains.
-tests_with_error = ["SPINOP", "DITTERT", "LEUVEN4", "KTMODEL"]
+tests_with_error = ["SPINOP", "DITTERT", "LEUVEN4", "KTMODEL", "TRO21X5"]
 test_problems = CUTEst.select(;min_var=200, max_var=2000, min_con=10)
 # Exclude tests that are known to take too long
 test_problems = filter(name -> name ∉ tests_with_error, test_problems)
@@ -72,7 +72,7 @@ for i = 1:n_tests
     nlp = CUTEstModel(name)
     skip = has_lb_const(nlp.meta.lcon, nlp.meta.ucon)
     finalize(nlp)
-    if !skip
+    if skip
         println("\n*************************************************************")
         println("Problem $name ")
         println("it has lower bound constraints check result")
