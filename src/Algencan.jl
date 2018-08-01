@@ -94,7 +94,13 @@ mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
     mult::Vector{Float64}           # Final Lagrange multipliers on constraints
     obj_val::Float64                # Final objective
     status::Symbol                  # Final status
+
+    # Performance information
     solve_time::Float64             # Total solution time
+    n_fc::Int                       # Number of funciton evaluations
+    n_gjac::Int                     # Number of gradients and Jacobian evaluations
+    n_hl::Int                       # Number of Hessian evaluations
+    n_hlp::Int                      # Number of Hessian times vector
 
     # Options to be passed to the solver
     options
@@ -114,6 +120,8 @@ mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
         model.h_row_inds, model.h_col_inds = Int[], Int[]
         model.x, model.g, model.mult = Float64[], Float64[], Float64[]
         model.obj_val, model.status = 0.0, :Undefined
+        model.solve_time = 0.0
+        model.n_fc, model.n_gjac, model.n_hl, model.n_hlp = 0, 0, 0, 0
         model.options = options
         model
     end
@@ -264,6 +272,17 @@ function setmultwarmstart!(model::AlgencanMathProgModel, mult)
 end
 export setmultwarmstart!
 
+function getnfevals(model::AlgencanMathProgModel)
+    return model.n_fc, model.n_gjac, model.n_hl, model.n_hlp
+end
+export getnfevals
+
+function resetnfevals(model::AlgencanMathProgModel)
+   model.n_fc, model.n_gjac, model.n_hl, model.n_hlp = 0, 0, 0, 0
+   nothing
+end  
+export resetnfevals
+
 # More complex funcitons
 
 "Loads the problem with its basic data and functions in a NLPEvaluator"
@@ -325,6 +344,8 @@ function loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     model.g = zeros(numConstr)
     model.mult = zeros(numConstr)
     model.obj_val, model.status = 0.0, :Undefined
+    model.solve_time = 0.0
+    model.n_fc, model.n_gjac, model.n_hl, model.n_hlp = 0, 0, 0, 0
 end
 export loadproblem!
 
@@ -360,6 +381,7 @@ function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
     model::AlgencanMathProgModel = current_algencan_model
 
     # Evaluate objective and constraints
+    model.n_fc += 1
     x = unsafe_wrap(Array, x_ptr, Int(n))
     obj_val = MathProgBase.eval_f(model.evaluator, x)
     unsafe_store!(obj_ptr, model.sense*obj_val)
@@ -390,6 +412,7 @@ function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
     model::AlgencanMathProgModel = current_algencan_model
 
     # Compute gradient of the objective
+    model.n_gjac += 1
     x = unsafe_wrap(Array, x_ptr, Int(n))
     f_grad = unsafe_wrap(Array, f_grad_ptr, Int(n))
     MathProgBase.eval_grad_f(model.evaluator, f_grad, x)
@@ -443,6 +466,7 @@ function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     lmem_ptr::Ptr{UInt8}, flag_ptr::Ptr{Cint})
     model::AlgencanMathProgModel = current_algencan_model
 
+    model.n_hl += 1
     # Get nonzero indexes.
     nnz = length(model.h_row_inds)
     if nnz > Int(lim)
@@ -486,6 +510,7 @@ function julia_hlp(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     flag_ptr::Ptr{Cint})
     model::AlgencanMathProgModel = current_algencan_model
 
+    model.n_hlp += 1
     # Compute scaled multipliers
     σ = scale_f*model.sense
     alg_mult = unsafe_wrap(Array, mult_ptr, Int(m))
