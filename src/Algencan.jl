@@ -280,7 +280,7 @@ export getnfevals
 function resetnfevals(model::AlgencanMathProgModel)
    model.n_fc, model.n_gjac, model.n_hl, model.n_hlp = 0, 0, 0, 0
    nothing
-end  
+end
 export resetnfevals
 
 # More complex funcitons
@@ -516,7 +516,7 @@ function julia_hlp(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     alg_mult = unsafe_wrap(Array, mult_ptr, Int(m))
     scale_g = unsafe_wrap(Array, scale_g_ptr, Int(m))
     if !model.g_has_lb
-        μ = model.g_sense .* alg_mult .* scale_g 
+        μ = model.g_sense .* alg_mult .* scale_g
     else
         μ = model.g_sense .* alg_mult[1:model.m] .* scale_g[1:model.m]
         μ[model.g_two_sides] -= alg_mult[model.m + 1:m] .* scale_g[model.m + 1:m]
@@ -720,26 +720,27 @@ function find_status(model::AlgencanMathProgModel, cnorm::Float64, snorm::Float6
     bounded_obj = model.sense*model.obj_val > fmin
 
     # Optimality thresholds
+    # TODO: Deal with the possibility that specfnm may overrid these constans
     epsopt, epsfeas = model.options[:epsopt], model.options[:epsfeas]
 
     # Conditions for constrained problems
     if model.m > 0
         bounded_mult = maximum(abs.(model.mult)) < max_multiplier
         feasible = cnorm <= epsfeas
-        if feasible && (!bounded_mult || !bounded_obj)
-            return :Unbounded
-        elseif feasible && nlpsupn <= epsopt && snorm <= epsopt
-            return :Optimal
-        elseif !feasible
+        if !feasible
             return :Infeasible
+        elseif !(bounded_obj && bounded_mult)
+            return :Unbounded
+        elseif nlpsupn <= epsopt && snorm <= epsopt
+            return :Optimal
         else
             return :Error
         end
     else
-        if nlpsupn <= epsopt && bounded_obj
-            return :Optimal
-        elseif !bounded_obj
+        if !bounded_obj
             return :Unbounded
+        elseif nlpsupn <= epsopt
+            return :Optimal
         else
             return :Error
         end

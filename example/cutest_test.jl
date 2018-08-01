@@ -12,8 +12,8 @@ using MathProgBase
 using NLPModels
 using CUTEst
 
-using Algencan
 # Algencan tolerances
+using Algencan
 const solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5,
     efstain=3.162278e-03, eostain=3.162278e-08, efacc=3.162278e-3,
     eoacc=3.162278e-3,
@@ -31,12 +31,13 @@ const solver_name = "algencan_hsl_accel"
 function cutest_bench(name)
     nlp = CUTEstModel(name)
     model = NLPtoMPB(nlp, solver)
-    bench_data = @timed MathProgBase.optimize!(model)
-    time = bench_data[2]
-    status = MathProgBase.status(model)
-    objval = MathProgBase.getobjval(model)
+    bench_data = @timed optimize!(model)
     finalize(nlp)
-    return time, status, objval
+    etime = bench_data[2]
+    flag = status(model)
+    objval = getobjval(model)
+    n_fc, n_ggrad, n_hl, n_hlp = getnfevals(model)
+    return flag, etime, n_fc, n_ggrad, n_hl, n_hlp, objval
 end
 
 function has_lb_const(lb, ub)
@@ -59,11 +60,6 @@ test_problems = CUTEst.select(;min_var=200, max_var=2000, min_con=10)
 test_problems = filter(name -> name ∉ avoid, test_problems)
 n_tests = length(test_problems)
 
-# Create vector to store result
-times = Array{Float64}(0)
-status = Array{Symbol}(0)
-values = Array{Float64}(0)
-
 # Run benchmarks
 report = open(string(solver_name, "_cutest.txt"), "w")
 for i = 1:n_tests
@@ -79,21 +75,18 @@ for i = 1:n_tests
         println("it has lower bound constraints check result")
         println("*************************************************************\n")
     end
-    t, s, v = cutest_bench(name)
-    push!(times, t)
-    push!(status, s)
-    push!(values, v)
+    s, t, fc, ggrad, hl, hlp, v = cutest_bench(name)
     println("\n*************************************************************")
     println("Problem name = ", name)
-    println("Times = ", t)
+    println("Performance = ", t, fc, ggrad, hl, hlp)
     println("Status = ", s)
-    println("Obj values = ", v)
+    println("Obj value = ", v)
     println("*************************************************************\n")
-    line = @sprintf("%-14s%-14s%12.4e\t%12.4e\t%12.4e\n", name, s, t,
-        (s == :Optimal ? t : -t), v)
+    line = @sprintf("%-14s%-14s%12.4e\t%10.4d\t%10.4d\t%10.4d\t%10.4d\t%12.4e\n",
+        name, s, t, fc, ggrad, hl, hlp, v)
     write(report, line)
     flush(report)
 end
 close(report)
 
-println("Solved ", size(times)[1], " problems.")
+println("Solved ", n_tests, " problems.")
