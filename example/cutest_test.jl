@@ -1,4 +1,4 @@
-# Run a series of CUTEst model to test a solver.
+# Run a series of CUTEst models to test a solver.
 #
 # Generates the report solvername_cutest.txt that can be used to create a simple
 # performance profile comparing solvers. However it should be taken into
@@ -14,11 +14,7 @@ using CUTEst
 
 # Algencan tolerances
 using Algencan
-const solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5,
-    efstain=3.162278e-03, eostain=3.162278e-08, efacc=3.162278e-3,
-    eoacc=3.162278e-3,
-    ITERATIONS_OUTPUT_DETAIL=0, NUMBER_OF_ARRAYS_COMPONENTS_IN_OUTPUT=0)
-    # SKIP_ACCELERATION_PROCESS=1)
+const solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5, specfnm="algencan.dat")
 const solver_name = "algencan_hsl_accel"
 
 # # Alternative definition to run Ipopt
@@ -52,7 +48,7 @@ cutest_bench("HS6")
 # Grab a list of CUTEst tests
 test_problems = CUTEst.select(;min_var=200, max_var=2000, min_con=10)
 
-# Aoid tests that generete error in Algencan, probably it tries to compute
+# Avoid tests that generete error in Algencan, probably it tries to compute
 # values outside the functions domains and tests that take too long (Algencan
 # does not have a timeout option).
 avoid = ["SPINOP", "DITTERT", "LEUVEN4", "KTMODEL", "TRO21X5", "NUFFIELD", "SPIN"]
