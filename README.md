@@ -34,7 +34,7 @@ a dynamic library from it as Algencan creates a static library by default.
 **Obs2: Using Algencan without HSL is quite limited. You should compile it with
 HSL whenever possible.**
 
-1. Add the option `-f PIC` to  `CFLAGS` and `FFLAGS` in the top of the main
+1. Add the option `-fPIC` to  `CFLAGS` and `FFLAGS` in the top of the main
 Makefile. Change any numbered compiler version to use the default one in your
 system. For examplo `gcc-4.9` should become `gcc`. There are now two cases:
 
