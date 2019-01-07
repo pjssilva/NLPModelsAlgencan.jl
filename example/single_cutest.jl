@@ -1,5 +1,6 @@
 using MathProgBase
 using NLPModels
+using NLPModelsJuMP
 using CUTEst
 using Algencan
 
