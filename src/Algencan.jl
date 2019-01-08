@@ -211,6 +211,7 @@ end
 
 function MPB.getconstrduals(model::AlgencanMathProgModel)
     v = model.mult
+    scale!(v, model.g_sense)
     scale!(v, model.sense)
     return v
 end
