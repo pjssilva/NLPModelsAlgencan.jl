@@ -385,7 +385,7 @@ function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
     else
         g .-= model.g_ub
     end
-    println("G algencan = ", g[1])
+    println("G algencan = ", x, g[1])
 
     # Report that evaluation of successful
     unsafe_store!(flag_ptr, Cint(0))
