@@ -81,7 +81,7 @@ mutable struct AlgencanMathProgModel <: MPB.AbstractNonlinearModel
     g_two_smap::Vector{Int}
     g_has_lb::Bool                  # true if at least one constraint has lower
                                     # bound
-    evaluator::AbstractNLPEvaluator # Evaluator for functions
+    evaluator::MPB.AbstractNLPEvaluator # Evaluator for functions
     j_row_inds::Vector{Int}         # NNZ row indexes of sparse const. Jacobian.
     j_col_inds::Vector{Int}         # NNZ col indexes of sparse const. Jacobian.
     h_row_inds::Vector{Int}         # NNZ row indexes of sparse Lag. Hessian.
@@ -290,7 +290,7 @@ export resetnfevals
 "Loads the problem with its basic data and functions in a NLPEvaluator"
 function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     numConstr::Integer, x_l, x_u, g_lb, g_ub, sense::Symbol,
-    d::AbstractNLPEvaluator)
+    d::MPB.AbstractNLPEvaluator)
 
     @assert sense == :Min || sense == :Max
 
@@ -753,7 +753,7 @@ end
 # TODO: Automate this with proper packages
 precompile(loadproblem!, (AlgencanMathProgModel, Integer, Integer,
     Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Symbol,
-    AbstractNLPEvaluator))
+    MPB.AbstractNLPEvaluator))
 precompile(option2vparam, (AlgencanMathProgModel,))
 precompile(julia_fc, (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64},
     Ptr{Cint}))
