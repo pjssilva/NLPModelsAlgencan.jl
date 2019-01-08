@@ -658,6 +658,7 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     model.obj_val = model.sense*f[1]
 
     # Deal with lower bound and two-sided contraints
+    println("FInal multipliers from Algencan", mult)
     model.mult = model.g_sense .* mult[1:model.m]
     model.mult[model.g_two_sides] -= mult[model.m + 1:m]
 
