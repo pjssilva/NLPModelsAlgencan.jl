@@ -298,14 +298,14 @@ function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     model.g_lb, model.g_ub = g_lb, g_ub
 
     model.g_ub[g_only_low] = -g_lb[g_only_low]
-    model.g_lb[g_only_low] = -Inf
+    model.g_lb[g_only_low] .= -Inf
 
     model.sense = sense == :Min ? 1.0 : -1.0
     model.evaluator = d
 
     # Constraints types
     model.is_equality = zeros(UInt8, numConstr)
-    model.is_equality[model.g_lb .== model.g_ub] = 1
+    model.is_equality[model.g_lb .== model.g_ub] .= 1
     model.is_g_linear = zeros(UInt8, numConstr)
     for i in 1:numConstr
         if MPB.isconstrlinear(d, i)
@@ -318,8 +318,8 @@ function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     h_row_inds, h_col_inds = MPB.hesslag_structure(d)
 
     # C indices start in 0
-    model.j_row_inds, model.j_col_inds = j_row_inds - 1, j_col_inds - 1
-    model.h_row_inds, model.h_col_inds = h_row_inds - 1, h_col_inds - 1
+    model.j_row_inds, model.j_col_inds = j_row_inds .- 1, j_col_inds .- 1
+    model.h_row_inds, model.h_col_inds = h_row_inds .- 1, h_col_inds .- 1
 
     # Initial values
     model.x = zeros(numVar)
@@ -336,7 +336,7 @@ function treat_lower_bounds(lb, ub)
     m = length(lb)
     sense = ones(m)
     only_lower = (-Inf .< lb) .& (ub .== Inf)
-    sense[only_lower] = -1.0
+    sense[only_lower] .= -1.0
 
     two_sides = (-Inf .< lb) .& (ub .< Inf)
 
@@ -536,7 +536,7 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     # end
     global current_algencan_model = model
 
-    tic()
+    start = time_ns()
     ###########################################################################
     # Algencan callback function wrappers
     ###########################################################################
@@ -672,7 +672,7 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     model.status = find_status(model, cnorm[1], snorm[1], nlpsupn[1],
         Int(inform[1]))
 
-    model.solve_time = toc()
+    model.solve_time = (time_ns - start) / 1000.0
     return Int(inform[1])
 
 end
