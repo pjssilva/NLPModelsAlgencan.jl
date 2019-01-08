@@ -376,6 +376,9 @@ function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
         first_g = view(g, 1:model.m)
         g[model.m + 1:m] = -first_g[model.g_two_sides] +
             model.g_lb[model.g_two_sides]
+        # TODO: I have the feeling that this is overkill and JuMP will only allow
+        # lower bound contraints when there are two bounds and hence 
+        # g_sense would always be equal to 1.0
         for i = 1:model.m
             if model.g_sense[i] == 1.0
                 g[i] -= model.g_ub[i]
