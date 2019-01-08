@@ -373,10 +373,15 @@ function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
     # Treat lower bounds and two-sided constraints
     if model.g_has_lb
         first_g = view(g, 1:model.m)
-        first_g .*= model.g_sense
         g[model.m + 1:m] = -first_g[model.g_two_sides] +
             model.g_lb[model.g_two_sides]
-        first_g .-= model.g_ub
+        for i = 1:model.m
+            if model.g_sense[i] == 1.0
+                g[i] -= model.g_ub[i]
+            else
+                g[i] = -g[i] + model.g_ln[i]
+            end
+        end
     else
         g .-= model.g_ub
     end
