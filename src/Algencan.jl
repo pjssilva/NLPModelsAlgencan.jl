@@ -225,12 +225,12 @@ function MPB.setwarmstart!(model::AlgencanMathProgModel, x)
 end
 export setwarmstart!
 
-function MPB.getconstrduals(model::AlgencanMathProgModel)
+function getconstrduals(model::AlgencanMathProgModel)
     v = model.mult
     scale!(v, model.sense)
     return v
 end
-export MPB.getconstrduals
+export getconstrduals
 
 "Return mutipliers associated with bound cosntraints"
 function MPB.getreducedcosts(model::AlgencanMathProgModel)
