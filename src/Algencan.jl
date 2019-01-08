@@ -35,7 +35,6 @@ global current_algencan_problem
 # Standard LP interface
 import MathProgBase
 MPB = MathProgBase
-# import MathProgBase.SolverInterface
 import Base.copy
 
 ###############################################################################
@@ -138,65 +137,65 @@ MPB.LinearQuadraticModel(s::AlgencanSolver) = MPB.NonlinearToLPQPBridge(MPB.Nonl
 
 # Simple functions
 "Return the current primal point, the solution after calling optimize"
-getsolution(model::AlgencanMathProgModel) = model.x
+MPB.getsolution(model::AlgencanMathProgModel) = model.x
 export getsolution
 
 "Get objective value at current primal point"
-getobjval(model::AlgencanMathProgModel) = model.sense*model.obj_val
+MPB.getobjval(model::AlgencanMathProgModel) = model.sense*model.obj_val
 export getobjval
 
 "Get current model status"
-status(model::AlgencanMathProgModel) = model.status
+MPB.status(model::AlgencanMathProgModel) = model.status
 export status
 
 "Get best bound on (local) optimal value"
-getobjbound(m::AlgencanMathProgModel) = model.status == :optimal ? getobjval(m) : m.sense*Inf
+MPB.getobjbound(m::AlgencanMathProgModel) = model.status == :optimal ? getobjval(m) : m.sense*Inf
 export getobjbound
 
 "Get gap to (local) optimality"
-getobjgap(m::AlgencanMathProgModel) = model.status == :Optimal ? 0.0 : Inf
+MPB.getobjgap(m::AlgencanMathProgModel) = model.status == :Optimal ? 0.0 : Inf
 export getobjgap
 
 "There is no inner solver, all functionality is exposed by the default interface"
-getrawsolver(m::AlgencanMathProgModel) = nothing
+MPB.getrawsolver(m::AlgencanMathProgModel) = nothing
 export getrawsolver
 
 "Get the solution time"
-getsolvetime(m::AlgencanMathProgModel) = m.solve_time
+MPB.getsolvetime(m::AlgencanMathProgModel) = m.solve_time
 export getsolvetime
 
 "Change optimization sense, either :Min or :Max"
-function setsense!(m::AlgencanMathProgModel, sense)
+function MPB.setsense!(m::AlgencanMathProgModel, sense)
     m.sense = sense == :Max ? -1 : 1
 end
 export setsense!
 
 "Return problem sense"
-getsense(model::AlgencanMathProgModel) = (model.sense == 1 ? :Min : :Max)
+MPB.getsense(model::AlgencanMathProgModel) = (model.sense == 1 ? :Min : :Max)
 export getsense
 
 "Return the number of decision variables"
-numvar(model::AlgencanMathProgModel) = model.n
+MPB.numvar(model::AlgencanMathProgModel) = model.n
 export numvar
 
 "Return the number of constraints"
-numconstr(model::AlgencanMathProgModel) = model.m
+MPB.numconstr(model::AlgencanMathProgModel) = model.m
 export numconstr
 
 "Return a copy of the current model"
-copy(m::AlgencanMathProgModel) = deepcopy(m)
+MPB.copy(m::AlgencanMathProgModel) = deepcopy(m)
 export copy
 
 "Algencan only deals with continuous variable, so inform if this is not the case"
- function setvartype!(m::AlgencanMathProgModel, v::Vector{Symbol})
-     if !all(v .== :Cont)
-         throw("Algencan ony deals with continuous variables")
-     end
- end
+function MPB.setvartype!(m::AlgencanMathProgModel, v::Vector{Symbol})
+    if !all(v .== :Cont)
+        throw("Algencan ony deals with continuous variables")
+    end
+end
 export setvartype!
 
 "Return variable types: they are all continuous"
-function getvartype(model::AlgencanMathProgModel)
+function MPB.getvartype(model::AlgencanMathProgModel)
     types = Vector{Symbol}(model.m)
     types .= :Cont
     return types
@@ -211,7 +210,7 @@ You can use any Algencan parameter that can be set in a specification file plus
 
 See more details in Algencan documentation.
 """
-function setparameters!(m::Union{AlgencanSolver, AlgencanMathProgModel};
+function MPB.setparameters!(m::Union{AlgencanSolver, AlgencanMathProgModel};
     kwargs...)
 
     for (key, value) in kwargs
@@ -221,12 +220,12 @@ end
 export setparameters
 
 "Set an initial value for the decision variables (warmstart)"
-function setwarmstart!(model::AlgencanMathProgModel, x)
+function MPB.setwarmstart!(model::AlgencanMathProgModel, x)
     model.x = copy(x)
 end
 export setwarmstart!
 
-function getconstrduals(model::AlgencanMathProgModel)
+function MPB.getconstrduals(model::AlgencanMathProgModel)
     v = model.mult
     scale!(v, model.sense)
     return v
@@ -234,7 +233,7 @@ end
 export getconstrduals
 
 "Return mutipliers associated with bound cosntraints"
-function getreducedcosts(model::AlgencanMathProgModel)
+function MPB.getreducedcosts(model::AlgencanMathProgModel)
     if model.status != :Optimal
         throw("Cannot compute reduced costs: problem not solved to optimality")
     end
@@ -247,12 +246,12 @@ function getreducedcosts(model::AlgencanMathProgModel)
 
     # # Objective function
     # grad_lag = Vector{Float64}(model.n)
-    # MathProgBase.eval_grad_f(model.evaluator, grad_lag, model.x)
+    # MPB.eval_grad_f(model.evaluator, grad_lag, model.x)
     # grad_lag *= model.sense
     #
     # # Add the multiplier combination of the contraints gradients
     # grad_g = Vector{Float64}(model.n)
-    # MathProgBase.eval_jac_prod_t(model.evaluator, grad_g, model.x, model.mult)
+    # MPB.eval_jac_prod_t(model.evaluator, grad_g, model.x, model.mult)
     #
     # grad_lag .+= grad_g
     #
@@ -270,17 +269,17 @@ export getreducedcosts
 # Simple function only defined for Algencan models
 
 "Set an inital value for the constaint mutipliers (warmstart)"
-function setmultwarmstart!(model::AlgencanMathProgModel, mult)
+function MPB.setmultwarmstart!(model::AlgencanMathProgModel, mult)
     model.mult = copy(mult)
 end
 export setmultwarmstart!
 
-function getnfevals(model::AlgencanMathProgModel)
+function MPB.getnfevals(model::AlgencanMathProgModel)
     return model.n_fc, model.n_gjac, model.n_hl, model.n_hlp
 end
 export getnfevals
 
-function resetnfevals(model::AlgencanMathProgModel)
+function MPB.resetnfevals(model::AlgencanMathProgModel)
    model.n_fc, model.n_gjac, model.n_hl, model.n_hlp = 0, 0, 0, 0
    nothing
 end
@@ -289,7 +288,7 @@ export resetnfevals
 # More complex funcitons
 
 "Loads the problem with its basic data and functions in a NLPEvaluator"
-function loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
+function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     numConstr::Integer, x_l, x_u, g_lb, g_ub, sense::Symbol,
     d::AbstractNLPEvaluator)
 
@@ -297,12 +296,12 @@ function loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
 
     # Link the model with the problem representation
     # Initialize the evaluator with the right features
-    features = features_available(d)
+    features = MPB.features_available(d)
     has_hessian = (:Hess in features)
     init_feat = [:Grad]
     has_hessian && push!(init_feat, :Hess)
     numConstr > 0 && push!(init_feat, :Jac)
-    initialize(d, init_feat)
+    MPB.initialize(d, init_feat)
 
     # Copy data
     model.n = numVar
@@ -329,14 +328,14 @@ function loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     model.is_equality[model.g_lb .== model.g_ub] = 1
     model.is_g_linear = zeros(UInt8, numConstr)
     for i in 1:numConstr
-        if MathProgBase.isconstrlinear(d, i)
+        if MPB.isconstrlinear(d, i)
             model.is_g_linear[i] = 1
         end
     end
 
     # Get strutural indices of Jacobian and Hessian.
-    j_row_inds, j_col_inds = MathProgBase.jac_structure(d)
-    h_row_inds, h_col_inds = MathProgBase.hesslag_structure(d)
+    j_row_inds, j_col_inds = MPB.jac_structure(d)
+    h_row_inds, h_col_inds = MPB.hesslag_structure(d)
 
     # C indices start in 0
     model.j_row_inds, model.j_col_inds = j_row_inds - 1, j_col_inds - 1
@@ -386,10 +385,10 @@ function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
     # Evaluate objective and constraints
     model.n_fc += 1
     x = unsafe_wrap(Array, x_ptr, Int(n))
-    obj_val = MathProgBase.eval_f(model.evaluator, x)
+    obj_val = MPB.eval_f(model.evaluator, x)
     unsafe_store!(obj_ptr, model.sense*obj_val)
     g = unsafe_wrap(Array, g_ptr, Int(m))
-    MathProgBase.eval_g(model.evaluator, g, x)
+    MPB.eval_g(model.evaluator, g, x)
 
     # Treat lower bounds and two-sided constraints
     if model.g_has_lb
@@ -418,7 +417,7 @@ function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
     model.n_gjac += 1
     x = unsafe_wrap(Array, x_ptr, Int(n))
     f_grad = unsafe_wrap(Array, f_grad_ptr, Int(n))
-    MathProgBase.eval_grad_f(model.evaluator, f_grad, x)
+    MPB.eval_grad_f(model.evaluator, f_grad, x)
     scale!(f_grad, model.sense)
 
     # Find structure of the constraints Jacobian
@@ -437,7 +436,7 @@ function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
 
     # Compute the constraints Jacobian
     J = unsafe_wrap(Array, jval_ptr, Int(lim))
-    MathProgBase.eval_jac_g(model.evaluator, J, x)
+    MPB.eval_jac_g(model.evaluator, J, x)
 
     # Treat the presence of lower bound in the constraints
     if model.g_has_lb
@@ -499,7 +498,7 @@ function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     # Evaluate the Hessian
     x = unsafe_wrap(Array, x_ptr, Int(n))
     H = unsafe_wrap(Array, hval_ptr, Int(lim))
-    MathProgBase.eval_hesslag(model.evaluator, H, x, σ, μ)
+    MPB.eval_hesslag(model.evaluator, H, x, σ, μ)
 
     # Declare success
     unsafe_store!(flag_ptr, Cint(0))
@@ -529,7 +528,7 @@ function julia_hlp(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     x = unsafe_wrap(Array, x_ptr, Int(n))
     p = unsafe_wrap(Array, p_ptr, Int(n))
     hp = unsafe_wrap(Array, hp_ptr, Int(n))
-    MathProgBase.eval_hesslag_prod(model.evaluator, hp, x, p,
+    MPB.eval_hesslag_prod(model.evaluator, hp, x, p,
         σ, μ)
 
     # Declare success
@@ -537,7 +536,7 @@ function julia_hlp(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     nothing
 end
 
-function optimize!(model::AlgencanMathProgModel)
+function MPB.optimize!(model::AlgencanMathProgModel)
     # TODO: Allow warm start primal and specially dual
     #copy!(model.inner.x, model.warmstart) # set warmstart
     # TODO: No options for now
