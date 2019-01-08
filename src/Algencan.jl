@@ -536,7 +536,7 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     # end
     global current_algencan_model = model
 
-    start = time_ns()
+    start_time = time_ns()
     ###########################################################################
     # Algencan callback function wrappers
     ###########################################################################
@@ -672,7 +672,7 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     model.status = find_status(model, cnorm[1], snorm[1], nlpsupn[1],
         Int(inform[1]))
 
-    model.solve_time = (time_ns - start) / 1000.0
+    model.solve_time = (time_ns() - start_time) / 1000.0
     return Int(inform[1])
 
 end
