@@ -764,7 +764,7 @@ precompile(julia_hl, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Float64,
     Ptr{UInt8}, Ptr{Cint}))
 precompile(julia_hlp, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Float64,
     Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{UInt8}, Ptr{Cint}))
-precompile(optimize!, (AlgencanMathProgModel,))
+precompile(MPB.optimize!, (AlgencanMathProgModel,))
 precompile(find_status, (AlgencanMathProgModel, Float64, Float64, Float64, Int))
 
 end # module
