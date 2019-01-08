@@ -672,7 +672,7 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     model.status = find_status(model, cnorm[1], snorm[1], nlpsupn[1],
         Int(inform[1]))
 
-    model.solve_time = (time_ns() - start_time) / 1000.0
+    model.solve_time = (time_ns() - start_time) / 1.0e+9
     return Int(inform[1])
 
 end
