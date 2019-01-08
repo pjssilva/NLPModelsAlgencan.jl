@@ -379,7 +379,7 @@ function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
             if model.g_sense[i] == 1.0
                 g[i] -= model.g_ub[i]
             else
-                g[i] = -g[i] + model.g_ln[i]
+                g[i] = -g[i] + model.g_lb[i]
             end
         end
     else
