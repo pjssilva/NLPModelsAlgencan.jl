@@ -8,6 +8,7 @@ See its [GitHub page](https://github.com/pjssilva/Algencan.jl)
 module Algencan
 
 using LinearAlgebra
+using Libdl
 
 # TODO: This looks like things to allow for automatic download and
 #       compilation of dependencies. Deal with it later.
