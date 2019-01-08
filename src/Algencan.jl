@@ -209,6 +209,7 @@ function MPB.setwarmstart!(model::AlgencanMathProgModel, x)
     model.x = copy(x)
 end
 
+"TODO: treat constraints with both sides"
 function MPB.getconstrduals(model::AlgencanMathProgModel)
     v = model.mult
     scale!(v, model.g_sense)
