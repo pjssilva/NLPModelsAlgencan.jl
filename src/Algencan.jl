@@ -209,7 +209,7 @@ function MPB.setwarmstart!(model::AlgencanMathProgModel, x)
     model.x = copy(x)
 end
 
-function getconstrduals(model::AlgencanMathProgModel)
+function MPB.getconstrduals(model::AlgencanMathProgModel)
     v = model.mult
     scale!(v, model.sense)
     return v
