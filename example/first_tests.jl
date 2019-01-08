@@ -13,7 +13,7 @@ m2 = Model(solver=Algencan.AlgencanSolver(epsfeas=1.0e-8, epsopt=1.0e-5))
 # m2 = Model(solver=IpoptSolver())
 @variable(m2, 2.0 <= var2[1:3] <= 5.0)
 @NLobjective(m2, :Min, (var2[1] - 4)^2 + (var2[2] - 4)^2 + var2[3])
-@constraint(m2, -5 <= -(var2[1] + var2[2]))
+@constraint(m2, -5 <= -(var2[1] + var2[2]) <= 1.0e+10)
 
 # status = solve(m)
 # println("Solution status: $status.")
