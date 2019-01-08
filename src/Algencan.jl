@@ -551,18 +551,18 @@ function optimize!(model::AlgencanMathProgModel)
     ###########################################################################
     # Algencan callback function wrappers
     ###########################################################################
-    const c_julia_fc = cfunction(julia_fc, Void, (Cint, Ptr{Float64},
+    const c_julia_fc = cfunction(julia_fc, Nothing, (Cint, Ptr{Float64},
         Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Cint}))
 
-    const c_julia_gjac = cfunction(julia_gjac, Void, (Cint, Ptr{Float64},
+    const c_julia_gjac = cfunction(julia_gjac, Nothing, (Cint, Ptr{Float64},
         Ptr{Float64}, Cint, Ptr{Cint}, Ptr{Cint}, Ptr{Float64}, Ptr{Cint}, Cint,
         Ptr{UInt8}, Ptr{Cint}))
 
-    const c_julia_hl = cfunction(julia_hl, Void, (Cint, Ptr{Float64}, Cint,
+    const c_julia_hl = cfunction(julia_hl, Nothing, (Cint, Ptr{Float64}, Cint,
         Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Cint}, Ptr{Cint}, Ptr{Float64},
         Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
 
-    const c_julia_hlp = cfunction(julia_hlp, Void, (Cint, Ptr{Float64}, Cint,
+    const c_julia_hlp = cfunction(julia_hlp, Nothing, (Cint, Ptr{Float64}, Cint,
             Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Float64}, Ptr{Float64},
             Ptr{UInt8}, Ptr{Cint}))
 
@@ -623,19 +623,19 @@ function optimize!(model::AlgencanMathProgModel)
 
     ccall(
         (:c_algencan, algencan_lib_path),                # library
-        Void,                                            # Return type
+        Nothing,                                            # Return type
         (                                                # Parameters types
-            Ptr{Void},                                   # *myevalf,
-            Ptr{Void},                                   # *myevalg,
-            Ptr{Void},                                   # *myevalh,
-            Ptr{Void},                                   # *myevalc,
-            Ptr{Void},                                   # *myevaljac,
-            Ptr{Void},                                   # *myevalhc,
-            Ptr{Void},                                   # *myevalfc,
-            Ptr{Void},                                   # *myevalgjac,
-            Ptr{Void},                                   # *myevalgjacp,
-            Ptr{Void},                                   # *myevalhl,
-            Ptr{Void},                                   # *myevalhlp,
+            Ptr{Nothing},                                   # *myevalf,
+            Ptr{Nothing},                                   # *myevalg,
+            Ptr{Nothing},                                   # *myevalh,
+            Ptr{Nothing},                                   # *myevalc,
+            Ptr{Nothing},                                   # *myevaljac,
+            Ptr{Nothing},                                   # *myevalhc,
+            Ptr{Nothing},                                   # *myevalfc,
+            Ptr{Nothing},                                   # *myevalgjac,
+            Ptr{Nothing},                                   # *myevalgjacp,
+            Ptr{Nothing},                                   # *myevalhl,
+            Ptr{Nothing},                                   # *myevalhlp,
             Cint,                                        # jcnnzmax,
             Cint,                                        # hnnzmax,
             Ref{Cdouble},                                # *epsfeas,
