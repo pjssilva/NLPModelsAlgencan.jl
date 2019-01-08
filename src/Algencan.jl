@@ -34,7 +34,8 @@ global current_algencan_problem
 
 # Standard LP interface
 import MathProgBase
-using MathProgBase.SolverInterface
+MPB = MathProgBase
+# import MathProgBase.SolverInterface
 import Base.copy
 
 ###############################################################################
@@ -42,7 +43,7 @@ import Base.copy
 export AlgencanSolver
 
 "Algencan solver that stores options"
-struct AlgencanSolver <: AbstractMathProgSolver
+struct AlgencanSolver <: MPB.AbstractMathProgSolver
     options
 
     function AlgencanSolver(kwargs)
@@ -67,7 +68,7 @@ end
 AlgencanSolver(;kwargs...) = AlgencanSolver(kwargs)
 
 "Algencan model, that storing solution data"
-mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
+mutable struct AlgencanMathProgModel <: MPB.AbstractNonlinearModel
     # Problem data
     n::Int                          # Num variables
     lb::Vector{Float64}             # Lower bounds on vars
@@ -128,8 +129,8 @@ mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
         model
     end
 end
-NonlinearModel(s::AlgencanSolver) = AlgencanMathProgModel(s.options)
-LinearQuadraticModel(s::AlgencanSolver) = NonlinearToLPQPBridge(NonlinearModel(s))
+MPB.NonlinearModel(s::AlgencanSolver) = AlgencanMathProgModel(s.options)
+MPB.LinearQuadraticModel(s::AlgencanSolver) = MPB.NonlinearToLPQPBridge(MPB.NonlinearModel(s))
 
 ###############################################################################
 # Begin interface implementation
