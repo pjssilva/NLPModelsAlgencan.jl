@@ -1,6 +1,8 @@
 using JuMP
 using Ipopt
 using Algencan
+import MathProgBase
+MPB = MathProgBase
 
 # m = Model(solver=AlgencanSolver(epsopt=1.0e-5, epsfeas=1.0e-5))
 # # m = Model(solver=IpoptSolver())
@@ -22,4 +24,4 @@ status = solve(m2)
 println("Solution status: $status.")
 println("Primal-dual pair to second problem: ")
 println(getvalue(var2))
-println(getconstrduals(internalmodel(m2)))
+println(MPB.getconstrduals(internalmodel(m2)))
