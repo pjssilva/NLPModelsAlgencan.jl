@@ -405,7 +405,7 @@ function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
     x = unsafe_wrap(Array, x_ptr, Int(n))
     f_grad = unsafe_wrap(Array, f_grad_ptr, Int(n))
     MPB.eval_grad_f(model.evaluator, f_grad, x)
-    fgrad .*= model.sense
+    f_grad .*= model.sense
 
     # Find structure of the constraints Jacobian
     nnz = length(model.j_row_inds)
