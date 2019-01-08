@@ -551,18 +551,18 @@ function optimize!(model::AlgencanMathProgModel)
     ###########################################################################
     # Algencan callback function wrappers
     ###########################################################################
-    const c_julia_fc = cfunction(julia_fc, Nothing, (Cint, Ptr{Float64},
+    c_julia_fc = cfunction(julia_fc, Nothing, (Cint, Ptr{Float64},
         Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Cint}))
 
-    const c_julia_gjac = cfunction(julia_gjac, Nothing, (Cint, Ptr{Float64},
+    c_julia_gjac = cfunction(julia_gjac, Nothing, (Cint, Ptr{Float64},
         Ptr{Float64}, Cint, Ptr{Cint}, Ptr{Cint}, Ptr{Float64}, Ptr{Cint}, Cint,
         Ptr{UInt8}, Ptr{Cint}))
 
-    const c_julia_hl = cfunction(julia_hl, Nothing, (Cint, Ptr{Float64}, Cint,
+    c_julia_hl = cfunction(julia_hl, Nothing, (Cint, Ptr{Float64}, Cint,
         Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Cint}, Ptr{Cint}, Ptr{Float64},
         Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
 
-    const c_julia_hlp = cfunction(julia_hlp, Nothing, (Cint, Ptr{Float64}, Cint,
+    c_julia_hlp = cfunction(julia_hlp, Nothing, (Cint, Ptr{Float64}, Cint,
             Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Float64}, Ptr{Float64},
             Ptr{UInt8}, Ptr{Cint}))
 
