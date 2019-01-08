@@ -296,8 +296,6 @@ function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
         maximum(model.g_two_sides)))
     g_only_low = (model.g_sense .== -1.0)
     model.g_lb, model.g_ub = g_lb, g_ub
-    # println("lb = ", g_lb[model.g_two_sides])
-    # println("ub = ", g_ub[model.g_two_sides])
 
     model.g_ub[g_only_low] = -g_lb[g_only_low]
     model.g_lb[g_only_low] = -Inf
@@ -330,8 +328,6 @@ function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     model.obj_val, model.status = 0.0, :Undefined
     model.solve_time = 0.0
     model.n_fc, model.n_gjac, model.n_hl, model.n_hlp = 0, 0, 0, 0
-    println("###############################################################################")
-    println(model.g_two_sides)
 end
 
 "Analyse the lower and upper bounds on the constraints and prepare the
