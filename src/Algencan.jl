@@ -128,8 +128,8 @@ mutable struct AlgencanMathProgModel <: MPB.AbstractNonlinearModel
         model
     end
 end
-MPB.NonlinearModel(s::AlgencanSolver) = AlgencanMathProgModel(s.options)
-MPB.LinearQuadraticModel(s::AlgencanSolver) = MPB.NonlinearToLPQPBridge(MPB.NonlinearModel(s))
+NonlinearModel(s::AlgencanSolver) = AlgencanMathProgModel(s.options)
+LinearQuadraticModel(s::AlgencanSolver) = MPB.NonlinearToLPQPBridge(NonlinearModel(s))
 
 ###############################################################################
 # Begin interface implementation
