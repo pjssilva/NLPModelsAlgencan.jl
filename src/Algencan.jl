@@ -370,7 +370,6 @@ function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
     MPB.eval_g(model.evaluator, g, x)
 
     # Treat lower bounds and two-sided constraints
-    println("G from MPB = ", x, " ", g[1])
     if model.g_has_lb
         first_g = view(g, 1:model.m)
         g[model.m + 1:m] = -first_g[model.g_two_sides] +
@@ -388,7 +387,6 @@ function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
     else
         g .-= model.g_ub
     end
-    println("G algencan = ", g[1])
 
     # Report that evaluation of successful
     unsafe_store!(flag_ptr, Cint(0))
