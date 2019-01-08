@@ -34,7 +34,7 @@ global current_algencan_problem
 
 # Standard LP interface
 import MathProgBase
-importall MathProgBase.SolverInterface
+using MathProgBase.SolverInterface
 import Base.copy
 
 ###############################################################################
