@@ -330,6 +330,7 @@ function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     model.obj_val, model.status = 0.0, :Undefined
     model.solve_time = 0.0
     model.n_fc, model.n_gjac, model.n_hl, model.n_hlp = 0, 0, 0, 0
+    println(model.g_two_sides)
 end
 
 "Analyse the lower and upper bounds on the constraints and prepare the
