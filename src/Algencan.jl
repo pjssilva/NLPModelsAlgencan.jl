@@ -751,7 +751,7 @@ end
 
 # Hints to precompile
 # TODO: Automate this with proper packages
-precompile(loadproblem!, (AlgencanMathProgModel, Integer, Integer,
+precompile(MPB.loadproblem!, (AlgencanMathProgModel, Integer, Integer,
     Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Symbol,
     MPB.AbstractNLPEvaluator))
 precompile(option2vparam, (AlgencanMathProgModel,))
