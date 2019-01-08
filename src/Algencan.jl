@@ -540,20 +540,20 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     ###########################################################################
     # Algencan callback function wrappers
     ###########################################################################
-    c_julia_fc = cfunction(julia_fc, Nothing, Tuple{Cint, Ptr{Float64},
-        Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Cint}})
+    c_julia_fc = @cfunction(julia_fc, Nothing, (Cint, Ptr{Float64},
+        Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Cint}))
 
-    c_julia_gjac = cfunction(julia_gjac, Nothing, Tuple{Cint, Ptr{Float64},
+    c_julia_gjac = @cfunction(julia_gjac, Nothing, (Cint, Ptr{Float64},
         Ptr{Float64}, Cint, Ptr{Cint}, Ptr{Cint}, Ptr{Float64}, Ptr{Cint}, Cint,
-        Ptr{UInt8}, Ptr{Cint}})
+        Ptr{UInt8}, Ptr{Cint}))
 
-    c_julia_hl = cfunction(julia_hl, Nothing, Tuple{Cint, Ptr{Float64}, Cint,
+    c_julia_hl = @cfunction(julia_hl, Nothing, (Cint, Ptr{Float64}, Cint,
         Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Cint}, Ptr{Cint}, Ptr{Float64},
-        Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}})
+        Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
 
-    c_julia_hlp = cfunction(julia_hlp, Nothing, tuple{Cint, Ptr{Float64}, Cint,
+    c_julia_hlp = @cfunction(julia_hlp, Nothing, (Cint, Ptr{Float64}, Cint,
             Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Float64}, Ptr{Float64},
-            Ptr{UInt8}, Ptr{Cint}})
+            Ptr{UInt8}, Ptr{Cint}))
 
     # Call Algencan. I will do it slowly, first I create variables for all
     # Algencan's parameters, that are a lot, and then I call it.
