@@ -128,63 +128,51 @@ mutable struct AlgencanMathProgModel <: MPB.AbstractNonlinearModel
         model
     end
 end
-NonlinearModel(s::AlgencanSolver) = AlgencanMathProgModel(s.options)
-LinearQuadraticModel(s::AlgencanSolver) = MPB.NonlinearToLPQPBridge(NonlinearModel(s))
+MPB.NonlinearModel(s::AlgencanSolver) = AlgencanMathProgModel(s.options)
+MPB.LinearQuadraticModel(s::AlgencanSolver) = MPB.NonlinearToLPQPBridge(MPB.NonlinearModel(s))
 
 ###############################################################################
 # Begin interface implementation
-# TODO: Verify if I need to explicitly export something or not
+# TODO: Verify if really need not to explicitly export the MPB functions
 
 # Simple functions
 "Return the current primal point, the solution after calling optimize"
 MPB.getsolution(model::AlgencanMathProgModel) = model.x
-export getsolution
 
 "Get objective value at current primal point"
 MPB.getobjval(model::AlgencanMathProgModel) = model.sense*model.obj_val
-export getobjval
 
 "Get current model status"
 MPB.status(model::AlgencanMathProgModel) = model.status
-export status
 
 "Get best bound on (local) optimal value"
 MPB.getobjbound(m::AlgencanMathProgModel) = model.status == :optimal ? getobjval(m) : m.sense*Inf
-export getobjbound
 
 "Get gap to (local) optimality"
 MPB.getobjgap(m::AlgencanMathProgModel) = model.status == :Optimal ? 0.0 : Inf
-export getobjgap
 
 "There is no inner solver, all functionality is exposed by the default interface"
 MPB.getrawsolver(m::AlgencanMathProgModel) = nothing
-export getrawsolver
 
 "Get the solution time"
 MPB.getsolvetime(m::AlgencanMathProgModel) = m.solve_time
-export getsolvetime
 
 "Change optimization sense, either :Min or :Max"
 function MPB.setsense!(m::AlgencanMathProgModel, sense)
     m.sense = sense == :Max ? -1 : 1
 end
-export setsense!
 
 "Return problem sense"
 MPB.getsense(model::AlgencanMathProgModel) = (model.sense == 1 ? :Min : :Max)
-export getsense
 
 "Return the number of decision variables"
 MPB.numvar(model::AlgencanMathProgModel) = model.n
-export numvar
 
 "Return the number of constraints"
 MPB.numconstr(model::AlgencanMathProgModel) = model.m
-export numconstr
 
 "Return a copy of the current model"
 MPB.copy(m::AlgencanMathProgModel) = deepcopy(m)
-export copy
 
 "Algencan only deals with continuous variable, so inform if this is not the case"
 function MPB.setvartype!(m::AlgencanMathProgModel, v::Vector{Symbol})
@@ -192,7 +180,6 @@ function MPB.setvartype!(m::AlgencanMathProgModel, v::Vector{Symbol})
         throw("Algencan ony deals with continuous variables")
     end
 end
-export setvartype!
 
 "Return variable types: they are all continuous"
 function MPB.getvartype(model::AlgencanMathProgModel)
@@ -200,7 +187,6 @@ function MPB.getvartype(model::AlgencanMathProgModel)
     types .= :Cont
     return types
 end
-export getvartype
 
 """
 Set parameter for a solver, that will be default for all next models
@@ -217,20 +203,17 @@ function MPB.setparameters!(m::Union{AlgencanSolver, AlgencanMathProgModel};
         m.options[key] = value
     end
 end
-export setparameters
 
 "Set an initial value for the decision variables (warmstart)"
 function MPB.setwarmstart!(model::AlgencanMathProgModel, x)
     model.x = copy(x)
 end
-export setwarmstart!
 
 function getconstrduals(model::AlgencanMathProgModel)
     v = model.mult
     scale!(v, model.sense)
     return v
 end
-export getconstrduals
 
 "Return mutipliers associated with bound cosntraints"
 function MPB.getreducedcosts(model::AlgencanMathProgModel)
@@ -264,7 +247,6 @@ function MPB.getreducedcosts(model::AlgencanMathProgModel)
     #
     # return reduced_costs
 end
-export getreducedcosts
 
 # Simple function only defined for Algencan models
 
@@ -349,7 +331,6 @@ function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     model.solve_time = 0.0
     model.n_fc, model.n_gjac, model.n_hl, model.n_hlp = 0, 0, 0, 0
 end
-export loadproblem!
 
 "Analyse the lower and upper bounds on the constraints and prepare the
  data structure to treat lower bounds."
@@ -689,7 +670,6 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     return Int(inform[1])
 
 end
-export optimize!
 
 # Local, auxiliary functions
 
