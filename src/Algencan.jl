@@ -212,7 +212,6 @@ end
 "TODO: treat constraints with both sides"
 function MPB.getconstrduals(model::AlgencanMathProgModel)
     v = model.mult
-    v .*= model.g_sense
     scale!(v, model.sense)
     return v
 end
