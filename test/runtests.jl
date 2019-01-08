@@ -1,4 +1,4 @@
-using Algencan, JuMP, Base.Test
+using Algencan, JuMP, Test
 
 @testset "Basic model test" begin
   model = Model(solver = AlgencanSolver())

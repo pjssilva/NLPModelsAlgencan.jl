@@ -230,7 +230,7 @@ function MPB.getconstrduals(model::AlgencanMathProgModel)
     scale!(v, model.sense)
     return v
 end
-export getconstrduals
+export MPB.getconstrduals
 
 "Return mutipliers associated with bound cosntraints"
 function MPB.getreducedcosts(model::AlgencanMathProgModel)
