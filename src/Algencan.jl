@@ -683,7 +683,7 @@ end
 function option2vparam(model::AlgencanMathProgModel)
     parameters = [:epsfeas, :epsopt, :efstain, :eostain, :efacc, :eoacc,
         :outputfnm, :specfnm]
-    vparam = Vector{String}(0)
+    vparam = Array{String}(undef, 0)
     for option in model.options
         key, value = option
         if key in parameters
