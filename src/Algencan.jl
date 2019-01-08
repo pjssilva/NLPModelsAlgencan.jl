@@ -269,23 +269,23 @@ export getreducedcosts
 # Simple function only defined for Algencan models
 
 "Set an inital value for the constaint mutipliers (warmstart)"
-function MPB.setmultwarmstart!(model::AlgencanMathProgModel, mult)
+function setmultwarmstart!(model::AlgencanMathProgModel, mult)
     model.mult = copy(mult)
 end
 export setmultwarmstart!
 
-function MPB.getnfevals(model::AlgencanMathProgModel)
+function getnfevals(model::AlgencanMathProgModel)
     return model.n_fc, model.n_gjac, model.n_hl, model.n_hlp
 end
 export getnfevals
 
-function MPB.resetnfevals(model::AlgencanMathProgModel)
+function resetnfevals(model::AlgencanMathProgModel)
    model.n_fc, model.n_gjac, model.n_hl, model.n_hlp = 0, 0, 0, 0
    nothing
 end
 export resetnfevals
 
-# More complex funcitons
+# More complex funcitons from MPB interface
 
 "Loads the problem with its basic data and functions in a NLPEvaluator"
 function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
