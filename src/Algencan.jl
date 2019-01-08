@@ -292,7 +292,6 @@ function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     g_lb, g_ub = float(g_lb), float(g_ub)
     model.g_sense, model.g_two_sides, model.g_two_smap = treat_lower_bounds(
         g_lb, g_ub)
-    println(g_lb, g_ub)
     model.g_has_lb = (model.m > 0 && (minimum(model.g_sense) == -1 ||
         maximum(model.g_two_sides)))
     g_only_low = (model.g_sense .== -1.0)
@@ -343,7 +342,7 @@ function treat_lower_bounds(lb, ub)
     only_lower = (-Inf .< lb) .& (ub .== Inf)
     sense[only_lower] = -1.0
 
-    two_sides = -Inf .< lb .< ub .< Inf
+    two_sides = (-Inf .< lb) .& (ub .< Inf)
 
     new_ind = 1
     two_smap = zeros(m)
