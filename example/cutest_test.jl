@@ -28,9 +28,8 @@ function cutest_bench(name)
     etime = bench_data[2]
     flag = MPB.status(model)
     objval = MPB.getobjval(model)
-    # n_fc, n_ggrad, n_hl, n_hlp = MPB.getnfevals(model)
-    # return flag, etime, n_fc, n_ggrad, n_hl, n_hlp, objval
-    return flag, etime, 0, 0, 0, 0, objval
+    n_fc, n_ggrad, n_hl, n_hlp = MPB.getnfevals(model)
+    return flag, etime, n_fc, n_ggrad, n_hl, n_hlp, objval
 end
 
 function has_lb_const(lb, ub)
