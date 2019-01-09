@@ -18,13 +18,6 @@ using Algencan
 const solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5, specfnm="algencan.dat")
 const solver_name = "algencan_hsl_accel"
 
-# # Alternative definition to run Ipopt
-# using Ipopt
-# const solver = IpoptSolver(tol=1.0e-7, constr_viol_tol=1.0e-5,
-#     compl_inf_tol=1.0e-5, print_level=5, print_frequency_iter=100,
-#     max_iter=10000, max_cpu_time=3600.0)
-# const solver_name = "ipopt"
-
 function cutest_bench(name)
     nlp = CUTEstModel(name)
     model = NLPtoMPB(nlp, solver)
@@ -47,24 +40,10 @@ end
 cutest_bench("HS6")
 
 # Grab a list of CUTEst tests
-test_problems = CUTEst.select(;min_var=200, max_var=2000, min_con=10)
-
-# Avoid tests that generete error in Algencan, probably it tries to compute
-# values outside the functions domains and tests that take too long (Algencan
-# does not have a timeout option).
-avoid = ["SPINOP", "DITTERT", "LEUVEN4", "KTMODEL", "TRO21X5", "NUFFIELD", "SPIN"]
-# Exclude problematic tests
-test_problems = filter(name -> name ∉ avoid, test_problems)
+test_problems = readlines(open("cutest_selection.txt"))
 n_tests = length(test_problems)
 
-# Save the list of test_problems
-selection = open("cutest_selection.txt", "w")
-for p in test_problems
-    write(selection, string(p, "\n"))
-end
-close(selection)
-
-# Run benchmarks
+# Run tests
 report = open(string(solver_name, "_cutest.txt"), "w")
 for i = 1:n_tests
     name = test_problems[i]
