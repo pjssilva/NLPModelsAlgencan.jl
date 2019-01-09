@@ -20,7 +20,7 @@ a version that works with Julia 0.6.4 and move on to Julia 1.0.
 You can simply do
 
 ```julia
-Pkg.clone("Pkg.clone("https://github.com/pjssilva/Algencan.jl")
+Pkg.clone("https://github.com/pjssilva/Algencan.jl")
 Pkg.build("Algencan")
 
 ```
