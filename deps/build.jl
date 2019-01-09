@@ -53,7 +53,7 @@ provides(SimpleBuild,
               # Compile with Makefile and flags
               `make CFLAGS="-O3 -fPIC" FFLAGS="-O3 -ffree-form -fPIC"`
               # Produce a shared library on deps/usr/lib
-              `gcc -shared -o ../../usr/lib/libalgencan.dylib
+              `gfortran -shared -o ../../usr/lib/libalgencan.dylib
                     -Wl,-all_load lib/libalgencan.a
                     -Wl,-noall_load -lgfortran`
             end
