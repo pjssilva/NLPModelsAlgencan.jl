@@ -33,15 +33,14 @@ the [Tango project website](https://www.ime.usp.br/~egbirgin/tango/codes.php)
 and compile it yourself, following the authors instructions to use the HSL
 libraries and the directions below. Note that the Algencan library has to be
 available before installing Algencan.jl so that it can be used by it at
-installation. So this compilation needs to be done before doint the
+installation. So this compilation needs to be done before doing the
 `Pkg.clone`.
 
 ### Hints to self compilation of Algencan with HSL libraries
 
 1. Add the option `-fPIC` to  `CFLAGS` and `FFLAGS` in the top of the main
 Makefile. Change any numbered compiler version to use the default one in your
-system. For examplo `gcc-4.9` should become `gcc`.
-
+system. For example `gcc-4.9` should become `gcc`.
 
 1. Prepare your HSL code as instructed in the `README` file you got from
 Algencan. It should be located in `sources\hsl`.
@@ -50,12 +49,12 @@ Algencan. It should be located in `sources\hsl`.
 
 1. Type `make` and compile Algencan.
 
-1.  Move to the `lib` directory, where you can find the `libalgencan.a` file
+1. Move to the `lib` directory, where you can find the `libalgencan.a` file
 and type:
-```bash
-gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
+    ```bash
+    gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
     -Wl,--no-whole-archive -lgfortran -L$PWD -lhsl
-```
+    ```
 
 1. You should now have a file named `libalgencan.so` in the `lib` directory.
 
