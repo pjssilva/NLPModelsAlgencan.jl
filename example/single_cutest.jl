@@ -1,4 +1,6 @@
+using Printf
 using MathProgBase
+MPB = MathProgBase
 using NLPModels
 using NLPModelsJuMP
 using CUTEst
@@ -15,9 +17,9 @@ Solve a single CUTEst problem given as a parameter in the command line.
 solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5, specfnm="algencan.dat")
 nlp = CUTEstModel(ARGS[1])
 model = NLPtoMPB(nlp, solver)
-bench_data = @timed optimize!(model)
+bench_data = @timed status = MPB.optimize!(model)
 finalize(nlp)
-println("Solver status = ", status(model))
+println("Solver status = ", status)
 println("Perfomance data (time, n_fc, n_ggrad, n_hl, n_nlp)")
 n_fc, n_ggrad, n_hl, n_hlp = getnfevals(model)
 @printf("%.4e\t%10d\t%10d\t%10d\t%10d\n", bench_data[2], n_fc, n_ggrad, n_hl, n_hlp)

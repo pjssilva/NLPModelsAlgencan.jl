@@ -8,33 +8,36 @@
 # Obs: It is set to run Algencan now, but you should easily adapt to other
 # solvers.
 
+using Printf
 using MathProgBase
+MPB = MathProgBase
 using NLPModels
 using NLPModelsJuMP
 using CUTEst
 
-# Algencan tolerances
-using Algencan
-const solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5, specfnm="algencan.dat")
-const solver_name = "algencan_hsl_accel"
+# # Algencan tolerances
+# using Algencan
+# const solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5, specfnm="algencan.dat")
+# const solver_name = "algencan_hsl_accel"
 
-# # Alternative definition to run Ipopt
-# using Ipopt
-# const solver = IpoptSolver(tol=1.0e-7, constr_viol_tol=1.0e-5,
-#     compl_inf_tol=1.0e-5, print_level=5, print_frequency_iter=100,
-#     max_iter=10000, max_cpu_time=3600.0)
-# const solver_name = "ipopt"
+# Alternative definition to run Ipopt
+using Ipopt
+const solver = IpoptSolver(tol=1.0e-7, constr_viol_tol=1.0e-5,
+    compl_inf_tol=1.0e-5, print_level=5, print_frequency_iter=100,
+    max_iter=10000, max_cpu_time=3600.0)
+const solver_name = "ipopt"
 
 function cutest_bench(name)
     nlp = CUTEstModel(name)
     model = NLPtoMPB(nlp, solver)
-    bench_data = @timed optimize!(model)
+    bench_data = @timed MPB.optimize!(model)
     finalize(nlp)
     etime = bench_data[2]
-    flag = status(model)
-    objval = getobjval(model)
-    n_fc, n_ggrad, n_hl, n_hlp = getnfevals(model)
-    return flag, etime, n_fc, n_ggrad, n_hl, n_hlp, objval
+    flag = MPB.status(model)
+    objval = MPB.getobjval(model)
+    # n_fc, n_ggrad, n_hl, n_hlp = MPB.getnfevals(model)
+    # return flag, etime, n_fc, n_ggrad, n_hl, n_hlp, objval
+    return flag, etime, 0, 0, 0, 0, objval
 end
 
 function has_lb_const(lb, ub)
