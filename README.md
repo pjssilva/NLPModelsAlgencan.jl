@@ -38,7 +38,7 @@ available before installing Algencan.jl so that it can be used by it at
 installation. So this compilation needs to be done before doint the
 `Pkg.clone`.
 
-*** Hints to self compilation of Algencan with HSL libraries***
+***Hints to self compilation of Algencan with HSL libraries***
 
 1. Add the option `-fPIC` to  `CFLAGS` and `FFLAGS` in the top of the main
 Makefile. Change any numbered compiler version to use the default one in your
