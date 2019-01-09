@@ -22,6 +22,7 @@ if "ALGENCAN_LIB_DIR" in keys(ENV)
         "libalgencan.so"))
 elseif isfile(joinpath(dirname(@__FILE__),"..","deps","deps.jl"))
     include("../deps/deps.jl")
+    println("Test for MAC path = ", libalgencan)
     const algencan_lib_path = libalgencan
 end
 
