@@ -1,6 +1,6 @@
-Algencan.jl
+# Algencan.jl
 
-Copyright: Paulo J. S. Silva, 2018.
+Copyright: Paulo J. S. Silva, 2018, 2019.
 
 License:
 
