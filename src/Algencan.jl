@@ -369,7 +369,6 @@ function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
     unsafe_store!(obj_ptr, model.sense*obj_val)
     g = unsafe_wrap(Array, g_ptr, Int(m))
     MPB.eval_g(model.evaluator, g, x)
-    println("g = ", g[9:11])
 
     # Treat lower bounds and two-sided constraints
     if model.g_has_lb
