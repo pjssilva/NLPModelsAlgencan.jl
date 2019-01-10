@@ -339,8 +339,7 @@ function treat_lower_bounds(lb, ub)
     only_lower = (-Inf .< lb) .& (ub .== Inf)
     sense[only_lower] .= -1.0
 
-    two_sides = (-Inf .< lb) .& (ub .< Inf)
-
+    two_sides = (-Inf .< lb .!= ub .< Inf)
     new_ind = 1
     two_smap = zeros(m)
     for i = 1:m
