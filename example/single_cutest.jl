@@ -9,7 +9,6 @@ using Algencan
 """
 Solve a single CUTEst problem given as a parameter in the command line.
 """
-
 function solve_cutest(pname)
     # solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5,
     #     efstain=3.162278e-03, eostain=3.162278e-08, efacc=3.162278e-3,
