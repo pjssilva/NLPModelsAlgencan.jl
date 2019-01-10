@@ -31,7 +31,7 @@ end
 
 # Global to avoid closures as Algencan does not allow to send user information
 # back to call backs. Long names to avoid conflicts.
-const current_algencan_problem
+global current_algencan_problem
 
 # Standard LP interface
 import MathProgBase
