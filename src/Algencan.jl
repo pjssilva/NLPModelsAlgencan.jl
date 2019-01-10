@@ -31,7 +31,7 @@ end
 
 # Global to avoid closures as Algencan does not allow to send user information
 # back to call backs. Long names to avoid conflicts.
-global current_algencan_problem
+const current_algencan_problem
 
 # Standard LP interface
 import MathProgBase
@@ -295,13 +295,15 @@ function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
         g_lb, g_ub)
     model.g_has_lb = (model.m > 0 && (minimum(model.g_sense) == -1 ||
         maximum(model.g_two_sides)))
-    g_only_low = (model.g_sense .== -1.0)
     model.g_lb, model.g_ub = g_lb, g_ub
 
+    # Contraints with only lower bound will be multiplied by -1.0, hence
+    # their lower bounds becomes minus the upper cound
+    g_only_low = (model.g_sense .== -1.0)
     model.g_ub[g_only_low] = -g_lb[g_only_low]
     model.g_lb[g_only_low] .= -Inf
 
-    model.sense = sense == :Min ? 1.0 : -1.0
+    model.sense = (sense == :Min ? 1.0 : -1.0)
     model.evaluator = d
 
     # Constraints types
@@ -335,10 +337,13 @@ end
  data structure to treat lower bounds."
 function treat_lower_bounds(lb, ub)
     m = length(lb)
+
+    # Allow to treat constraints that have only lower bounds
     sense = ones(m)
     only_lower = (-Inf .< lb) .& (ub .== Inf)
     sense[only_lower] .= -1.0
 
+    # Treat two side constraints
     two_sides = (-Inf .< lb .!= ub .< Inf)
     new_ind = 1
     two_smap = zeros(m)
