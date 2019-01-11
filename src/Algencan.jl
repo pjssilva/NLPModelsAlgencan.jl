@@ -469,13 +469,13 @@ function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     hcol_ind[1:nnz] .= model.h_col_inds
 
     # Compute scaled multipliers
-    σ = scale_f*model.sense
+    σ = model.sense*scale_f
     alg_mult = unsafe_wrap(Array, mult_ptr, Int(m))
     scale_g = unsafe_wrap(Array, scale_g_ptr, Int(m))
     if !model.g_has_lb
-        μ = model.g_sense .* alg_mult .* scale_g
+        μ = scale_g .* alg_mult
     else
-        μ = model.g_sense .* alg_mult[1:model.m] .* scale_g[1:model.m]
+        μ = model.g_sense .* scale_g[1:model.m] .* alg_mult[1:model.m] 
         μ[model.g_two_sides] -= scale_g[model.m + 1:m] .* alg_mult[model.m + 1:m]
     end
 
