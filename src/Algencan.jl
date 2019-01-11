@@ -8,7 +8,7 @@ See its [GitHub page](https://github.com/pjssilva/Algencan.jl)
 module Algencan
 
 using LinearAlgebra
-using Libdl
+import Libdl
 
 # TODO: This looks like things to allow for automatic download and
 #       compilation of dependencies. Deal with it later.
@@ -607,8 +607,12 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     nlpsupn = [0.0]
     inform = Vector{Cint}([0])
 
-    ccall(
-        (:c_algencan, algencan_lib_path),                # library
+    @assert !(algencan_lib_path in Libdl.dllist())
+    algencandl = Libdl.dlopen(algencan_lib_path)
+    @assert algencan_lib_path in Libdl.dllist()
+    algencansym = Libdl.dlsym(algencandl, :c_algencan)
+    Libdl.ccall(
+        albencansym,                                     # function
         Nothing,                                            # Return type
         (                                                # Parameters types
             Ptr{Nothing},                                   # *myevalf,
@@ -657,6 +661,8 @@ function MPB.optimize!(model::AlgencanMathProgModel)
         is_equality, is_g_linear, coded, checkder, f, cnorm, snorm,
         nlpsupn, inform
     )
+    Libdl.dlclose(algencandl)
+    @assert !(algencan_lib_path in Libdl.dllist())
 
     # Fix sign of objetive function
     model.obj_val = model.sense*f[1]
