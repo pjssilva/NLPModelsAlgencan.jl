@@ -611,7 +611,7 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     algencandl = Libdl.dlopen(algencan_lib_path)
     @assert algencan_lib_path in Libdl.dllist()
     algencansym = Libdl.dlsym(algencandl, :c_algencan)
-    Libdl.ccall(
+    ccall(
         albencansym,                                     # function
         Nothing,                                            # Return type
         (                                                # Parameters types
