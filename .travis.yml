@@ -23,9 +23,7 @@ before_install:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 
 install:
-  - julia -e 'versioninfo()'
-  - julia -E 'Pkg.clone(pwd());'
-  - julia -E 'Pkg.build("Algencan");'
+  - julia -E 'using Pkg; Pkg.clone(pwd()); Pkg.build("Algencan");'
 
 script:
   - julia --check-bounds=yes -E 'Pkg.test("Algencan"; coverage=true)'
