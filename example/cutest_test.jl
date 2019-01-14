@@ -1,4 +1,4 @@
-# Run a series of CUTEst models to test a solver.
+# Run a series of CUTEst models to test the solver.
 #
 # Generates the report solvername_cutest.txt that can be used to create a simple
 # performance profile comparing solvers. However it should be taken into
@@ -8,68 +8,61 @@
 # Obs: It is set to run Algencan now, but you should easily adapt to other
 # solvers.
 
+using Printf
 using MathProgBase
+MPB = MathProgBase
 using NLPModels
 using NLPModelsJuMP
 using CUTEst
-
-# Algencan tolerances
 using Algencan
-const solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5, specfnm="algencan.dat")
-const solver_name = "algencan_hsl_accel"
 
-function cutest_bench(name)
+
+function cutest_bench(name, solver)
     nlp = CUTEstModel(name)
     model = NLPtoMPB(nlp, solver)
-    bench_data = @timed optimize!(model)
+    bench_data = @timed MPB.optimize!(model)
     finalize(nlp)
     etime = bench_data[2]
-    flag = status(model)
-    objval = getobjval(model)
+    flag = MPB.status(model)
+    objval = MPB.getobjval(model)
     n_fc, n_ggrad, n_hl, n_hlp = getnfevals(model)
     return flag, etime, n_fc, n_ggrad, n_hl, n_hlp, objval
 end
 
-function has_lb_const(lb, ub)
-    has_lower = (lb .!= -Inf)
-    not_equal = .!(lb .== ub)
-    sum(has_lower .& not_equal) > 0
-end
 
-# First run to compile
-cutest_bench("HS6")
+function run_tests()
+    # Algencan tolerances
+    solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5, specfnm="algencan.dat")
+    solver_name = "algencan_hsl_accel"
 
-# Grab a list of CUTEst tests
-test_problems = readlines(open("cutest_selection.txt"))
-n_tests = length(test_problems)
+    # First run to compile
+    cutest_bench("HS6", solver)
 
-# Run tests
-report = open(string(solver_name, "_cutest.txt"), "w")
-for i = 1:n_tests
-    name = test_problems[i]
-    println("\nSolving Problem $name - $i of $n_tests.\n")
+    # Grab a list of CUTEst tests
+    test_problems = readlines(open("cutest_selection.txt"))
+    n_tests = length(test_problems)
 
-    nlp = CUTEstModel(name)
-    skip = has_lb_const(nlp.meta.lcon, nlp.meta.ucon)
-    finalize(nlp)
-    if skip
+    # Run tests
+    report = open(string(solver_name, "_cutest.txt"), "w")
+    for i = 1:n_tests
+        name = test_problems[i]
+        println("\nSolving Problem $name - $i of $n_tests.\n")
+        s, t, fc, ggrad, hl, hlp, v = cutest_bench(name, solver)
+
         println("\n*************************************************************")
-        println("Problem $name ")
-        println("it has lower bound constraints check result")
+        println("Problem name = ", name)
+        println("Performance = ", t, fc, ggrad, hl, hlp)
+        println("Status = ", s)
+        println("Obj value = ", v)
         println("*************************************************************\n")
+        line = @sprintf("%-14s%-14s%12.4e\t%10.4d\t%10.4d\t%10.4d\t%10.4d\t%12.4e\n",
+            name, s, t, fc, ggrad, hl, hlp, v)
+        write(report, line)
+        flush(report)
     end
-    s, t, fc, ggrad, hl, hlp, v = cutest_bench(name)
-    println("\n*************************************************************")
-    println("Problem name = ", name)
-    println("Performance = ", t, fc, ggrad, hl, hlp)
-    println("Status = ", s)
-    println("Obj value = ", v)
-    println("*************************************************************\n")
-    line = @sprintf("%-14s%-14s%12.4e\t%10.4d\t%10.4d\t%10.4d\t%10.4d\t%12.4e\n",
-        name, s, t, fc, ggrad, hl, hlp, v)
-    write(report, line)
-    flush(report)
-end
-close(report)
+    close(report)
 
-println("Solved ", n_tests, " problems.")
+    println("Solved ", n_tests, " problems.")
+end
+
+run_tests()

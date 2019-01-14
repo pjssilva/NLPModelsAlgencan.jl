@@ -7,6 +7,9 @@ See its [GitHub page](https://github.com/pjssilva/Algencan.jl)
 """
 module Algencan
 
+using LinearAlgebra
+import Libdl
+
 # TODO: This looks like things to allow for automatic download and
 #       compilation of dependencies. Deal with it later.
 # if isfile(joinpath(dirname(@__FILE__),"..","deps","deps.jl"))
@@ -32,7 +35,7 @@ global current_algencan_problem
 
 # Standard LP interface
 import MathProgBase
-importall MathProgBase.SolverInterface
+MPB = MathProgBase
 import Base.copy
 
 ###############################################################################
@@ -40,7 +43,7 @@ import Base.copy
 export AlgencanSolver
 
 "Algencan solver that stores options"
-struct AlgencanSolver <: AbstractMathProgSolver
+struct AlgencanSolver <: MPB.AbstractMathProgSolver
     options
 
     function AlgencanSolver(kwargs)
@@ -65,7 +68,7 @@ end
 AlgencanSolver(;kwargs...) = AlgencanSolver(kwargs)
 
 "Algencan model, that storing solution data"
-mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
+mutable struct AlgencanMathProgModel <: MPB.AbstractNonlinearModel
     # Problem data
     n::Int                          # Num variables
     lb::Vector{Float64}             # Lower bounds on vars
@@ -79,7 +82,7 @@ mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
     g_two_smap::Vector{Int}
     g_has_lb::Bool                  # true if at least one constraint has lower
                                     # bound
-    evaluator::AbstractNLPEvaluator # Evaluator for functions
+    evaluator::MPB.AbstractNLPEvaluator # Evaluator for functions
     j_row_inds::Vector{Int}         # NNZ row indexes of sparse const. Jacobian.
     j_col_inds::Vector{Int}         # NNZ col indexes of sparse const. Jacobian.
     h_row_inds::Vector{Int}         # NNZ row indexes of sparse Lag. Hessian.
@@ -126,79 +129,65 @@ mutable struct AlgencanMathProgModel <: AbstractNonlinearModel
         model
     end
 end
-NonlinearModel(s::AlgencanSolver) = AlgencanMathProgModel(s.options)
-LinearQuadraticModel(s::AlgencanSolver) = NonlinearToLPQPBridge(NonlinearModel(s))
+MPB.NonlinearModel(s::AlgencanSolver) = AlgencanMathProgModel(s.options)
+MPB.LinearQuadraticModel(s::AlgencanSolver) = MPB.NonlinearToLPQPBridge(MPB.NonlinearModel(s))
 
 ###############################################################################
 # Begin interface implementation
-# TODO: Verify if I need to explicitly export something or not
+# TODO: Verify if really need not to explicitly export the MPB functions
 
 # Simple functions
 "Return the current primal point, the solution after calling optimize"
-getsolution(model::AlgencanMathProgModel) = model.x
-export getsolution
+MPB.getsolution(model::AlgencanMathProgModel) = model.x
 
 "Get objective value at current primal point"
-getobjval(model::AlgencanMathProgModel) = model.sense*model.obj_val
-export getobjval
+MPB.getobjval(model::AlgencanMathProgModel) = model.sense*model.obj_val
 
 "Get current model status"
-status(model::AlgencanMathProgModel) = model.status
-export status
+MPB.status(model::AlgencanMathProgModel) = model.status
 
 "Get best bound on (local) optimal value"
-getobjbound(m::AlgencanMathProgModel) = model.status == :optimal ? getobjval(m) : m.sense*Inf
-export getobjbound
+MPB.getobjbound(m::AlgencanMathProgModel) = model.status == :optimal ? getobjval(m) : m.sense*Inf
 
 "Get gap to (local) optimality"
-getobjgap(m::AlgencanMathProgModel) = model.status == :Optimal ? 0.0 : Inf
-export getobjgap
+MPB.getobjgap(m::AlgencanMathProgModel) = model.status == :Optimal ? 0.0 : Inf
 
 "There is no inner solver, all functionality is exposed by the default interface"
-getrawsolver(m::AlgencanMathProgModel) = nothing
-export getrawsolver
+MPB.getrawsolver(m::AlgencanMathProgModel) = nothing
 
 "Get the solution time"
-getsolvetime(m::AlgencanMathProgModel) = m.solve_time
-export getsolvetime
+MPB.getsolvetime(m::AlgencanMathProgModel) = m.solve_time
 
 "Change optimization sense, either :Min or :Max"
-function setsense!(m::AlgencanMathProgModel, sense)
+function MPB.setsense!(m::AlgencanMathProgModel, sense)
     m.sense = sense == :Max ? -1 : 1
 end
-export setsense!
 
 "Return problem sense"
-getsense(model::AlgencanMathProgModel) = (model.sense == 1 ? :Min : :Max)
-export getsense
+MPB.getsense(model::AlgencanMathProgModel) = (model.sense == 1 ? :Min : :Max)
 
 "Return the number of decision variables"
-numvar(model::AlgencanMathProgModel) = model.n
-export numvar
+MPB.numvar(model::AlgencanMathProgModel) = model.n
 
 "Return the number of constraints"
-numconstr(model::AlgencanMathProgModel) = model.m
-export numconstr
+MPB.numconstr(model::AlgencanMathProgModel) = model.m
 
 "Return a copy of the current model"
-copy(m::AlgencanMathProgModel) = deepcopy(m)
-export copy
+MPB.copy(m::AlgencanMathProgModel) = deepcopy(m)
 
 "Algencan only deals with continuous variable, so inform if this is not the case"
- function setvartype!(m::AlgencanMathProgModel, v::Vector{Symbol})
-     if !all(v .== :Cont)
-         throw("Algencan ony deals with continuous variables")
-     end
- end
-export setvartype!
+function MPB.setvartype!(m::AlgencanMathProgModel, v::Vector{Symbol})
+    if !all(v .== :Cont)
+        throw("Algencan ony deals with continuous variables")
+    end
+end
 
 "Return variable types: they are all continuous"
-function getvartype(model::AlgencanMathProgModel)
+function MPB.getvartype(model::AlgencanMathProgModel)
     types = Vector{Symbol}(model.m)
     types .= :Cont
     return types
 end
-export getvartype
 
 """
 Set parameter for a solver, that will be default for all next models
@@ -208,30 +197,27 @@ You can use any Algencan parameter that can be set in a specification file plus
 
 See more details in Algencan documentation.
 """
-function setparameters!(m::Union{AlgencanSolver, AlgencanMathProgModel};
+function MPB.setparameters!(m::Union{AlgencanSolver, AlgencanMathProgModel};
     kwargs...)
 
     for (key, value) in kwargs
         m.options[key] = value
     end
 end
-export setparameters
 
 "Set an initial value for the decision variables (warmstart)"
-function setwarmstart!(model::AlgencanMathProgModel, x)
+function MPB.setwarmstart!(model::AlgencanMathProgModel, x)
     model.x = copy(x)
 end
-export setwarmstart!
 
-function getconstrduals(model::AlgencanMathProgModel)
+function MPB.getconstrduals(model::AlgencanMathProgModel)
     v = model.mult
-    scale!(v, model.sense)
+    v .*= model.sense
     return v
 end
-export getconstrduals
 
 "Return mutipliers associated with bound cosntraints"
-function getreducedcosts(model::AlgencanMathProgModel)
+function MPB.getreducedcosts(model::AlgencanMathProgModel)
     if model.status != :Optimal
         throw("Cannot compute reduced costs: problem not solved to optimality")
     end
@@ -244,12 +230,12 @@ function getreducedcosts(model::AlgencanMathProgModel)
 
     # # Objective function
     # grad_lag = Vector{Float64}(model.n)
-    # MathProgBase.eval_grad_f(model.evaluator, grad_lag, model.x)
+    # MPB.eval_grad_f(model.evaluator, grad_lag, model.x)
     # grad_lag *= model.sense
     #
     # # Add the multiplier combination of the contraints gradients
     # grad_g = Vector{Float64}(model.n)
-    # MathProgBase.eval_jac_prod_t(model.evaluator, grad_g, model.x, model.mult)
+    # MPB.eval_jac_prod_t(model.evaluator, grad_g, model.x, model.mult)
     #
     # grad_lag .+= grad_g
     #
@@ -262,7 +248,6 @@ function getreducedcosts(model::AlgencanMathProgModel)
     #
     # return reduced_costs
 end
-export getreducedcosts
 
 # Simple function only defined for Algencan models
 
@@ -283,23 +268,23 @@ function resetnfevals(model::AlgencanMathProgModel)
 end
 export resetnfevals
 
-# More complex funcitons
+# More complex funcitons from MPB interface
 
 "Loads the problem with its basic data and functions in a NLPEvaluator"
-function loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
+function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     numConstr::Integer, x_l, x_u, g_lb, g_ub, sense::Symbol,
-    d::AbstractNLPEvaluator)
+    d::MPB.AbstractNLPEvaluator)
 
     @assert sense == :Min || sense == :Max
 
     # Link the model with the problem representation
     # Initialize the evaluator with the right features
-    features = features_available(d)
+    features = MPB.features_available(d)
     has_hessian = (:Hess in features)
     init_feat = [:Grad]
     has_hessian && push!(init_feat, :Hess)
     numConstr > 0 && push!(init_feat, :Jac)
-    initialize(d, init_feat)
+    MPB.initialize(d, init_feat)
 
     # Copy data
     model.n = numVar
@@ -310,34 +295,34 @@ function loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
         g_lb, g_ub)
     model.g_has_lb = (model.m > 0 && (minimum(model.g_sense) == -1 ||
         maximum(model.g_two_sides)))
-    g_only_low = (model.g_sense .== -1.0)
     model.g_lb, model.g_ub = g_lb, g_ub
-    # println("lb = ", g_lb[model.g_two_sides])
-    # println("ub = ", g_ub[model.g_two_sides])
 
+    # Contraints with only lower bound will be multiplied by -1.0, hence
+    # their lower bounds becomes minus the upper cound
+    g_only_low = (model.g_sense .== -1.0)
     model.g_ub[g_only_low] = -g_lb[g_only_low]
-    model.g_lb[g_only_low] = -Inf
+    model.g_lb[g_only_low] .= -Inf
 
-    model.sense = sense == :Min ? 1.0 : -1.0
+    model.sense = (sense == :Min ? 1.0 : -1.0)
     model.evaluator = d
 
     # Constraints types
     model.is_equality = zeros(UInt8, numConstr)
-    model.is_equality[model.g_lb .== model.g_ub] = 1
+    model.is_equality[model.g_lb .== model.g_ub] .= 1
     model.is_g_linear = zeros(UInt8, numConstr)
     for i in 1:numConstr
-        if MathProgBase.isconstrlinear(d, i)
+        if MPB.isconstrlinear(d, i)
             model.is_g_linear[i] = 1
         end
     end
 
     # Get strutural indices of Jacobian and Hessian.
-    j_row_inds, j_col_inds = MathProgBase.jac_structure(d)
-    h_row_inds, h_col_inds = MathProgBase.hesslag_structure(d)
+    j_row_inds, j_col_inds = MPB.jac_structure(d)
+    h_row_inds, h_col_inds = MPB.hesslag_structure(d)
 
     # C indices start in 0
-    model.j_row_inds, model.j_col_inds = j_row_inds - 1, j_col_inds - 1
-    model.h_row_inds, model.h_col_inds = h_row_inds - 1, h_col_inds - 1
+    model.j_row_inds, model.j_col_inds = j_row_inds .- 1, j_col_inds .- 1
+    model.h_row_inds, model.h_col_inds = h_row_inds .- 1, h_col_inds .- 1
 
     # Initial values
     model.x = zeros(numVar)
@@ -347,18 +332,19 @@ function loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     model.solve_time = 0.0
     model.n_fc, model.n_gjac, model.n_hl, model.n_hlp = 0, 0, 0, 0
 end
-export loadproblem!
 
 "Analyse the lower and upper bounds on the constraints and prepare the
  data structure to treat lower bounds."
 function treat_lower_bounds(lb, ub)
     m = length(lb)
+
+    # Allow to treat constraints that have only lower bounds
     sense = ones(m)
     only_lower = (-Inf .< lb) .& (ub .== Inf)
-    sense[only_lower] = -1.0
+    sense[only_lower] .= -1.0
 
-    two_sides = -Inf .< lb .< ub .< Inf
-
+    # Treat two side constraints
+    two_sides = (-Inf .< lb .!= ub .< Inf)
     new_ind = 1
     two_smap = zeros(m)
     for i = 1:m
@@ -383,10 +369,10 @@ function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
     # Evaluate objective and constraints
     model.n_fc += 1
     x = unsafe_wrap(Array, x_ptr, Int(n))
-    obj_val = MathProgBase.eval_f(model.evaluator, x)
+    obj_val = MPB.eval_f(model.evaluator, x)
     unsafe_store!(obj_ptr, model.sense*obj_val)
     g = unsafe_wrap(Array, g_ptr, Int(m))
-    MathProgBase.eval_g(model.evaluator, g, x)
+    MPB.eval_g(model.evaluator, g, x)
 
     # Treat lower bounds and two-sided constraints
     if model.g_has_lb
@@ -415,8 +401,8 @@ function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
     model.n_gjac += 1
     x = unsafe_wrap(Array, x_ptr, Int(n))
     f_grad = unsafe_wrap(Array, f_grad_ptr, Int(n))
-    MathProgBase.eval_grad_f(model.evaluator, f_grad, x)
-    scale!(f_grad, model.sense)
+    MPB.eval_grad_f(model.evaluator, f_grad, x)
+    f_grad .*= model.sense
 
     # Find structure of the constraints Jacobian
     nnz = length(model.j_row_inds)
@@ -434,7 +420,7 @@ function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
 
     # Compute the constraints Jacobian
     J = unsafe_wrap(Array, jval_ptr, Int(lim))
-    MathProgBase.eval_jac_g(model.evaluator, J, x)
+    MPB.eval_jac_g(model.evaluator, J, x)
 
     # Treat the presence of lower bound in the constraints
     if model.g_has_lb
@@ -483,20 +469,20 @@ function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     hcol_ind[1:nnz] .= model.h_col_inds
 
     # Compute scaled multipliers
-    σ = scale_f*model.sense
+    σ = model.sense*scale_f
     alg_mult = unsafe_wrap(Array, mult_ptr, Int(m))
     scale_g = unsafe_wrap(Array, scale_g_ptr, Int(m))
     if !model.g_has_lb
-        μ = model.g_sense .* alg_mult .* scale_g
+        μ = scale_g .* alg_mult
     else
-        μ = model.g_sense .* alg_mult[1:model.m] .* scale_g[1:model.m]
+        μ = model.g_sense .* scale_g[1:model.m] .* alg_mult[1:model.m] 
         μ[model.g_two_sides] -= scale_g[model.m + 1:m] .* alg_mult[model.m + 1:m]
     end
 
     # Evaluate the Hessian
     x = unsafe_wrap(Array, x_ptr, Int(n))
     H = unsafe_wrap(Array, hval_ptr, Int(lim))
-    MathProgBase.eval_hesslag(model.evaluator, H, x, σ, μ)
+    MPB.eval_hesslag(model.evaluator, H, x, σ, μ)
 
     # Declare success
     unsafe_store!(flag_ptr, Cint(0))
@@ -526,7 +512,7 @@ function julia_hlp(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     x = unsafe_wrap(Array, x_ptr, Int(n))
     p = unsafe_wrap(Array, p_ptr, Int(n))
     hp = unsafe_wrap(Array, hp_ptr, Int(n))
-    MathProgBase.eval_hesslag_prod(model.evaluator, hp, x, p,
+    MPB.eval_hesslag_prod(model.evaluator, hp, x, p,
         σ, μ)
 
     # Declare success
@@ -534,7 +520,7 @@ function julia_hlp(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     nothing
 end
 
-function optimize!(model::AlgencanMathProgModel)
+function MPB.optimize!(model::AlgencanMathProgModel)
     # TODO: Allow warm start primal and specially dual
     #copy!(model.inner.x, model.warmstart) # set warmstart
     # TODO: No options for now
@@ -547,22 +533,22 @@ function optimize!(model::AlgencanMathProgModel)
     # end
     global current_algencan_model = model
 
-    tic()
+    start_time = time_ns()
     ###########################################################################
     # Algencan callback function wrappers
     ###########################################################################
-    const c_julia_fc = cfunction(julia_fc, Void, (Cint, Ptr{Float64},
+    c_julia_fc = @cfunction(julia_fc, Nothing, (Cint, Ptr{Float64},
         Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Cint}))
 
-    const c_julia_gjac = cfunction(julia_gjac, Void, (Cint, Ptr{Float64},
+    c_julia_gjac = @cfunction(julia_gjac, Nothing, (Cint, Ptr{Float64},
         Ptr{Float64}, Cint, Ptr{Cint}, Ptr{Cint}, Ptr{Float64}, Ptr{Cint}, Cint,
         Ptr{UInt8}, Ptr{Cint}))
 
-    const c_julia_hl = cfunction(julia_hl, Void, (Cint, Ptr{Float64}, Cint,
+    c_julia_hl = @cfunction(julia_hl, Nothing, (Cint, Ptr{Float64}, Cint,
         Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Cint}, Ptr{Cint}, Ptr{Float64},
         Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
 
-    const c_julia_hlp = cfunction(julia_hlp, Void, (Cint, Ptr{Float64}, Cint,
+    c_julia_hlp = @cfunction(julia_hlp, Nothing, (Cint, Ptr{Float64}, Cint,
             Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Float64}, Ptr{Float64},
             Ptr{UInt8}, Ptr{Cint}))
 
@@ -627,19 +613,19 @@ function optimize!(model::AlgencanMathProgModel)
     algencansym = Libdl.dlsym(algencandl, :c_algencan)
     ccall(
         algencansym,                                     # function
-        Void,                                            # Return type
+        Nothing,                                         # Return type
         (                                                # Parameters types
-            Ptr{Void},                                   # *myevalf,
-            Ptr{Void},                                   # *myevalg,
-            Ptr{Void},                                   # *myevalh,
-            Ptr{Void},                                   # *myevalc,
-            Ptr{Void},                                   # *myevaljac,
-            Ptr{Void},                                   # *myevalhc,
-            Ptr{Void},                                   # *myevalfc,
-            Ptr{Void},                                   # *myevalgjac,
-            Ptr{Void},                                   # *myevalgjacp,
-            Ptr{Void},                                   # *myevalhl,
-            Ptr{Void},                                   # *myevalhlp,
+            Ptr{Nothing},                                # *myevalf,
+            Ptr{Nothing},                                # *myevalg,
+            Ptr{Nothing},                                # *myevalh,
+            Ptr{Nothing},                                # *myevalc,
+            Ptr{Nothing},                                # *myevaljac,
+            Ptr{Nothing},                                # *myevalhc,
+            Ptr{Nothing},                                # *myevalfc,
+            Ptr{Nothing},                                # *myevalgjac,
+            Ptr{Nothing},                                # *myevalgjacp,
+            Ptr{Nothing},                                # *myevalhl,
+            Ptr{Nothing},                                # *myevalhlp,
             Cint,                                        # jcnnzmax,
             Cint,                                        # hnnzmax,
             Ref{Cdouble},                                # *epsfeas,
@@ -689,11 +675,9 @@ function optimize!(model::AlgencanMathProgModel)
     model.status = find_status(model, cnorm[1], snorm[1], nlpsupn[1],
         Int(inform[1]))
 
-    model.solve_time = toc()
+    model.solve_time = (time_ns() - start_time) / 1.0e+9
     return Int(inform[1])
-
 end
-export optimize!
 
 # Local, auxiliary functions
 
@@ -701,7 +685,7 @@ export optimize!
 function option2vparam(model::AlgencanMathProgModel)
     parameters = [:epsfeas, :epsopt, :efstain, :eostain, :efacc, :eoacc,
         :outputfnm, :specfnm]
-    vparam = Vector{String}(0)
+    vparam = Array{String}(undef, 0)
     for option in model.options
         key, value = option
         if key in parameters
@@ -755,9 +739,9 @@ end
 
 # Hints to precompile
 # TODO: Automate this with proper packages
-precompile(loadproblem!, (AlgencanMathProgModel, Integer, Integer,
+precompile(MPB.loadproblem!, (AlgencanMathProgModel, Integer, Integer,
     Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Symbol,
-    AbstractNLPEvaluator))
+    MPB.AbstractNLPEvaluator))
 precompile(option2vparam, (AlgencanMathProgModel,))
 precompile(julia_fc, (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64},
     Ptr{Cint}))
@@ -768,7 +752,7 @@ precompile(julia_hl, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Float64,
     Ptr{UInt8}, Ptr{Cint}))
 precompile(julia_hlp, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Float64,
     Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{UInt8}, Ptr{Cint}))
-precompile(optimize!, (AlgencanMathProgModel,))
+precompile(MPB.optimize!, (AlgencanMathProgModel,))
 precompile(find_status, (AlgencanMathProgModel, Float64, Float64, Float64, Int))
 
 end # module
