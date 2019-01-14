@@ -5,9 +5,9 @@ language: julia
 matrix:
   include:
     - os: linux
-      julia: 0.6
+      julia: 1.0
     - os: osx
-      julia: 0.6
+      julia: 1.0
 
 addons:
   apt_packages:

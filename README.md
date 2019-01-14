@@ -12,8 +12,8 @@ matrices and some smart acceleration strategies.
 ## Status
 
 At this point this is alpha software. From verision v0.2.0 on the code will work
-with Julia 0.7 or later only. Use Julia 1.0  or later, if possible. If you need
-to run Algencan.jl with the old Julia 0.6, please install the version v0.1.x.
+with Julia 1.0 or later only. If you need to run Algencan.jl with the old Julia
+0.6, please install the version v0.1.x.
 
 ## Installation
 
