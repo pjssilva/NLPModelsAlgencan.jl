@@ -621,8 +621,12 @@ function optimize!(model::AlgencanMathProgModel)
     nlpsupn = [0.0]
     inform = Vector{Cint}([0])
 
+    @assert !(algencan_lib_path in Libdl.dllist())
+    algencandl = Libdl.dlopen(algencan_lib_path)
+    @assert algencan_lib_path in Libdl.dllist()
+    algencansym = Libdl.dlsym(algencandl, :c_algencan)
     ccall(
-        (:c_algencan, algencan_lib_path),                # library
+        algencansym,                                     # function
         Void,                                            # Return type
         (                                                # Parameters types
             Ptr{Void},                                   # *myevalf,
@@ -671,6 +675,8 @@ function optimize!(model::AlgencanMathProgModel)
         is_equality, is_g_linear, coded, checkder, f, cnorm, snorm,
         nlpsupn, inform
     )
+    Libdl.dlclose(algencandl)
+    @assert !(algencan_lib_path in Libdl.dllist())
 
     # Fix sign of objetive function
     model.obj_val = model.sense*f[1]
