@@ -11,22 +11,23 @@ matrices and some smart acceleration strategies.
 
 ## Status
 
-At this point this is alpha software. I am doing this first release to freeze
-a version that works with Julia 0.6.4 and move on to Julia 1.0.
+At this point this is alpha software. From verision v0.2.0 on the code will work
+with Julia 0.7 or later only. Use Julia 1.0  or later, if possible. If you need
+to run Algencan.jl with the old Julia 0.6, please install the version v0.1.x.
 
 ## Installation
 
-You can simply do
+It is now an official package. Hence, you can simply do
 
 ```julia
-Pkg.clone("https://github.com/pjssilva/Algencan.jl")
-Pkg.build("Algencan")
+add Algencan
 ```
+in package mode in the REPL.
 
 This will download Algencan's code, compile it and make it available to the
 Algencan.jl package. **However there is a major caveat here. At this point I am
 compiling Algencan without any HSL support. This has major influence on Algencan
-behavior and performance. So use HSL whenever you have access to it.**
+behavior and performance. You should use HSL whenever you have access to it.**
 
 You can try to compile Algencan with HSL support you need to get the code from
 the [Tango project website](https://www.ime.usp.br/~egbirgin/tango/codes.php)
