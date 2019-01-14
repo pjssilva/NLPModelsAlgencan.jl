@@ -26,7 +26,7 @@ install:
   - julia -E 'using Pkg; Pkg.clone(pwd()); Pkg.build("Algencan");'
 
 script:
-  - julia --check-bounds=yes -E 'Pkg.test("Algencan"; coverage=true)'
+  - julia --check-bounds=yes -E 'using Pkg; Pkg.test("Algencan"; coverage=true)'
 
 after_success:
-  - julia -e 'cd(Pkg.dir("Algencan")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'using Pkg; cd(Pkg.dir("Algencan")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
