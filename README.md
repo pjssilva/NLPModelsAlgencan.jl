@@ -20,7 +20,7 @@ with Julia 1.0 or later only. If you need to run Algencan.jl with the old Julia
 It is now an official package. Hence, you can simply do
 
 ```julia
-add Algencan
+(v1.0) pkg> add Algencan
 ```
 in package mode in the REPL.
 
@@ -40,4 +40,4 @@ installation. So this compilation needs to be done before doing the
 ### Hints to self compilation of Algencan with HSL libraries
 
 Try to follow the instructions from the 
-[Wiki](https://github.com/pjssilva/Algencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-Algencan.jl)
+[Wiki](https://github.com/pjssilva/Algencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-Algencan.jl).
