@@ -1,0 +1,216 @@
+diff -Naur algencan-3.1.1_original/Makefile algencan-3.1.1_modificado/Makefile
+--- algencan-3.1.1_original/Makefile	2017-03-10 14:25:44.000000000 -0500
++++ algencan-3.1.1_modificado/Makefile	2019-01-14 17:01:42.259797723 -0500
+@@ -5,11 +5,11 @@
+ # case.
+ AR := ar
+ FC := gfortran
+-CC := gcc-4.9
+-CP := g++-4.9
++CC := gcc
++CP := g++
+ 
+-FFLAGS   := -O3
+-CFLAGS   := -O3
++FFLAGS   := -O3 -fPIC
++CFLAGS   := -O3 -fPIC
+ 
+ # Set variable ALGENCAN with the absolute path of your ALGENCAN installation
+ # directory. The value shown expands to the path of current working directory.
+@@ -19,7 +19,6 @@
+ LIB      := $(ALGENCAN)/lib
+ SRC      := $(ALGENCAN)/sources
+ ALGSRC   := $(SRC)/algencan
+-HSLSRC   := $(SRC)/hsl
+ INTERSRC := $(SRC)/interfaces
+ INTERFCS := $(notdir $(wildcard $(INTERSRC)/*))
+ 
+@@ -34,7 +33,7 @@
+ # $HSLSRC. Otherwise, set it to 0. In the latter case, it is assumed
+ # that the BLAS and LAPACK libraries exist and that they will be used
+ # in the linking process.
+-BLAS_LAPACK := 1
++BLAS_LAPACK := 0
+ 
+ # If you are using HSL_MA86 and/or HSL_MA97 and you want to use
+ # OpenMP, set the OpenMP flag of your compiler. Otherwise, leave it
+@@ -43,14 +42,21 @@
+ # OPENMPFLAG :=
+ 
+ # CUTEst Directories
+-MASTSIF  := $(ALGENCAN)/myfolder/testes
+-#MASTSIF  := $(HOME)/CUTEst/sif
+-#MASTSIF  := $(HOME)/CUTEst/sif/netlib
+-#MASTSIF  := $(HOME)/CUTEr/MastSIF/marosmeszaros
+-ARCHDEFS  := $(HOME)/CUTEst/archdefs
+-SIFDECODE := $(HOME)/CUTEst/sifdecode
+-CUTEST    := $(HOME)/CUTEst/cutest
+-MYARCH    := mac64.osx.gfo
++# MASTSIF  := $(ALGENCAN)/myfolder/testes
++# #MASTSIF  := $(HOME)/CUTEst/sif
++# #MASTSIF  := $(HOME)/CUTEst/sif/netlib
++# #MASTSIF  := $(HOME)/CUTEr/MastSIF/marosmeszaros
++# ARCHDEFS  := $(HOME)/CUTEst/archdefs
++# SIFDECODE := $(HOME)/CUTEst/sifdecode
++# CUTEST    := $(HOME)/CUTEst/cutest
++# MYARCH    := mac64.osx.gfo
++
++# Location of HSL libraries
++METIS_LIB := $(METISPATH)
++HSL_MA57_SOURCES := $(MA57PATH)
++# In the future the variables below will allow to use MA86 and MA97
++HSL_MA86_SOURCES :=
++HSL_MA97_SOURCES :=
+ 
+ # Stop your modifications here.
+ 
+@@ -64,15 +70,12 @@
+ 
+ all: algencan
+ 
+-algencan: hsl
++algencan:
+ 	$(MAKE) -C $(ALGSRC) all install
+ 
+ algencan-%: algencan
+ 	$(MAKE) -C $(INTERSRC)/$* all install
+ 
+-hsl:
+-	$(MAKE) -f $(HSL_MAKEFILE) -C $(HSLSRC)
+-
+ clean:
+ 	$(MAKE) -C $(ALGSRC) clean
+ 	$(MAKE) -f $(HSL_MAKEFILE) -C $(HSLSRC) clean
+diff -Naur algencan-3.1.1_original/sources/algencan/auglag.f90 algencan-3.1.1_modificado/sources/algencan/auglag.f90
+--- algencan-3.1.1_original/sources/algencan/auglag.f90	2015-11-06 13:04:00.000000000 -0500
++++ algencan-3.1.1_modificado/sources/algencan/auglag.f90	2019-01-14 18:42:51.932742329 -0500
+@@ -646,6 +646,10 @@
+      innfail = .true.
+   end if
+ 
++  if ( inform .eq. 314159 ) then
++    innfail = .true.
++  end if
++
+   if ( inform .ne. 0 ) return
+ 
+   ! ==================================================================
+diff -Naur algencan-3.1.1_original/sources/algencan/Makefile algencan-3.1.1_modificado/sources/algencan/Makefile
+--- algencan-3.1.1_original/sources/algencan/Makefile	2015-08-19 15:12:48.000000000 -0400
++++ algencan-3.1.1_modificado/sources/algencan/Makefile	2019-01-14 17:04:52.042090984 -0500
+@@ -6,11 +6,13 @@
+    modouttyp.o modminsq.o modmachconst.o modhpredat.o modhappdat.o	\
+    moditetyp.o modalgparam.o modalgconst.o calgencan.o accpro.o
+ 
+-MA57 := $(shell if [ -e $(HSLSRC)/hsl_ma57_double.mod ]; then echo true; fi)
+-MA86 := $(shell if [ -e $(HSLSRC)/hsl_ma86_double.mod ]; then echo true; fi)
+-MA97 := $(shell if [ -e $(HSLSRC)/hsl_ma97_double.mod ]; then echo true; fi)
++MA57 := $(shell if [ -e $(HSL_MA57_SOURCES)/src/hsl_ma57_double.mod ]; then echo true; fi)
++MA86 := $(shell if [ -e $(HSL_MA86_SOURCES)/src/hsl_ma86_double.mod ]; then echo true; fi)
++MA97 := $(shell if [ -e $(HSL_MA97_SOURCES)/src/hsl_ma97_double.mod ]; then echo true; fi)
+ 
++ADDHSL :=
+ ifeq ($(MA57),true)
++  ADDHSL := $(ADDHSL)addlib $(HSL_MA57_SOURCES)/lib/libhsl_ma57.a
+   HSL := lssma57.o
+ else
+   HSL := dummy_lssma57.o
+@@ -18,23 +20,38 @@
+ 
+ ifeq ($(MA86),true)
+   HSL := $(HSL) lssma86.o
++  ADDHSL := $(ADDHSL)addlib $(HSL_MA86_SOURCES)/lib/libhsl_ma86.a\n
+ else
+   HSL := $(HSL) dummy_lssma86.o
+ endif
+ 
+ ifeq ($(MA97),true)
+   HSL := $(HSL) lssma97.o
++  ADDHSL := $(ADDHSL)addlib $(HSL_MA97_SOURCES)/lib/libhsl_ma97.a\n
+ else
+   HSL := $(HSL) dummy_lssma97.o
+ endif
+ 
++ifdef METIS_LIB
++	ADDMETIS := addlib $(METIS_LIB)/libmetis.a
++else
++	ADDMETIS :=
++endif
++
+ %.o: %.f90
+ 	$(FC) $(FFLAGS) -c -o $@ $<
+ 
+ all: lib
+ 
+ lib: $(ALGENCAN)
+-	$(AR) rcs libalgencan.a $(ALGENCAN) $(HSL)
++	$(AR) rcs libprealgencan.a $(ALGENCAN) $(HSL)
++	echo "create libalgencan.a" > libalgencan.mri
++	echo "addlib libprealgencan.a" >> libalgencan.mri
++	echo "$(ADDHSL)" >> libalgencan.mri
++	echo "$(ADDMETIS)" >> libalgencan.mri
++	echo "save" >> libalgencan.mri
++	echo "end" >> libalgencan.mri
++	$(AR) M < libalgencan.mri 
+ 
+ install:
+ 	mv -f libalgencan.a $(LIB)
+@@ -104,13 +121,13 @@
+ dummy_lssma97.o: dummy_lssma97.f90
+ 
+ lssma57.o: lssma57.f90 modmachconst.o modouttyp.o
+-	$(FC) $(FFLAGS) $(OPENMPFLAG) -I$(HSLSRC) -c -o $@ $<
++	$(FC) $(FFLAGS) $(OPENMPFLAG) -I$(HSL_MA57_SOURCES)/src -c -o $@ $<
+ 
+ lssma86.o: lssma86.f90 modmachconst.o modouttyp.o
+-	$(FC) $(FFLAGS) $(OPENMPFLAG) -I$(HSLSRC) -c -o $@ $<
++	$(FC) $(FFLAGS) $(OPENMPFLAG) -I$(HSL_MA86_SOURCES)/src -c -o $@ $<
+ 
+ lssma97.o: lssma97.f90 modmachconst.o modouttyp.o
+-	$(FC) $(FFLAGS) $(OPENMPFLAG) -I$(HSLSRC) -c -o $@ $<
++	$(FC) $(FFLAGS) $(OPENMPFLAG) -I$(HSL_MA97_SOURCES)/src -c -o $@ $<
+ 
+ memalloc.o: memalloc.f90 modrspace.o modsydat.o modsvdgrad.o	\
+ 	    modsvdhess.o modhappdat.o modhpredat.o modminsq.o
+diff -Naur algencan-3.1.1_original/sources/algencan/newtd.f90 algencan-3.1.1_modificado/sources/algencan/newtd.f90
+--- algencan-3.1.1_original/sources/algencan/newtd.f90	2016-05-30 09:17:11.000000000 -0400
++++ algencan-3.1.1_modificado/sources/algencan/newtd.f90	2019-01-14 18:44:04.073589680 -0500
+@@ -180,6 +180,13 @@
+      write(10,1010) adsupn
+   end if
+ 
++  ! Added by Paulo J. S. Silva to avoid loop
++  if ( adsupn > 1.0d+100 ) then
++      call lssend()
++      inform = 314159
++      return
++  end if
++
+   ! ------------------------------------------------------------------
+   ! Factorize matrix
+   ! ------------------------------------------------------------------
+diff -Naur algencan-3.1.1_original/sources/interfaces/cutest/Makefile algencan-3.1.1_modificado/sources/interfaces/cutest/Makefile
+--- algencan-3.1.1_original/sources/interfaces/cutest/Makefile	2015-08-14 11:53:29.000000000 -0400
++++ algencan-3.1.1_modificado/sources/interfaces/cutest/Makefile	2019-01-14 16:54:55.322849755 -0500
+@@ -2,18 +2,11 @@
+ DIR := $(notdir $(CURDIR))
+ SIF := ELFUN EXTER GROUP RANGE
+ 
+-# Check for the availability of the HSL library
+-HSL := $(shell if [ -e $(LIB)/libhsl.a ]; then echo true; fi)
+-
+ # Decide which linking flags are necessary to use
+-LDFLAGS := -lalgencan -lcutest
+-
+-ifeq ($(HSL),true)
+-  LDFLAGS := $(LDFLAGS) -lhsl
++LDFLAGS := -lalgencan -lcutest -Xlinker -zmuldefs
+ 
+-  ifeq ($(BLAS_LAPACK),0)
+-    LDFLAGS := $(LDFLAGS) -lblas -llapack
+-  endif
++ifeq ($(BLAS_LAPACK),0)
++	LDFLAGS := $(LDFLAGS) -lblas -llapack
+ endif
+ 
+ %.o: %.f90

@@ -39,25 +39,5 @@ installation. So this compilation needs to be done before doing the
 
 ### Hints to self compilation of Algencan with HSL libraries
 
-1. Add the option `-fPIC` to  `CFLAGS` and `FFLAGS` in the top of the main
-Makefile. Change any numbered compiler version to use the default one in your
-system. For example `gcc-4.9` should become `gcc`.
-
-1. Prepare your HSL code as instructed in the `README` file you got from
-Algencan. It should be located in `sources\hsl`.
-
-1. Go back to the initial Algencan dir.
-
-1. Type `make` and compile Algencan.
-
-1. Move to the `lib` directory, where you can find the `libalgencan.a` file
-and type:
-    ```bash
-    gcc -shared -o libalgencan.so -Wl,--whole-archive libalgencan.a \\
-    -Wl,--no-whole-archive -lgfortran -L$PWD -lhsl
-    ```
-
-1. You should now have a file named `libalgencan.so` in the `lib` directory.
-
-1. Create a environmental library named `ALGENCAN_LIB_DIR` pointing to the
-`lib` directory. You can proceed to install Algencan.jl as instructed above.
+Try to follow the instructions from the 
+[Wiki](https://github.com/pjssilva/Algencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-Algencan.jl)

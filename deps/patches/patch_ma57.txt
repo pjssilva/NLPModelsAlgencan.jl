@@ -1,0 +1,19 @@
+diff -Naur hsl_ma57-5.2.0/src/hsl_ma57d.f90 hsl_ma57-5.2.0_algencan/src/hsl_ma57d.f90
+--- hsl_ma57-5.2.0/src/hsl_ma57d.f90	2013-08-02 09:15:32.000000000 -0400
++++ hsl_ma57-5.2.0_algencan/src/hsl_ma57d.f90	2019-01-14 14:44:51.769601041 -0500
+@@ -132,6 +132,7 @@
+       integer :: modstep = -1 ! First pivot modification when pivoting=4
+       integer :: rank = -1    ! Rank of original factorization
+       integer :: stat = 0     ! STAT value after allocate failure
++      real(wp) :: pivot
+    end type ma57_finfo
+ 
+    type ma57_sinfo
+@@ -479,6 +480,7 @@
+       if (stat/=0) go to 100
+ 
+ 
++      finfo%pivot = rinfo(20)
+       finfo%more = info(2)
+       if (info(1)>=0) then
+         finfo%nebdu  = info(14)
