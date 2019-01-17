@@ -17,7 +17,7 @@ if "MA57_SOURCE" in keys(ENV)
   mudir = "metis-4.0.3"
   provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=mudir)
   hsludir = "hsl_ma57-5.2.0"
-  provides(Sources, URI(ENV["MA57_SOURCE"]), libma57, unpacked_dir=hsludir)
+  provides(Sources, URI("file:/"*ENV["MA57_SOURCE"]), libma57, unpacked_dir=hsludir)
 end
 # Download
 provides(SimpleBuild,
