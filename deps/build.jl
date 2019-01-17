@@ -15,9 +15,9 @@ using BinDeps
 # metis_dirname = joinpath(BinDeps.depsdir(libmetis), "src", udir)
 # provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=udir)
   
-  libma57 = library_dependency("libhsl_ma57")
+  libhsl_ma57 = library_dependency("libhsl_ma57")
   maudir = "hsl_ma57-5.2.0"
-  ma57_dirname = joinpath(BinDeps.depsdir(libma57), "src", maudir)
+  ma57_dirname = joinpath(BinDeps.depsdir(libhsl_ma57), "src", maudir)
 # end
 
 # # Metis
@@ -66,7 +66,7 @@ provides(SimpleBuild,
               CreateDirectory(ma57_dirname)
               FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
             end
-          end), libma57, os = :Linux)
+          end), libhsl_ma57, os = :Linux)
 
 # Algencan
 # provides(SimpleBuild,
@@ -140,4 +140,4 @@ provides(SimpleBuild,
 #           end), libalgencan, os = :Darwin)
 
 # @BinDeps.install Dict(:libalgencan => :libalgencan)
-@BinDeps.install Dict(:libma57 => :libma57)
+@BinDeps.install Dict(:libhsl_ma57 => :libhsl_ma57)
