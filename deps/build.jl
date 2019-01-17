@@ -72,7 +72,7 @@ provides(SimpleBuild,
             @build_steps begin
               ChangeDirectory(ma57_dirname)
               `patch -p1 <../../patches/patch_ma57.txt`
-              `./configure --prefix=$ma57_dirname CFLAGS=-fPIC FCFLAGS=-fPIC`
+              `configure --prefix="$ma57_dirname" CFLAGS="-fPIC" FCFLAGS=-"fPIC"`
               `make`
             end
           end), libhsl_ma57, os = :Linux)
