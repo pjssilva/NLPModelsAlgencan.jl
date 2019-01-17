@@ -89,5 +89,5 @@ provides(SimpleBuild,
             end
           end), libalgencan, os = :Darwin)
 
-@BinDeps.install Dict(:libalgencan => :libalgencan)
+# @BinDeps.install Dict(:libalgencan => :libalgencan)
 @BinDeps.install Dict(:libmetis => :libmetis)
