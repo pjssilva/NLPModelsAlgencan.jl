@@ -17,7 +17,7 @@ using BinDeps
   
   libhsl_ma57 = library_dependency("libhsl_ma57")
   maudir = "hsl_ma57-5.2.0"
-  ma57_dirname = joinpath(BinDeps.depsdir(libhsl_ma57), "src", maudir)
+  ma57_dirname = joinpath(BinDeps.depsdir(libhsl_ma57), "src")
 # end
 
 # # Metis
