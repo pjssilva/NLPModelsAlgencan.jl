@@ -13,4 +13,4 @@ provides(SimpleBuild,
       FileUnpacker(ENV["MA57_SOURCE"], src_dir, "")
   end), libhsl_ma57, os = :Linux)
 
-# @BinDeps.install Dict(:libhsl_ma57 => :libhsl_ma57)
+@BinDeps.install Dict(:libhsl_ma57 => :libhsl_ma57)
