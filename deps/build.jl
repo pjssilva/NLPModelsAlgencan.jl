@@ -1,5 +1,7 @@
 using BinDeps
 
+using BinDeps
+
 # TODO: Allow using HSL
 
 @BinDeps.setup
@@ -11,11 +13,21 @@ algencan_dirname = joinpath(BinDeps.depsdir(libalgencan), "src", udir)
 
 provides(Sources, URI("http://www.ime.usp.br/~egbirgin/tango/sources/algencan-3.1.1.tgz"), libalgencan, unpacked_dir=udir)
 
+if "MA57_SOURCE" in keys(ENV)
+  libmetis = library_dependency("libmetis")
+  libma57 = library_dependency("libhsl_ma57")
+  mudir = "metis-4.0.3"
+  provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=mudir)
+  hsludir = "hsl_ma57-5.2.0"
+  provides(Sources, URI(ENV["MA57_SOURCE"]), libma57, unpacked_dir=hsludir)
+end
 # Download
 provides(SimpleBuild,
          (@build_steps begin
             # Download and untar
             GetSources(libalgencan)
+            GetSources(libmetis)
+            GetSources(libma57)
             @build_steps begin
               ChangeDirectory(BinDeps.depsdir(libalgencan))        # Possibly remove
               CreateDirectory("src")
