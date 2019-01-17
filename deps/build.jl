@@ -5,7 +5,7 @@ using BinDeps
 ma57_src = ENV["MA57_SOURCE"]
 libhsl_ma57 = library_dependency("libhsl_ma57")
 ma57_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src", "hsl_ma57-5.2.0")
-metis_dir = joinpath(BinDeps.depsdir(libmetis), "src", "metis-4.0.3")
+metis_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src", "metis-4.0.3")
 provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libhsl_ma57, unpacked_dir="metis-4.0.3")
 
 # src_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src")
