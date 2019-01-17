@@ -66,7 +66,9 @@ provides(SimpleBuild,
             # Unpack for compilation
             @build_steps begin
               CreateDirectory(ma57_dirname)
-              FileUnpacker(ENV["MA57_SOURCE"], ma57_basedir, "")
+              source = ENV["MA57_SOURCE"]
+              `tar xvf $source`
+              #FileUnpacker(ENV["MA57_SOURCE"], ma57_basedir, "")
             end
 
             # patch and compile
