@@ -25,9 +25,10 @@ provides(SimpleBuild,
          (@build_steps begin
             GetSources(libmetis)
 
-            ChangeDirectory(BinDeps.depsdir(libmetis))
-            `make COPTIONS=-fPIC`
-
+            @build_steps begin
+              ChangeDirectory(BinDeps.depsdir(libmetis))
+              `make COPTIONS=-fPIC`
+            end
           end), libmetis, os = :Linux)
 
 # # HSL
