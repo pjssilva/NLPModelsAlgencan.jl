@@ -1,47 +1,106 @@
 using BinDeps
+import Logging
 
 @BinDeps.setup
 
-ma57_src = ENV["MA57_SOURCE"]
-libhsl_ma57 = library_dependency("libhsl_ma57")
-ma57_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src", "hsl_ma57-5.2.0")
-metis_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src", "metis-4.0.3")
-provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libhsl_ma57, unpacked_dir="metis-4.0.3")
+libalgencan = library_dependency("libalgencan")
+depspath = BinDeps.depsdir(libalgencan)
+algencanpath = joinpath(depspath, "src", "algencan-3.1.1")
+provides(Sources, URI("http://www.ime.usp.br/~egbirgin/tango/sources/algencan-3.1.1.tgz"), libalgencan, unpackedpath="algencan-3.1.1")
+srcpath = joinpath(depspath, "src")
 
-# src_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src")
-src_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src")
+# Set HSL for compilation if necessary
+compilehsl = "MA57_SOURCE" in keys(ENV)
+if compilehsl
+  libmetis4 = library_dependency("libmetis")
+  metispath = joinpath(BinDeps.depsdir(libmetis4), "src", "metis-4.0.3")
+  provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis4, unpackedpath="metis-4.0.3")
+  ma57_src = ENV["MA57_SOURCE"]
+  ma57path = joinpath(BinDeps.depsdir(libalgencan), "src", "hsl_ma57-5.2.0")
+  ENV["METISPATH"] = metispath
+  ENV["MA57PATH"] = ma57path
+end
 
-# HSL
-provides(SimpleBuild, 
-  (@build_steps begin
-      # Get Metis sources and unpack
-      ChangeDirectory(BinDeps.depsdir(libhsl_ma57))
-      GetSources(libhsl_ma57)
-      `tar xf downloads/metis-4.0.3.tar.gz --directory=$src_dir`
+if compilehsl
+  # Build Algencan with HSL
+  provides(SimpleBuild, 
+    (@build_steps begin
+        # Get Metis sources and unpack
+        ChangeDirectory(BinDeps.depsdir(libalgencan))
+        GetSources(libmetis4)
+        `tar xf downloads/metis-4.0.3.tar.gz --directory=$srcpath`
+        GetSources(libalgencan)
+        `tar xf downloads/algencan-3.1.1.tgz --directory=$srcpath`
 
-      # Unpack HSL sources
-      CreateDirectory(ma57_dir)
-      `tar xf $ma57_src --directory=$src_dir`
+        # Unpack HSL sources
+        CreateDirectory(ma57path)
+        `tar xf $ma57_src --directory=$srcpath`
 
-      # Build Metis
-      @build_steps begin
-        ChangeDirectory(metis_dir)
-        `make COPTIONS=-fPIC`
-      end
+        # Build Metis
+        @build_steps begin
+          ChangeDirectory(metispath)
+          `make COPTIONS=-fPIC`
+        end
 
-      # Build HSL
-      @build_steps begin
-        ChangeDirectory(ma57_dir)
-        `patch -p1 -i ../../patches/patch_ma57.tx`
-        `./configure --with-metis=$metis_dir/libmetis.a --prefix=$ma57_dir CFLAGS=-fPIC FCFLAGS=-fPIC`
-        `make`
-        `make install`
-      end
-      @build_steps begin
-        ChangeDirectory(joinpath(ma57_dir, "lib"))
-        `gcc --shared -o libhsl_ma57.so libhsl_ma57.a`
-      end
-  end), libhsl_ma57, os = :Linux
-)
+        # Build HSL
+        @build_steps begin
+          ChangeDirectory(ma57path)
+          `patch -p1 -i../../patches/patch_ma57.txt`
+          `./configure --with-metis=$metispath/libmetis.a --prefix=$ma57path CFLAGS=-fPIC FCFLAGS=-fPIC`
+          `make`
+          `make install`
+        end
 
-@BinDeps.install Dict(:libhsl_ma57 => :libhsl_ma57)
+        # Build Algencan
+
+        @build_steps begin
+          ChangeDirectory(algencanpath)
+          `patch -p1 -i../../patches/patch_algencan.txt`
+          `make`
+        end
+
+        # Create the shared library
+        @build_steps begin
+          ChangeDirectory(BinDeps.depsdir(libalgencan))
+          CreateDirectory("usr")
+          CreateDirectory("usr/lib")        
+        end
+        @build_steps begin
+          ChangeDirectory(algencanpath)
+          `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -l gfortran`
+        end
+    end), libalgencan, os = :Linux
+  )
+else
+  provides(SimpleBuild, 
+    (@build_steps begin
+        Logging.@warn "WARNING: You are installing Algencan.jl without HSL libraries."
+        Logging.@warn "WARNING: This might preclude good performance."
+        Logging.@warn "WARNING: If you can try to use HSL."
+        Logging.@warn "WARNING: See details in the installation section at https://github.com/pjssilva/Algencan.jl ."
+
+        # Get Algencan sources and unpack
+        GetSources(libalgencan)
+        `tar xf downloads/algencan-3.1.1.tgz --directory=$srcpath`
+
+        # Build Algencan
+        @build_steps begin
+          ChangeDirectory(algencanpath)
+          `make CFLAGS="-O3 -fPIC" FFLAGS="-O3 -ffree-form -fPIC"`
+        end
+
+        # Create the shared library
+        @build_steps begin
+          ChangeDirectory(BinDeps.depsdir(libalgencan))
+          CreateDirectory("usr")
+          CreateDirectory("usr/lib")        
+        end
+        @build_steps begin
+          ChangeDirectory(algencanpath)
+          `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -l gfortran`
+        end
+    end), libalgencan, os = :Linux
+  )
+end
+
+@BinDeps.install Dict(:libalgencan => :libalgencan)
