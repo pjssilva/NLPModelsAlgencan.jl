@@ -25,7 +25,7 @@ provides(SimpleBuild,
          (@build_steps begin
             GetSources(libmetis)
 
-            ChageDirectory(BinDeps.depsdir(libmetis))
+            ChangeDirectory(BinDeps.depsdir(libmetis))
             `make COPTIONS=-fPIC`
 
           end), libmetis, os = :Linux)
