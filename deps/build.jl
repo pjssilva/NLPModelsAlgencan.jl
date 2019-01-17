@@ -15,9 +15,9 @@ if compile_hsl
   provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=mudir)
   metis_dirname = joinpath(BinDeps.depsdir(libmetis), "src", mudir)
 
-  libma57 = library_dependency("libhsl_ma57")
-  maudir = "hsl_ma57-5.2.0"
-  ma57_dirname = joinpath(BinDeps.depsdir(libma57), "src", maudir)
+  # libma57 = library_dependency("libhsl_ma57")
+  # maudir = "hsl_ma57-5.2.0"
+  # ma57_dirname = joinpath(BinDeps.depsdir(libma57), "src", maudir)
 end
 
 # # Metis
@@ -31,15 +31,15 @@ provides(SimpleBuild,
             end
           end), libmetis, os = :Linux)
 
-# HSL
-provides(SimpleBuild,
-         (@build_steps begin
-            @build_steps begin
-              CreateDirectory(ma57_dirname)
-              FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
-            end
+# # HSL
+# provides(SimpleBuild,
+#          (@build_steps begin
+#             @build_steps begin
+#               CreateDirectory(ma57_dirname)
+#               FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
+#             end
 
-          end), libma57, os = :Linux)
+#           end), libma57, os = :Linux)
 
 # Algencan
 provides(SimpleBuild,
