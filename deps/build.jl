@@ -32,7 +32,7 @@ provides(SimpleBuild,
       # Build HSL
       @build_steps begin
         ChangeDirectory(ma57_dir)
-        `patch -p1 <../../patches/patch_ma57.txt`
+        `patch -p1 -i ../../patches/patch_ma57.tx`
         `./configure --with-metis=$metis_dir/libmetis.a --prefix=$ma57_dir CFLAGS=-fPIC FCFLAGS=-fPIC`
         `make`
         `make install`
