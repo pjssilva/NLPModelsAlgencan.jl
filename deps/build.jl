@@ -2,9 +2,10 @@ using BinDeps
 
 @BinDeps.setup
 
+src_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src")
+
 ma57_src = ENV["MA57_SOURCE"]
 libhsl_ma57 = library_dependency("libhsl_ma57")
-src_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src")
 ma57_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src", "hsl_ma57-5.2.0")
 
 # HSL
@@ -18,6 +19,10 @@ provides(SimpleBuild,
         `./configure --prefix=$ma57_dir CFLAGS=-fPIC FCFLAGS=-fPIC `
         `make`
         `make install`
+      end
+      @build_steps begin
+        ChangeDirectory(joinpath(ma57_dir, "lib"))
+        `gcc --shared libalgencan.a`
       end
   end), libhsl_ma57, os = :Linux)
 
