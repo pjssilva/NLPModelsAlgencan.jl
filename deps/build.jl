@@ -63,6 +63,7 @@ using BinDeps
 # HSL
 provides(SimpleBuild,
          (@build_steps begin
+          CreateDirectory(ma57_dirname)
           FileUnpacker(ENV["MA57_SOURCE"], ma57_basedir, "")
           # ChangeDirectory(ma57_basedir)
           #   # Unpack for compilation
