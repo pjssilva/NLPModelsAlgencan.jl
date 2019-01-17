@@ -21,14 +21,15 @@ if compile_hsl
 end
 
 # # Metis
-# provides(SimpleBuild,
-#          (@build_steps begin
-#             GetSources(libmetis)
+provides(SimpleBuild,
+         (@build_steps begin
+            GetSources(libmetis)
 
-#             ChangeDirectory(BinDeps.depsdir(libmetis))
-#             `make COPTIONS=-fPIC`
+            ChangeDirectory(BinDeps.depsdir(libmetis))
+            `make COPTIONS=-fPIC`
 
-#           end), libmetis, os = :Linux)
+          end), libmetis, os = :Linux)
+
 # # HSL
 # provides(SimpleBuild,
 #          (@build_steps begin
