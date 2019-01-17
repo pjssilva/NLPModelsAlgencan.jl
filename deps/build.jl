@@ -24,7 +24,7 @@ provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis
 provides(SimpleBuild,
          (@build_steps begin
             # Download and untar
-            GetSources(libalgencan)
+            GetSources(libmetis)
             @build_steps begin
               ChangeDirectory(BinDeps.depsdir(libalgencan))        # Possibly remove
               CreateDirectory("src")
