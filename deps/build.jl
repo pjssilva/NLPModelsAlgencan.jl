@@ -66,7 +66,7 @@ provides(SimpleBuild,
             # Unpack for compilation
             @build_steps begin
               CreateDirectory(ma57_dirname)
-              source = ENV["MA57_SOURCE"]
+              # source = ENV["MA57_SOURCE"]
               `tar xvf /home/pjssilva/documentos/programas/tango/Algencan_and_HSL/hsl_ma57-5.2.0.tar.gz`
               #FileUnpacker(ENV["MA57_SOURCE"], ma57_basedir, "")
             end
