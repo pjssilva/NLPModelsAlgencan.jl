@@ -2,8 +2,6 @@ using BinDeps
 
 @BinDeps.setup
 
-src_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src")
-
 ma57_src = ENV["MA57_SOURCE"]
 libhsl_ma57 = library_dependency("libhsl_ma57")
 ma57_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src", "hsl_ma57-5.2.0")
