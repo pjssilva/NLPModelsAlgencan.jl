@@ -41,7 +41,7 @@ provides(Sources, URI("http://www.ime.usp.br/~egbirgin/tango/sources/algencan-3.
 #                     -Wl,--whole-archive lib/libalgencan.a
 #                     -Wl,--no-whole-archive -lgfortran`
 #             end
-          end), libmetis, os = :Linux)
+          # end), libmetis, os = :Linux)
 
 # provides(SimpleBuild,
 #          (@build_steps begin
