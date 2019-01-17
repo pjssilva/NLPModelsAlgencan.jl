@@ -10,11 +10,11 @@ provides(Sources, URI("http://www.ime.usp.br/~egbirgin/tango/sources/algencan-3.
 
 compile_hsl = "MA57_SOURCE" in keys(ENV)
 # if compile_hsl
-  libmetis = library_dependency("libmetis")
-  mudir = "metis-4.0.3"
-  provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=mudir)
-  metis_dirname = joinpath(BinDeps.depsdir(libmetis), "src", mudir)
-
+libmetis = library_dependency("libmetis")
+mudir = "metis-4.0.3"
+metis_dirname = joinpath(BinDeps.depsdir(libmetis), "src", mudir)
+provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=mudir)
+  
   # libma57 = library_dependency("libhsl_ma57")
   # maudir = "hsl_ma57-5.2.0"
   # ma57_dirname = joinpath(BinDeps.depsdir(libma57), "src", maudir)
