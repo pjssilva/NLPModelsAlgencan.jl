@@ -17,11 +17,11 @@ provides(SimpleBuild,
       # Get Metis sources and unpack
       ChangeDirectory(BinDeps.depsdir(libhsl_ma57))
       GetSources(libhsl_ma57)
-      `tar xvf downloads/metis-4.0.3.tar.gz --directory=$src_dir`
+      `tar xf downloads/metis-4.0.3.tar.gz --directory=$src_dir`
 
-      # Unpack HSL 
+      # Unpack HSL sources
       CreateDirectory(ma57_dir)
-      `tar xvf $ma57_src --directory=$src_dir`
+      `tar xf $ma57_src --directory=$src_dir`
 
       # Build Metis
       @build_steps begin
@@ -33,7 +33,7 @@ provides(SimpleBuild,
       @build_steps begin
         ChangeDirectory(ma57_dir)
         `patch -p1 <../../patches/patch_ma57.txt`
-        `./configure --prefix=$ma57_dir CFLAGS=-fPIC FCFLAGS=-fPIC`
+        `./configure --with-metis=$metis_dis/libmetis.a --prefix=$ma57_dir CFLAGS=-fPIC FCFLAGS=-fPIC`
         `make`
         `make install`
       end
