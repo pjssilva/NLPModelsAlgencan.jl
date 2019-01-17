@@ -20,24 +20,24 @@ if compile_hsl
   ma57_dirname = joinpath(BinDeps.depsdir(libma57), "src", maudir)
 end
 
-# Metis
-provides(SimpleBuild,
-         (@build_steps begin
-            GetSources(libmetis)
+# # Metis
+# provides(SimpleBuild,
+#          (@build_steps begin
+#             GetSources(libmetis)
 
-            ChangeDirectory(BinDeps.depsdir(libmetis))
-            `make COPTIONS=-fPIC`
+#             ChangeDirectory(BinDeps.depsdir(libmetis))
+#             `make COPTIONS=-fPIC`
 
-          end), libmetis, os = :Linux)
-# HSL
-provides(SimpleBuild,
-         (@build_steps begin
-            @build_steps begin
-              CreateDirectory(ma57_dirname)
-              FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
-            end
+#           end), libmetis, os = :Linux)
+# # HSL
+# provides(SimpleBuild,
+#          (@build_steps begin
+#             @build_steps begin
+#               CreateDirectory(ma57_dirname)
+#               FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
+#             end
 
-          end), libma57, os = :Linux)
+#           end), libma57, os = :Linux)
 
 # Algencan
 provides(SimpleBuild,
