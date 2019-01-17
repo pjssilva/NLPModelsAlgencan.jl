@@ -21,17 +21,17 @@ provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis
 # end
 
 # Metis
-provides(BuildProcess,
+provides(SimpleBuild,
          (@build_steps begin
             # Download and untar
-            GetSources(libmetis)
-#             @build_steps begin
-#               ChangeDirectory(BinDeps.depsdir(libmetis))        # Possibly remove
-#               CreateDirectory("src")
-#               CreateDirectory("usr")
-#               CreateDirectory("usr/lib")
-#               `tar -zxf downloads/metis-4.0.3.tar.gz -C src/` # Remove this later
-#             end
+            #GetSources(libmetis)
+            @build_steps begin
+              ChangeDirectory(BinDeps.depsdir(libmetis))        # Possibly remove
+              CreateDirectory("src")
+              CreateDirectory("usr")
+              CreateDirectory("usr/lib")
+              `tar -zxf downloads/metis-4.0.3.tar.gz -C src/` # Remove this later
+            end
 #             @build_steps begin
 #               ChangeDirectory(algencan_dirname)
 #               # Compile with Makefile and flags
@@ -141,4 +141,4 @@ provides(BuildProcess,
 #           end), libalgencan, os = :Darwin)
 
 # @BinDeps.install Dict(:libalgencan => :libalgencan)
-# @BinDeps.install Dict(:libmetis => :libmetis)
+@BinDeps.install Dict(:libmetis => :libmetis)
