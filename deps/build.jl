@@ -23,6 +23,7 @@ provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis
 # Metis
 provides(SimpleBuild,
          (@build_steps begin
+            # Download and untar
             GetSources(libmetis)
             @build_steps begin
               ChangeDirectory(BinDeps.depsdir(libmetis))        # Possibly remove
@@ -31,11 +32,32 @@ provides(SimpleBuild,
               CreateDirectory("usr/lib")
               `tar -zxf downloads/metis-4.0.3.tar.gz -C src/` # Remove this later
             end
-            @build_steps begin
-              ChangeDirectory(metis_dirname)
-              `make COPTIONS=-fPIC`
-            end
+#             @build_steps begin
+#               ChangeDirectory(algencan_dirname)
+#               # Compile with Makefile and flags
+#               `make CFLAGS="-O3 -fPIC" FFLAGS="-O3 -ffree-form -fPIC"`
+#               # Produce a shared library on deps/usr/lib
+#               `gcc -shared -o ../../usr/lib/libalgencan.so
+#                     -Wl,--whole-archive lib/libalgencan.a
+#                     -Wl,--no-whole-archive -lgfortran`
+#             end
           end), libmetis, os = :Linux)
+
+# provides(SimpleBuild,
+#          (@build_steps begin
+#             GetSources(libmetis)
+#             @build_steps begin
+#               ChangeDirectory(BinDeps.depsdir(libmetis))        # Possibly remove
+#               CreateDirectory("src")
+#               CreateDirectory("usr")
+#               CreateDirectory("usr/lib")
+#               `tar -zxf downloads/metis-4.0.3.tar.gz -C src/` # Remove this later
+#             end
+#             @build_steps begin
+#               ChangeDirectory(metis_dirname)
+#               `make COPTIONS=-fPIC`
+#             end
+#           end), libmetis, os = :Linux)
 
 # # HSL
 # provides(SimpleBuild,
