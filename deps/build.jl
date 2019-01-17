@@ -15,7 +15,7 @@ src_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src")
 provides(SimpleBuild, 
   (@build_steps begin
       # Get Metis sources and unpack
-      ChangeDirectory(inDeps.depsdir(libhsl_ma57))
+      ChangeDirectory(BinDeps.depsdir(libhsl_ma57))
       GetSources(libhsl_ma57)
       `tar xvf downloads/metis-4.0.3.tar.gz --directory=$src_dir`
 
