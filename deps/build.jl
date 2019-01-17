@@ -39,5 +39,4 @@ provides(SimpleBuild,
   end), libhsl_ma57, os = :Linux
 )
 
-@BinDeps.install Dict(:libhsl_ma57 => :libhsl_ma57)
-@BinDeps.install Dict(:libmetis => :libmetis)
+@BinDeps.install Dict(:libhsl_ma57 => :libhsl_ma57, :libmetis => :libmetis)
