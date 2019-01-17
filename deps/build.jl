@@ -8,12 +8,12 @@ using BinDeps
 # algencan_dirname = joinpath(BinDeps.depsdir(libalgencan), "src", udir)
 # provides(Sources, URI("http://www.ime.usp.br/~egbirgin/tango/sources/algencan-3.1.1.tgz"), libalgencan, unpacked_dir=udir)
 
-compile_hsl = "MA57_SOURCE" in keys(ENV)
+# compile_hsl = "MA57_SOURCE" in keys(ENV)
 # if compile_hsl
 libmetis = library_dependency("libmetis")
-mudir = "metis-4.0.3"
+udir = "metis-4.0.3"
 metis_dirname = joinpath(BinDeps.depsdir(libmetis), "src", mudir)
-provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=mudir)
+provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=udir)
   
   # libma57 = library_dependency("libhsl_ma57")
   # maudir = "hsl_ma57-5.2.0"
@@ -28,7 +28,7 @@ provides(SimpleBuild,
               ChangeDirectory(metis_dirname)
               `make COPTIONS=-fPIC`
             end
-          end), libmetis, os = :Linux)
+          end), libmetisa, os = :Linux)
 
 # # HSL
 # provides(SimpleBuild,
