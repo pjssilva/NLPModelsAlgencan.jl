@@ -10,38 +10,38 @@ using BinDeps
 
 # compile_hsl = "MA57_SOURCE" in keys(ENV)
 # if compile_hsl
-libmetis = library_dependency("libmetis")
-udir = "metis-4.0.3"
-metis_dirname = joinpath(BinDeps.depsdir(libmetis), "src", udir)
-provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=udir)
+# libmetis = library_dependency("libmetis")
+# udir = "metis-4.0.3"
+# metis_dirname = joinpath(BinDeps.depsdir(libmetis), "src", udir)
+# provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=udir)
   
-  # libma57 = library_dependency("libhsl_ma57")
-  # maudir = "hsl_ma57-5.2.0"
-  # ma57_dirname = joinpath(BinDeps.depsdir(libma57), "src", maudir)
+  libma57 = library_dependency("libhsl_ma57")
+  maudir = "hsl_ma57-5.2.0"
+  ma57_dirname = joinpath(BinDeps.depsdir(libma57), "src", maudir)
 # end
 
-# Metis
-provides(SimpleBuild,
-         (@build_steps begin
-            # Download and untar
-            #GetSources(libmetis)
-            @build_steps begin
-              ChangeDirectory(BinDeps.depsdir(libmetis))        # Possibly remove
-              CreateDirectory("src")
-              CreateDirectory("usr")
-              CreateDirectory("usr/lib")
-              `tar -zxf downloads/metis-4.0.3.tar.gz -C src/` # Remove this later
-            end
+# # Metis
+# provides(SimpleBuild,
+#          (@build_steps begin
+#             # Download and untar
+#             GetSources(libmetis)
 #             @build_steps begin
-#               ChangeDirectory(algencan_dirname)
-#               # Compile with Makefile and flags
-#               `make CFLAGS="-O3 -fPIC" FFLAGS="-O3 -ffree-form -fPIC"`
-#               # Produce a shared library on deps/usr/lib
-#               `gcc -shared -o ../../usr/lib/libalgencan.so
-#                     -Wl,--whole-archive lib/libalgencan.a
-#                     -Wl,--no-whole-archive -lgfortran`
+#               ChangeDirectory(BinDeps.depsdir(libmetis))        # Possibly remove
+#               CreateDirectory("src")
+#               CreateDirectory("usr")
+#               CreateDirectory("usr/lib")
+#               `tar -zxf downloads/metis-4.0.3.tar.gz -C src/` # Remove this later
 #             end
-          end), libmetis, os = :Linux)
+# #             @build_steps begin
+# #               ChangeDirectory(algencan_dirname)
+# #               # Compile with Makefile and flags
+# #               `make CFLAGS="-O3 -fPIC" FFLAGS="-O3 -ffree-form -fPIC"`
+# #               # Produce a shared library on deps/usr/lib
+# #               `gcc -shared -o ../../usr/lib/libalgencan.so
+# #                     -Wl,--whole-archive lib/libalgencan.a
+# #                     -Wl,--no-whole-archive -lgfortran`
+# #             end
+#           end), libmetis, os = :Linux)
 
 # provides(SimpleBuild,
 #          (@build_steps begin
@@ -59,15 +59,14 @@ provides(SimpleBuild,
 #             end
 #           end), libmetis, os = :Linux)
 
-# # HSL
-# provides(SimpleBuild,
-#          (@build_steps begin
-#             @build_steps begin
-#               CreateDirectory(ma57_dirname)
-#               FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
-#             end
-
-#           end), libma57, os = :Linux)
+# HSL
+provides(SimpleBuild,
+         (@build_steps begin
+            @build_steps begin
+              CreateDirectory(ma57_dirname)
+              FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
+            end
+          end), libma57, os = :Linux)
 
 # Algencan
 # provides(SimpleBuild,
@@ -141,4 +140,4 @@ provides(SimpleBuild,
 #           end), libalgencan, os = :Darwin)
 
 # @BinDeps.install Dict(:libalgencan => :libalgencan)
-@BinDeps.install Dict(:libmetis => :libmetis)
+@BinDeps.install Dict(:libma57 => :libma57)
