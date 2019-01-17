@@ -13,11 +13,13 @@ provides(Sources, URI("http://www.ime.usp.br/~egbirgin/tango/sources/algencan-3.
 
 if "MA57_SOURCE" in keys(ENV)
   libmetis = library_dependency("libmetis")
-  libma57 = library_dependency("libhsl_ma57")
   mudir = "metis-4.0.3"
   provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=mudir)
-  hsludir = "hsl_ma57-5.2.0"
-  provides(Sources, URI("file:/"*ENV["MA57_SOURCE"]), libma57, unpacked_dir=hsludir)
+  metis_dirname = joinpath(BinDeps.depsdir(libmetis), "src", mudir)
+
+  libma57 = library_dependency("libhsl_ma57")
+  maudir = "hsl_ma57-5.2.0"
+  ma57_dirname = joinpath(BinDeps.depsdir(libma57), "src", maudir)
 end
 # Download
 provides(SimpleBuild,
@@ -25,7 +27,9 @@ provides(SimpleBuild,
             # Download and untar
             GetSources(libalgencan)
             GetSources(libmetis)
-            GetSources(libma57)
+            @build_steps begin
+              FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname)
+            end
             @build_steps begin
               ChangeDirectory(BinDeps.depsdir(libalgencan))        # Possibly remove
               CreateDirectory("src")
