@@ -18,6 +18,7 @@ provides(SimpleBuild,
         `./configure --prefix=$ma57_dir CFLAGS=-fPIC FCFLAGS=-fPIC `
         `make`
         `make install`
+      end
   end), libhsl_ma57, os = :Linux)
 
 @BinDeps.install Dict(:libhsl_ma57 => :libhsl_ma57)
