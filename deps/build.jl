@@ -63,9 +63,9 @@ using BinDeps
 # HSL
 provides(SimpleBuild,
          (@build_steps begin
+            ChangeDirectory(ma57_basedir)
             # Unpack for compilation
             @build_steps begin
-              ChangeDirectory(ma57_basedir)
               # CreateDirectory(ma57_dirname)
               # source = ENV["MA57_SOURCE"]
               `tar xvf /home/pjssilva/documentos/programas/tango/Algencan_and_HSL/hsl_ma57-5.2.0.tar.gz`
