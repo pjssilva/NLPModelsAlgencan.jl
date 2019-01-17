@@ -28,7 +28,7 @@ provides(SimpleBuild,
             GetSources(libalgencan)
             GetSources(libmetis)
             @build_steps begin
-              FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname)
+              FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
             end
             @build_steps begin
               ChangeDirectory(BinDeps.depsdir(libalgencan))        # Possibly remove
