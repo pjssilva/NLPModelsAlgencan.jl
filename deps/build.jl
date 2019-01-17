@@ -23,11 +23,17 @@ provides(SimpleBuild,
       CreateDirectory(ma57_dir)
       `tar xvf $ma57_src --directory=$src_dir`
 
+      # Build Metis
+      @build_steps begin
+        ChangeDirectory(metis_dir)
+        `make COPTIONS=-fPIC`
+      end
+
       # Build HSL
       @build_steps begin
         ChangeDirectory(ma57_dir)
         `patch -p1 <../../patches/patch_ma57.txt`
-        `./configure --prefix=$ma57_dir CFLAGS=-fPIC FCFLAGS=-fPIC `
+        `./configure --prefix=$ma57_dir CFLAGS=-fPIC FCFLAGS=-fPIC`
         `make`
         `make install`
       end
