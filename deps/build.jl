@@ -31,15 +31,15 @@ provides(SimpleBuild,
             end
           end), libmetis, os = :Linux)
 
-# # HSL
-# provides(SimpleBuild,
-#          (@build_steps begin
-#             @build_steps begin
-#               CreateDirectory(ma57_dirname)
-#               FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
-#             end
+# HSL
+provides(SimpleBuild,
+         (@build_steps begin
+            @build_steps begin
+              CreateDirectory(ma57_dirname)
+              FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
+            end
 
-#           end), libma57, os = :Linux)
+          end), libma57, os = :Linux)
 
 # Algencan
 provides(SimpleBuild,
