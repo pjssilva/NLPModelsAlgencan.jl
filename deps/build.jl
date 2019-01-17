@@ -62,9 +62,18 @@ using BinDeps
 # HSL
 provides(SimpleBuild,
          (@build_steps begin
+            # Unpack for compilation
             @build_steps begin
               CreateDirectory(ma57_dirname)
               FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
+            end
+
+            # patch and compile
+            @build_steps begin
+              ChangeDirectory(ma57_dirname)
+              `patch -p1 < ../../patches/patch_ma57.txt`
+              `./configure --prefix=$PWD CFLAGS=-fPIC FCFLAGS=-fPIC`
+              `make`
             end
           end), libhsl_ma57, os = :Linux)
 
