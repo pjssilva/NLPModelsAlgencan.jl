@@ -25,22 +25,22 @@ provides(SimpleBuild,
          (@build_steps begin
             # Download and untar
             GetSources(libmetis)
-            @build_steps begin
-              ChangeDirectory(BinDeps.depsdir(libalgencan))        # Possibly remove
-              CreateDirectory("src")
-              CreateDirectory("usr")
-              CreateDirectory("usr/lib")
-              `tar -zxf downloads/algencan-3.1.1.tgz -C src/` # Remove this later
-            end
-            @build_steps begin
-              ChangeDirectory(algencan_dirname)
-              # Compile with Makefile and flags
-              `make CFLAGS="-O3 -fPIC" FFLAGS="-O3 -ffree-form -fPIC"`
-              # Produce a shared library on deps/usr/lib
-              `gcc -shared -o ../../usr/lib/libalgencan.so
-                    -Wl,--whole-archive lib/libalgencan.a
-                    -Wl,--no-whole-archive -lgfortran`
-            end
+            # @build_steps begin
+            #   ChangeDirectory(BinDeps.depsdir(libalgencan))        # Possibly remove
+            #   CreateDirectory("src")
+            #   CreateDirectory("usr")
+            #   CreateDirectory("usr/lib")
+            #   `tar -zxf downloads/algencan-3.1.1.tgz -C src/` # Remove this later
+            # end
+            # @build_steps begin
+            #   ChangeDirectory(algencan_dirname)
+            #   # Compile with Makefile and flags
+            #   `make CFLAGS="-O3 -fPIC" FFLAGS="-O3 -ffree-form -fPIC"`
+            #   # Produce a shared library on deps/usr/lib
+            #   `gcc -shared -o ../../usr/lib/libalgencan.so
+            #         -Wl,--whole-archive lib/libalgencan.a
+            #         -Wl,--no-whole-archive -lgfortran`
+            # end
           end), libmetis, os = :Linux)
 # provides(SimpleBuild,
 #          (@build_steps begin
