@@ -3,10 +3,10 @@ using BinDeps
 # TODO: Allow using HSL
 @BinDeps.setup
 
-libalgencan = library_dependency("libalgencan")
-udir = "algencan-3.1.1"
-algencan_dirname = joinpath(BinDeps.depsdir(libalgencan), "src", udir)
-provides(Sources, URI("http://www.ime.usp.br/~egbirgin/tango/sources/algencan-3.1.1.tgz"), libalgencan, unpacked_dir=udir)
+libmetis = library_dependency("libmetis")
+udir = "metis-4.0.3"
+metis_dirname = joinpath(BinDeps.depsdir(libmetis), "src", udir)
+provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=udir)
 
 # compile_hsl = "MA57_SOURCE" in keys(ENV)
 # if compile_hsl
@@ -73,24 +73,25 @@ provides(Sources, URI("http://www.ime.usp.br/~egbirgin/tango/sources/algencan-3.
 provides(SimpleBuild,
          (@build_steps begin
             # Download and untar
-            GetSources(libalgencan)
+            GetSources(libmetis)
             @build_steps begin
-              ChangeDirectory(BinDeps.depsdir(libalgencan))        # Possibly remove
+              ChangeDirectory(BinDeps.depsdir(libmetis))        # Possibly remove
               CreateDirectory("src")
               CreateDirectory("usr")
               CreateDirectory("usr/lib")
-              `tar -zxf downloads/algencan-3.1.1.tgz -C src/` # Remove this later
+              `tar -zxf downloads/metis-4.0.3.tar.gz -C src/` # Remove this later
             end
             @build_steps begin
-              ChangeDirectory(algencan_dirname)
+              ChangeDirectory(metis_dirname)
               # Compile with Makefile and flags
-              `make CFLAGS="-O3 -fPIC" FFLAGS="-O3 -ffree-form -fPIC"`
-              # Produce a shared library on deps/usr/lib
-              `gcc -shared -o ../../usr/lib/libalgencan.so
-                    -Wl,--whole-archive lib/libalgencan.a
-                    -Wl,--no-whole-archive -lgfortran`
+              `make COPTIONS="-fPIC"`
+              # `make CFLAGS="-O3 -fPIC" FFLAGS="-O3 -ffree-form -fPIC"`
+              # # Produce a shared library on deps/usr/lib
+              # `gcc -shared -o ../../usr/lib/libalgencan.so
+              #       -Wl,--whole-archive lib/libalgencan.a
+              #       -Wl,--no-whole-archive -lgfortran`
             end
-          end), libalgencan, os = :Linux)
+          end), libmetis, os = :Linux)
 
 # # Algencan
 # provides(SimpleBuild,
