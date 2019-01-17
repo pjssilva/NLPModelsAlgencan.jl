@@ -12,11 +12,16 @@ provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis
 # ma57_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src", "hsl_ma57-5.2.0")
 
 # src_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src")
+src_dir = joinpath(BinDeps.depsdir(libmetis), "src")
 
 # metis
 provides(SimpleBuild,
   (@build_steps begin
     GetSources(libmetis)
+    @build_steps begin
+      ChangeDirectory(src_dir)
+      `tar xvf downloads/metis-4.0.3.tar.gz --directory=src`
+    end
   end), libmetis, os = :Linux
 )
 
