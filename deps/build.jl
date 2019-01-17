@@ -21,7 +21,7 @@ provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis
 # end
 
 # Metis
-provides(SimpleBuild,
+provides(BuildProcess,
          (@build_steps begin
             # Download and untar
             GetSources(libmetis)
