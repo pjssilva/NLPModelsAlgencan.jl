@@ -12,6 +12,12 @@ provides(SimpleBuild,
   (@build_steps begin
       CreateDirectory(ma57_dir)
       `tar xvf $ma57_src --directory=$src_dir`
+      @build_steps begin
+        ChangeDirrectory(ma57_dir)
+        `patch -p1 <../../patches/patch_ma57.txt`
+        `./configure --prefix=$ma57_dir CFLAGS=-fPIC FCFLAGS=-fPIC `
+        `make`
+        `make install`
   end), libhsl_ma57, os = :Linux)
 
 @BinDeps.install Dict(:libhsl_ma57 => :libhsl_ma57)
