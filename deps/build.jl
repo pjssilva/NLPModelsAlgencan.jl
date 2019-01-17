@@ -22,7 +22,7 @@ provides(SimpleBuild,
       end
       @build_steps begin
         ChangeDirectory(joinpath(ma57_dir, "lib"))
-        `gcc --shared libalgencan.a`
+        `gcc --shared -o libhsl_ma57.so libhsl_ma57.a`
       end
   end), libhsl_ma57, os = :Linux)
 
