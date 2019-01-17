@@ -16,8 +16,9 @@ using BinDeps
 # provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=udir)
   
   libhsl_ma57 = library_dependency("libhsl_ma57")
-  maudir = "hsl_ma57-5.2.0"
-  ma57_dirname = joinpath(BinDeps.depsdir(libhsl_ma57), "src")
+  ma57_basedir = joinpath(BinDeps.depsdir(libhsl_ma57), "src")
+  uma57dir = "hsl_ma57-5.2.0"
+  ma57_dirname = joinpath(BinDeps.depsdir(libhsl_ma57), "src", uma57dir)
 # end
 
 # # Metis
@@ -65,7 +66,7 @@ provides(SimpleBuild,
             # Unpack for compilation
             @build_steps begin
               CreateDirectory(ma57_dirname)
-              FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
+              FileUnpacker(ENV["MA57_SOURCE"], ma57_basedir, "")
             end
 
             # patch and compile
