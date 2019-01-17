@@ -28,7 +28,7 @@ provides(SimpleBuild,
               ChangeDirectory(metis_dirname)
               `make COPTIONS=-fPIC`
             end
-          end), libmetisa, os = :Linux)
+          end), libmetis, os = :Linux)
 
 # # HSL
 # provides(SimpleBuild,
