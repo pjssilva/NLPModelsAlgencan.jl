@@ -28,6 +28,7 @@ provides(SimpleBuild,
             GetSources(libalgencan)
             GetSources(libmetis)
             @build_steps begin
+              CreateDirectory(ma57_dirname)
               FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
             end
             @build_steps begin
