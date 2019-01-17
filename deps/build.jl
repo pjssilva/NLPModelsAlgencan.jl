@@ -12,7 +12,7 @@ using BinDeps
 # if compile_hsl
 libmetis = library_dependency("libmetis")
 udir = "metis-4.0.3"
-metis_dirname = joinpath(BinDeps.depsdir(libmetis), "src", mudir)
+metis_dirname = joinpath(BinDeps.depsdir(libmetis), "src", udir)
 provides(Sources, URI("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz"), libmetis, unpacked_dir=udir)
   
   # libma57 = library_dependency("libhsl_ma57")
