@@ -17,7 +17,7 @@ src_dir = joinpath(BinDeps.depsdir(libhsl_ma57), "src")
 provides(SimpleBuild,
   (@build_steps begin
     GetSources(libmetis)
-  end), libmetis, os := Linux
+  end), libmetis, os = :Linux
 )
 
 # HSL
