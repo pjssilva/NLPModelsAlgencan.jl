@@ -22,24 +22,22 @@ end
 
 # Metis
 provides(SimpleBuild,
-         (@build_Steps begin
+         (@build_steps begin
+            GetSources(libmetis)
 
-          GetSources(libmetis)
+            ChageDirectory(BinDeps.depsdir(libmetis))
+            `make COPTIONS=-fPIC`
 
-          ChageDirectory(BinDeps.depsdir(libmetis))
-          `make COPTIONS=-fPIC`
-
-         end), libmetis, os = :Linux)
+          end), libmetis, os = :Linux)
 # HSL
 provides(SimpleBuild,
-         (@build_Steps begin
-          
-          @build_steps begin
-            CreateDirectory(ma57_dirname)
-            FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
-          end
+         (@build_steps begin
+            @build_steps begin
+              CreateDirectory(ma57_dirname)
+              FileUnpacker(ENV["MA57_SOURCE"], ma57_dirname, "")
+            end
 
-        end), libma57, os = :Linux)
+          end), libma57, os = :Linux)
 
 # Algencan
 provides(SimpleBuild,
