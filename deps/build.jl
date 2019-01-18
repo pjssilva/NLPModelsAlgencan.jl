@@ -1,5 +1,6 @@
 using BinDeps
 import Logging
+import Compat.Sys
 
 @BinDeps.setup
 
@@ -23,7 +24,7 @@ end
 
 if compilehsl
   # Build Algencan with HSL
-  provides(SimpleBuild, 
+  provides(SimpleBuild,
     (@build_steps begin
         # Get Metis sources and unpack
         ChangeDirectory(BinDeps.depsdir(libalgencan))
@@ -63,16 +64,20 @@ if compilehsl
         @build_steps begin
           ChangeDirectory(BinDeps.depsdir(libalgencan))
           CreateDirectory("usr")
-          CreateDirectory("usr/lib")        
+          CreateDirectory("usr/lib")
         end
         @build_steps begin
           ChangeDirectory(algencanpath)
-          `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -l gfortran`
+          if Sys.islinux()
+            `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -l gfortran`
+          else
+            `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -Wl,-noall-load -l gfortran`
+          end
         end
     end), libalgencan, os = :Linux
   )
 else
-  provides(SimpleBuild, 
+  provides(SimpleBuild,
     (@build_steps begin
         Logging.@warn "WARNING: You are installing Algencan.jl without HSL libraries."
         Logging.@warn "WARNING: This might preclude good performance."
@@ -93,11 +98,15 @@ else
         @build_steps begin
           ChangeDirectory(BinDeps.depsdir(libalgencan))
           CreateDirectory("usr")
-          CreateDirectory("usr/lib")        
+          CreateDirectory("usr/lib")
         end
         @build_steps begin
           ChangeDirectory(algencanpath)
-          `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -l gfortran`
+          if Sys.islinux()
+            `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -l gfortran`
+          else
+            `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -Wl,-noall-load -l gfortran`
+          end
         end
     end), libalgencan, os = :Linux
   )
