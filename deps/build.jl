@@ -74,7 +74,7 @@ if compilehsl
             `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -l gfortran`
           end
         end
-    end), libalgencan, os = :Linux
+    end), libalgencan, os = :Unix
   )
 else
   provides(SimpleBuild,
