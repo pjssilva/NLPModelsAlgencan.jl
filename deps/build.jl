@@ -1,5 +1,5 @@
 using BinDeps
-import Logging
+import Compat
 import Compat.Sys
 
 @BinDeps.setup
@@ -79,10 +79,10 @@ if compilehsl
 else
   provides(SimpleBuild,
     (@build_steps begin
-        Logging.@warn "WARNING: You are installing Algencan.jl without HSL libraries."
-        Logging.@warn "WARNING: This might preclude good performance."
-        Logging.@warn "WARNING: If you can try to use HSL."
-        Logging.@warn "WARNING: See details in the installation section at https://github.com/pjssilva/Algencan.jl ."
+        Compat.@warn "WARNING: You are installing Algencan.jl without HSL libraries."
+        Compat.@warn "WARNING: This might preclude good performance."
+        Compat.@warn "WARNING: If you can try to use HSL."
+        Compat.@warn "WARNING: See details in the installation section at https://github.com/pjssilva/Algencan.jl ."
 
         # Get Algencan sources and unpack
         GetSources(libalgencan)
