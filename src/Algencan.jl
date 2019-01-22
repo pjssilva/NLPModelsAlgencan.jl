@@ -737,21 +737,21 @@ end
 
 # Hints to precompile
 # TODO: Automate this with proper packages
-precompile(MPB.loadproblem!, (AlgencanMathProgModel, Integer, Integer,
-    Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Symbol,
-    MPB.AbstractNLPEvaluator))
-precompile(option2vparam, (AlgencanMathProgModel,))
-precompile(julia_fc, (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64},
-    Ptr{Cint}))
-precompile(julia_gjac, (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Cint},
-    Ptr{Cint}, Ptr{Float64}, Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
-precompile(julia_hl, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Float64,
-    Ptr{Float64}, Ptr{Cint}, Ptr{Cint}, Ptr{Float64}, Ptr{Cint}, Cint,
-    Ptr{UInt8}, Ptr{Cint}))
-precompile(julia_hlp, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Float64,
-    Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{UInt8}, Ptr{Cint}))
-precompile(MPB.optimize!, (AlgencanMathProgModel,))
-precompile(find_status, (AlgencanMathProgModel, Float64, Float64, Float64, Int))
-include("precompile_Algencan.jl")
-_precompile_()
+# precompile(MPB.loadproblem!, (AlgencanMathProgModel, Integer, Integer,
+#     Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Symbol,
+#     MPB.AbstractNLPEvaluator))
+# precompile(option2vparam, (AlgencanMathProgModel,))
+# precompile(julia_fc, (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64},
+#     Ptr{Cint}))
+# precompile(julia_gjac, (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Cint},
+#     Ptr{Cint}, Ptr{Float64}, Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
+# precompile(julia_hl, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Float64,
+#     Ptr{Float64}, Ptr{Cint}, Ptr{Cint}, Ptr{Float64}, Ptr{Cint}, Cint,
+#     Ptr{UInt8}, Ptr{Cint}))
+# precompile(julia_hlp, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Float64,
+#     Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{UInt8}, Ptr{Cint}))
+# precompile(MPB.optimize!, (AlgencanMathProgModel,))
+# precompile(find_status, (AlgencanMathProgModel, Float64, Float64, Float64, Int))
+# include("precompile_Algencan.jl")
+# _precompile_()
 end # module
