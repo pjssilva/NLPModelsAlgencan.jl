@@ -1,5 +1,3 @@
-__precompile__()
-
 """
 Algencan interface to MathProgBase and JuMP.
 
@@ -475,7 +473,7 @@ function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     if !model.g_has_lb
         μ = scale_g .* alg_mult
     else
-        μ = model.g_sense .* scale_g[1:model.m] .* alg_mult[1:model.m] 
+        μ = model.g_sense .* scale_g[1:model.m] .* alg_mult[1:model.m]
         μ[model.g_two_sides] -= scale_g[model.m + 1:m] .* alg_mult[model.m + 1:m]
     end
 
@@ -754,5 +752,6 @@ precompile(julia_hlp, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Float64,
     Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{UInt8}, Ptr{Cint}))
 precompile(MPB.optimize!, (AlgencanMathProgModel,))
 precompile(find_status, (AlgencanMathProgModel, Float64, Float64, Float64, Int))
-
+include("precompile_Algencan.jl")
+_precompile_()
 end # module
