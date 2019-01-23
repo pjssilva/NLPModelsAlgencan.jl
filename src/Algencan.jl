@@ -108,9 +108,8 @@ mutable struct AlgencanMathProgModel <: MPB.AbstractNonlinearModel
         model.n, model.m = 0, 0
         model.lb, model.ub = Float64[], Float64[]
         model.g_lb, model.g_ub = Float64[], Float64[]
-        model.g_sense, model.g_two_sides = Float64[], Bool[]
+        model.g_sense, model.g_two_sides, model.g_two_smap = Float64[], Bool[], Int[]
         model.g_has_lb = false
-        model.g_two_smap = Int[]
         model.sense = 1.0
         model.j_row_inds, model.j_col_inds = Int[], Int[]
         model.h_row_inds, model.h_col_inds = Int[], Int[]
@@ -287,13 +286,13 @@ function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     model.g_sense, model.g_two_sides, model.g_two_smap = treat_lower_bounds(
         g_lb, g_ub)
     model.g_has_lb = (model.m > 0 && (minimum(model.g_sense) == -1 ||
-        maximum(model.g_two_sides)))
+        length(model.two_smap) > 0))
     model.g_lb, model.g_ub = g_lb, g_ub
 
     # Contraints with only lower bound will be multiplied by -1.0, hence
-    # their lower bounds becomes minus the upper cound
+    # their lower bounds becomes minus the upper bound
     g_only_low = (model.g_sense .== -1.0)
-    model.g_ub[g_only_low] = -g_lb[g_only_low]
+    model.g_ub[g_only_low] .= -g_lb[g_only_low]
     model.g_lb[g_only_low] .= -Inf
 
     model.sense = (sense == :Min ? 1.0 : -1.0)
@@ -337,15 +336,8 @@ function treat_lower_bounds(lb, ub)
     sense[only_lower] .= -1.0
 
     # Treat two side constraints
-    two_sides = (-Inf .< lb .!= ub .< Inf)
-    new_ind = 1
-    two_smap = zeros(m)
-    for i = 1:m
-        if two_sides[i]
-            two_smap[i] = new_ind
-            new_ind += 1
-        end
-    end
+    two_sides = -Inf .< lb .!= ub .< Inf
+    two_smap = (1:m)[two_sides]
 
     return sense, two_sides, two_smap
 end
@@ -370,8 +362,10 @@ function julia_fc(model::AlgencanMathProgModel, n::Cint, x_ptr::Ptr{Float64}, ob
     if model.g_has_lb
         first_g = view(g, 1:model.m)
         first_g .*= model.g_sense
-        g[model.m + 1:m] .= -first_g[model.g_two_sides] .+
-            model.g_lb[model.g_two_sides]
+        for i = model.m + 1:m
+            mapped_i = model.two_smap[i - model.m]
+            g[i] = -first_g[mapped_i] + model.g_lb[mapped_i]
+        end
         first_g .-= model.g_ub
     else
         g .-= model.g_ub
@@ -466,7 +460,9 @@ function julia_hl(model::AlgencanMathProgModel, n::Cint, x_ptr::Ptr{Float64}, m:
         μ = scale_g .* alg_mult
     else
         μ = model.g_sense .* scale_g[1:model.m] .* alg_mult[1:model.m]
-        μ[model.g_two_sides] -= scale_g[model.m + 1:m] .* alg_mult[model.m + 1:m]
+        for i = 1:length(model.g_two_smap)
+            μ[model.g_two_smap[i]] -= scale_g[model.m + i] * alg_mult[model.m + i]
+        end
     end
 
     # Evaluate the Hessian
@@ -494,7 +490,9 @@ function julia_hlp(model::AlgencanMathProgModel, n::Cint, x_ptr::Ptr{Float64}, m
         μ = model.g_sense .* alg_mult .* scale_g
     else
         μ = model.g_sense .* alg_mult[1:model.m] .* scale_g[1:model.m]
-        μ[model.g_two_sides] .-= alg_mult[model.m + 1:m] .* scale_g[model.m + 1:m]
+        for i = 1:length(model.g_two_smap)
+            μ[model.g_two_smap[i]] -= scale_g[model.m + i] * alg_mult[model.m + i]
+        end
     end
 
     # Evaluate Hessian times p
@@ -569,13 +567,15 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     checkder = UInt8(0)
 
     # Deal with lower bounds
-    m = model.m + sum(model.g_two_sides)
+    m = model.m + length(model.g_two_smap)
     mult = zeros(m)
     is_equality = zeros(UInt8, m)
     is_equality[1:model.m] .= model.is_equality
     is_g_linear = zeros(UInt8, m)
     is_g_linear[1:model.m] .= model.is_g_linear
-    is_g_linear[model.m + 1:m] .= model.is_g_linear[model.g_two_sides]
+    for i = 1:length(model.g_two_smap)
+        is_g_linear[model.m + i] = models.is_g_linear[model.two_smap[i]]
+    end
 
     # Parameters controling precision
     epsfeas = [model.options[:epsfeas]]
@@ -660,7 +660,9 @@ function MPB.optimize!(model::AlgencanMathProgModel)
 
     # Deal with lower bound and two-sided contraints
     model.mult = model.g_sense .* mult[1:model.m]
-    model.mult[model.g_two_sides] -= mult[model.m + 1:m]
+    for i = 1:length(model.g_two_smap)
+        model.mult[model.g_two_smap[i]] -= mult[model.m + i]
+    end
 
     # Recover status information
     model.status = find_status(model, cnorm[1], snorm[1], nlpsupn[1],
