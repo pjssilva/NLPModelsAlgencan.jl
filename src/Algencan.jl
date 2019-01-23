@@ -574,7 +574,7 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     is_g_linear = zeros(UInt8, m)
     is_g_linear[1:model.m] .= model.is_g_linear
     for i = 1:length(model.g_two_smap)
-        is_g_linear[model.m + i] = models.is_g_linear[model.g_two_smap[i]]
+        is_g_linear[model.m + i] = model.is_g_linear[model.g_two_smap[i]]
     end
 
     # Parameters controling precision
