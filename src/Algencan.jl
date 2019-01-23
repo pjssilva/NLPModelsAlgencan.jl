@@ -26,14 +26,9 @@ elseif isfile(joinpath(dirname(@__FILE__),"..","deps","deps.jl"))
     const algencan_lib_path = libalgencan
 end
 
-
-# Global to avoid closures as Algencan does not allow to send user information
-# back to call backs. Long names to avoid conflicts.
-global current_algencan_problem
-
 # Standard LP interface
 import MathProgBase
-MPB = MathProgBase
+const MPB = MathProgBase
 import Base.copy
 
 ###############################################################################
@@ -360,9 +355,8 @@ end
 ###########################################################################
 
 "Compute objective and constraints as required by Algencan"
-function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
+function julia_fc(model::AlgencanMathProgModel, n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
     m::Cint, g_ptr::Ptr{Float64}, flag_ptr::Ptr{Cint})
-    model::AlgencanMathProgModel = current_algencan_model
 
     # Evaluate objective and constraints
     model.n_fc += 1
@@ -389,11 +383,10 @@ function julia_fc(n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
 end
 
 "Compute objective gradient and constraints Jacobian as required by Algencan"
-function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
+function julia_gjac(model::AlgencanMathProgModel, n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
     m::Cint, jrow_ptr::Ptr{Cint}, jcol_ptr::Ptr{Cint},
     jval_ptr::Ptr{Float64}, jnnz_ptr::Ptr{Cint}, lim::Cint,
     lmem_ptr::Ptr{UInt8}, flag_ptr::Ptr{Cint})
-    model::AlgencanMathProgModel = current_algencan_model
 
     # Compute gradient of the objective
     model.n_gjac += 1
@@ -443,12 +436,11 @@ function julia_gjac(n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
 end
 
 "Compute the Hessian of the Lagrangian as required by Algencan"
-function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
+function julia_hl(model::AlgencanMathProgModel, n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     mult_ptr::Ptr{Float64}, scale_f::Float64, scale_g_ptr::Ptr{Float64},
     hrow_ptr::Ptr{Cint}, hcol_ptr::Ptr{Cint},
     hval_ptr::Ptr{Float64}, hnnz_ptr::Ptr{Cint}, lim::Cint,
     lmem_ptr::Ptr{UInt8}, flag_ptr::Ptr{Cint})
-    model::AlgencanMathProgModel = current_algencan_model
 
     model.n_hl += 1
     # Get nonzero indexes.
@@ -488,11 +480,10 @@ function julia_hl(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
 end
 
 "Compute the Hessian of the Lagrangian times p as required by Algencan"
-function julia_hlp(n::Cint, x_ptr::Ptr{Float64}, m::Cint,
+function julia_hlp(model::AlgencanMathProgModel, n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     mult_ptr::Ptr{Float64}, scale_f::Float64, scale_g_ptr::Ptr{Float64},
     p_ptr::Ptr{Float64}, hp_ptr::Ptr{Float64}, goth_ptr::Ptr{UInt8},
     flag_ptr::Ptr{Cint})
-    model::AlgencanMathProgModel = current_algencan_model
 
     model.n_hlp += 1
     # Compute scaled multipliers
@@ -529,24 +520,27 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     #     end
     #     addOption(model.inner, sname, value)
     # end
-    global current_algencan_model = model
 
     start_time = time_ns()
     ###########################################################################
     # Algencan callback function wrappers
     ###########################################################################
-    c_julia_fc = @cfunction(julia_fc, Nothing, (Cint, Ptr{Float64},
-        Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Cint}))
+    local_julia_fc = (n, x_ptr, obj_ptr, m, g_ptr, flag_ptr) -> julia_fc(model, n, x_ptr, obj_ptr, m, g_ptr, flag_ptr)
+    c_julia_fc = @cfunction($local_julia_fc,
+        Nothing, (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Cint}))
 
-    c_julia_gjac = @cfunction(julia_gjac, Nothing, (Cint, Ptr{Float64},
-        Ptr{Float64}, Cint, Ptr{Cint}, Ptr{Cint}, Ptr{Float64}, Ptr{Cint}, Cint,
-        Ptr{UInt8}, Ptr{Cint}))
+    local_julia_gjac = (n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr, jval_ptr, jnnz_ptr, lim, lmem_ptr, flag_ptr) -> julia_gjac(model, n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr, jval_ptr, jnnz_ptr, lim, lmem_ptr, flag_ptr)
+    c_julia_gjac = @cfunction($local_julia_gjac,
+        Nothing, (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Cint}, Ptr{Cint},
+        Ptr{Float64}, Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
 
-    c_julia_hl = @cfunction(julia_hl, Nothing, (Cint, Ptr{Float64}, Cint,
+    local_julia_hl = (n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, hrow_ptr, hcol_ptr, hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr) -> julia_hl(model, n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, hrow_ptr, hcol_ptr, hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr)
+    c_julia_hl = @cfunction($local_julia_hl, Nothing, (Cint, Ptr{Float64}, Cint,
         Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Cint}, Ptr{Cint}, Ptr{Float64},
         Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
 
-    c_julia_hlp = @cfunction(julia_hlp, Nothing, (Cint, Ptr{Float64}, Cint,
+    local_julia_hlp = (n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, p_ptr, hp_ptr, goth_ptr, flag_ptr) -> julia_hlp(model, n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, p_ptr, hp_ptr, goth_ptr, flag_ptr)
+    c_julia_hlp = @cfunction($local_julia_hlp, Nothing, (Cint, Ptr{Float64}, Cint,
             Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Float64}, Ptr{Float64},
             Ptr{UInt8}, Ptr{Cint}))
 
