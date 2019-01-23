@@ -68,9 +68,9 @@ if compilehsl
         @build_steps begin
           ChangeDirectory(algencanpath)
           if Sys.isapple()
-            `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -Wl,-noall_load -lgfortran`
+            `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -Wl,-noall_load -lgfortran -lblas -llapack`
           else
-            `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -l gfortran`
+            `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -lgfortran -lblas -llapack`
           end
         end
     end), libalgencan, os = :Unix
@@ -102,9 +102,9 @@ else
         @build_steps begin
           ChangeDirectory(algencanpath)
           if Sys.isapple()
-            `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -Wl,-noall_load -lgfortran`
+            `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -Wl,-noall_load -lgfortran -lblas -llapck`
           else
-            `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -l gfortran`
+            `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -lgfortran -lblas -llapack`
           end
         end
     end), libalgencan, os = :Unix
