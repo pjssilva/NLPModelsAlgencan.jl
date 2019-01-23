@@ -370,7 +370,7 @@ function julia_fc(model::AlgencanMathProgModel, n::Cint, x_ptr::Ptr{Float64}, ob
     if model.g_has_lb
         first_g = view(g, 1:model.m)
         first_g .*= model.g_sense
-        g[model.m + 1:m] = -first_g[model.g_two_sides] +
+        g[model.m + 1:m] .= -first_g[model.g_two_sides] .+
             model.g_lb[model.g_two_sides]
         first_g .-= model.g_ub
     else
@@ -494,15 +494,14 @@ function julia_hlp(model::AlgencanMathProgModel, n::Cint, x_ptr::Ptr{Float64}, m
         μ = model.g_sense .* alg_mult .* scale_g
     else
         μ = model.g_sense .* alg_mult[1:model.m] .* scale_g[1:model.m]
-        μ[model.g_two_sides] -= alg_mult[model.m + 1:m] .* scale_g[model.m + 1:m]
+        μ[model.g_two_sides] .-= alg_mult[model.m + 1:m] .* scale_g[model.m + 1:m]
     end
 
     # Evaluate Hessian times p
     x = unsafe_wrap(Array, x_ptr, Int(n))
     p = unsafe_wrap(Array, p_ptr, Int(n))
     hp = unsafe_wrap(Array, hp_ptr, Int(n))
-    MPB.eval_hesslag_prod(model.evaluator, hp, x, p,
-        σ, μ)
+    MPB.eval_hesslag_prod(model.evaluator, hp, x, p, σ, μ)
 
     # Declare success
     unsafe_store!(flag_ptr, Cint(0))
