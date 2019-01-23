@@ -13,7 +13,10 @@ matrix:
 addons:
   apt_packages:
     - gfortran
+    - liblapack3
+    - liblapack-dev
     - libopenblas-base
+    - libopenblas-dev
 
 branches:
   only:
