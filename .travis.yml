@@ -5,6 +5,7 @@ language: julia
 matrix:
   include:
     - os: linux
+      dist: xenial
       julia: 1.0
     - os: osx
       julia: 1.0

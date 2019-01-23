@@ -102,7 +102,7 @@ else
         @build_steps begin
           ChangeDirectory(algencanpath)
           if Sys.isapple()
-            `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -Wl,-noall_load -lgfortran -lblas -llapck`
+            `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -Wl,-noall_load -lgfortran -lblas -llapack`
           else
             `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -lgfortran -lblas -llapack`
           end
