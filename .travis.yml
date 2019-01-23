@@ -12,6 +12,7 @@ matrix:
 addons:
   apt_packages:
     - gfortran
+    - libopenblas-base
 
 branches:
   only:
@@ -19,7 +20,7 @@ branches:
 
 before_install:
   - if [ `uname` == "Linux" ]; then unset DY_LIBRARY_PATH; fi
-  - if [ `uname` == "Darwin" ]; then brew update && brew install gcc; fi
+  - if [ `uname` == "Darwin" ]; then brew update && brew install gcc openblas; fi
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 
 install:
