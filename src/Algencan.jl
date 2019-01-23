@@ -286,7 +286,7 @@ function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     model.g_sense, model.g_two_sides, model.g_two_smap = treat_lower_bounds(
         g_lb, g_ub)
     model.g_has_lb = (model.m > 0 && (minimum(model.g_sense) == -1 ||
-        length(model.two_smap) > 0))
+        length(model.g_two_smap) > 0))
     model.g_lb, model.g_ub = g_lb, g_ub
 
     # Contraints with only lower bound will be multiplied by -1.0, hence
@@ -363,7 +363,7 @@ function julia_fc(model::AlgencanMathProgModel, n::Cint, x_ptr::Ptr{Float64}, ob
         first_g = view(g, 1:model.m)
         first_g .*= model.g_sense
         for i = model.m + 1:m
-            mapped_i = model.two_smap[i - model.m]
+            mapped_i = model.g_two_smap[i - model.m]
             g[i] = -first_g[mapped_i] + model.g_lb[mapped_i]
         end
         first_g .-= model.g_ub
@@ -574,7 +574,7 @@ function MPB.optimize!(model::AlgencanMathProgModel)
     is_g_linear = zeros(UInt8, m)
     is_g_linear[1:model.m] .= model.is_g_linear
     for i = 1:length(model.g_two_smap)
-        is_g_linear[model.m + i] = models.is_g_linear[model.two_smap[i]]
+        is_g_linear[model.m + i] = models.is_g_linear[model.g_two_smap[i]]
     end
 
     # Parameters controling precision
