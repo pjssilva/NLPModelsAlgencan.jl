@@ -36,10 +36,12 @@ example, if the file is located at the `/tmp` folder, in bash you would do
 export MA57_SOURCE=/tmp/hsl_ma57-5.2.0.tar.gz
 ```
 
-After that just install Algencan.jl from Julia's REPL.
+After that just install Algencan.jl from Julia's REPL and import it to force
+precompilation.
 
 ```julia
 (v1.0) pkg> add Algencan
+julia> using Algencan
 ```
 
 ### The easy mode
