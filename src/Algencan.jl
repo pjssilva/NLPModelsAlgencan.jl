@@ -71,7 +71,7 @@ mutable struct AlgencanMathProgModel <: MPB.AbstractNonlinearModel
     g_ub::Vector{Float64}           # Upper bounds on constraints
     g_lb::Vector{Float64}           # Lower bound on constrains
     g_sense::Vector{Int}
-    g_two_sides::Vector{Bool}
+    g_two_sinvmap::Vector{Int}
     g_two_smap::Vector{Int}
     g_has_lb::Bool                  # true if at least one constraint has lower
                                     # bound
@@ -108,7 +108,7 @@ mutable struct AlgencanMathProgModel <: MPB.AbstractNonlinearModel
         model.n, model.m = 0, 0
         model.lb, model.ub = Float64[], Float64[]
         model.g_lb, model.g_ub = Float64[], Float64[]
-        model.g_sense, model.g_two_sides, model.g_two_smap = Float64[], Bool[], Int[]
+        model.g_sense, model.g_two_sinvmap, model.g_two_smap = Float64[], Int[], Int[]
         model.g_has_lb = false
         model.sense = 1.0
         model.j_row_inds, model.j_col_inds = Int[], Int[]
@@ -283,7 +283,7 @@ function MPB.loadproblem!(model::AlgencanMathProgModel, numVar::Integer,
     model.m = numConstr
     model.lb, model.ub = float(x_l), float(x_u)
     g_lb, g_ub = float(g_lb), float(g_ub)
-    model.g_sense, model.g_two_sides, model.g_two_smap = treat_lower_bounds(
+    model.g_sense, model.g_two_sinvmap, model.g_two_smap = treat_lower_bounds(
         g_lb, g_ub)
     model.g_has_lb = (model.m > 0 && (minimum(model.g_sense) == -1 ||
         length(model.g_two_smap) > 0))
@@ -338,8 +338,16 @@ function treat_lower_bounds(lb, ub)
     # Treat two side constraints
     two_sides = -Inf .< lb .!= ub .< Inf
     two_smap = (1:m)[two_sides]
+    new_ind = 1
+    two_sinvmap = zeros(m)
+    for i = 1:m
+        if two_sides[i]
+            two_sinvmap[i] = new_ind
+            new_ind += 1
+        end
+    end
 
-    return sense, two_sides, two_smap
+    return sense, two_sinvmap, two_smap
 end
 
 ###########################################################################
@@ -412,9 +420,9 @@ function julia_gjac(model::AlgencanMathProgModel, n::Cint, x_ptr::Ptr{Float64}, 
         @inbounds for i = 1:length(model.j_row_inds)
             # +1, -1 to translate from C indexing to Julia indexing
             rind, cind = model.j_row_inds[i] + 1, model.j_col_inds[i]
-            if model.g_two_sides[rind]
+            if model.g_two_sinvmap[rind] > 0
                 nnz += 1
-                jrow_ind[nnz] = model.m + model.g_two_smap[rind] - 1
+                jrow_ind[nnz] = model.m + model.g_two_sinvmap[rind] - 1
                 jcol_ind[nnz] = cind
                 J[nnz] = -J[i]
             else
