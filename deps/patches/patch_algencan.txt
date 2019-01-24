@@ -1,6 +1,6 @@
-diff -Naur algencan-3.1.1.orig/Makefile algencan-3.1.1/Makefile
---- algencan-3.1.1.orig/Makefile	2017-03-10 14:25:44.000000000 -0500
-+++ algencan-3.1.1/Makefile	2019-01-24 15:07:01.332117481 -0500
+diff -Naur algencan-3.1.1_original/Makefile algencan-3.1.1_modificado/Makefile
+--- algencan-3.1.1_original/Makefile	2017-03-10 14:25:44.000000000 -0500
++++ algencan-3.1.1_modificado/Makefile	2019-01-24 15:29:22.568864406 -0500
 @@ -5,11 +5,11 @@
  # case.
  AR := ar
@@ -81,21 +81,21 @@ diff -Naur algencan-3.1.1.orig/Makefile algencan-3.1.1/Makefile
  clean:
  	$(MAKE) -C $(ALGSRC) clean
  	$(MAKE) -f $(HSL_MAKEFILE) -C $(HSLSRC) clean
-diff -Naur algencan-3.1.1.orig/sources/algencan/algencan.f90 algencan-3.1.1/sources/algencan/algencan.f90
---- algencan-3.1.1.orig/sources/algencan/algencan.f90	2017-03-10 14:05:18.000000000 -0500
-+++ algencan-3.1.1/sources/algencan/algencan.f90	2019-01-24 15:07:48.188603868 -0500
+diff -Naur algencan-3.1.1_original/sources/algencan/algencan.f90 algencan-3.1.1_modificado/sources/algencan/algencan.f90
+--- algencan-3.1.1_original/sources/algencan/algencan.f90	2017-03-10 14:05:18.000000000 -0500
++++ algencan-3.1.1_modificado/sources/algencan/algencan.f90	2019-01-24 15:29:57.101329828 -0500
 @@ -452,7 +452,7 @@
    ! NON-EXECUTABLE STATEMENTS
    ! ==================================================================
  
 - 9000 format(/,1X,'Total CPU time in seconds = ',0P,F8.2)
-+ 9000 format(/,1X,'Total CPU time in seconds = ',0P,F14.6)
++ 9000 format(/,1X,'Total CPU time in seconds = ',0P,F16.6)
  
   9100 format(1X,1P,D24.16,3(1X,1P,D7.1),1X,1P,D24.16,1X,1P,D7.1,2(1X,I12),&
             1X,1P,D24.16,3(1X,1P,D7.1),1X,1P,D24.16,1X,1P,D7.1,1X,I12,1X,  &
-diff -Naur algencan-3.1.1.orig/sources/algencan/auglag.f90 algencan-3.1.1/sources/algencan/auglag.f90
---- algencan-3.1.1.orig/sources/algencan/auglag.f90	2015-11-06 13:04:00.000000000 -0500
-+++ algencan-3.1.1/sources/algencan/auglag.f90	2019-01-24 15:07:01.332117481 -0500
+diff -Naur algencan-3.1.1_original/sources/algencan/auglag.f90 algencan-3.1.1_modificado/sources/algencan/auglag.f90
+--- algencan-3.1.1_original/sources/algencan/auglag.f90	2015-11-06 13:04:00.000000000 -0500
++++ algencan-3.1.1_modificado/sources/algencan/auglag.f90	2019-01-24 15:29:22.572864461 -0500
 @@ -646,6 +646,10 @@
       innfail = .true.
    end if
@@ -107,9 +107,9 @@ diff -Naur algencan-3.1.1.orig/sources/algencan/auglag.f90 algencan-3.1.1/source
    if ( inform .ne. 0 ) return
  
    ! ==================================================================
-diff -Naur algencan-3.1.1.orig/sources/algencan/Makefile algencan-3.1.1/sources/algencan/Makefile
---- algencan-3.1.1.orig/sources/algencan/Makefile	2015-08-19 15:12:48.000000000 -0400
-+++ algencan-3.1.1/sources/algencan/Makefile	2019-01-24 15:07:01.332117481 -0500
+diff -Naur algencan-3.1.1_original/sources/algencan/Makefile algencan-3.1.1_modificado/sources/algencan/Makefile
+--- algencan-3.1.1_original/sources/algencan/Makefile	2015-08-19 15:12:48.000000000 -0400
++++ algencan-3.1.1_modificado/sources/algencan/Makefile	2019-01-24 15:29:22.572864461 -0500
 @@ -6,11 +6,13 @@
     modouttyp.o modminsq.o modmachconst.o modhpredat.o modhappdat.o	\
     moditetyp.o modalgparam.o modalgconst.o calgencan.o accpro.o
@@ -184,9 +184,9 @@ diff -Naur algencan-3.1.1.orig/sources/algencan/Makefile algencan-3.1.1/sources/
  
  memalloc.o: memalloc.f90 modrspace.o modsydat.o modsvdgrad.o	\
  	    modsvdhess.o modhappdat.o modhpredat.o modminsq.o
-diff -Naur algencan-3.1.1.orig/sources/algencan/newtd.f90 algencan-3.1.1/sources/algencan/newtd.f90
---- algencan-3.1.1.orig/sources/algencan/newtd.f90	2016-05-30 09:17:11.000000000 -0400
-+++ algencan-3.1.1/sources/algencan/newtd.f90	2019-01-24 15:07:01.332117481 -0500
+diff -Naur algencan-3.1.1_original/sources/algencan/newtd.f90 algencan-3.1.1_modificado/sources/algencan/newtd.f90
+--- algencan-3.1.1_original/sources/algencan/newtd.f90	2016-05-30 09:17:11.000000000 -0400
++++ algencan-3.1.1_modificado/sources/algencan/newtd.f90	2019-01-24 15:29:22.572864461 -0500
 @@ -180,6 +180,13 @@
       write(10,1010) adsupn
    end if
@@ -201,9 +201,9 @@ diff -Naur algencan-3.1.1.orig/sources/algencan/newtd.f90 algencan-3.1.1/sources
    ! ------------------------------------------------------------------
    ! Factorize matrix
    ! ------------------------------------------------------------------
-diff -Naur algencan-3.1.1.orig/sources/interfaces/cutest/Makefile algencan-3.1.1/sources/interfaces/cutest/Makefile
---- algencan-3.1.1.orig/sources/interfaces/cutest/Makefile	2015-08-14 11:53:29.000000000 -0400
-+++ algencan-3.1.1/sources/interfaces/cutest/Makefile	2019-01-24 15:07:01.332117481 -0500
+diff -Naur algencan-3.1.1_original/sources/interfaces/cutest/Makefile algencan-3.1.1_modificado/sources/interfaces/cutest/Makefile
+--- algencan-3.1.1_original/sources/interfaces/cutest/Makefile	2015-08-14 11:53:29.000000000 -0400
++++ algencan-3.1.1_modificado/sources/interfaces/cutest/Makefile	2019-01-24 15:29:22.576864514 -0500
 @@ -2,18 +2,11 @@
  DIR := $(notdir $(CURDIR))
  SIF := ELFUN EXTER GROUP RANGE
