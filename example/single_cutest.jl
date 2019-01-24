@@ -25,4 +25,7 @@ function solve_cutest(pname)
     @printf("%.4e\t%10d\t%10d\t%10d\t%10d\n", bench_data[2], n_fc, n_ggrad, n_hl, n_hlp)
 end
 
+# Calls a simple problem to compile the Julia code in order to get a reasonable
+# timing information at the end.
+solve_cutest("HS110")
 solve_cutest(ARGS[1])
