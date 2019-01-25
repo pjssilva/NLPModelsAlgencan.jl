@@ -79,10 +79,10 @@ if compilehsl
 else
   provides(SimpleBuild,
     (@build_steps begin
-        Compat.@warn "WARNING: You are installing Algencan.jl without HSL libraries."
-        Compat.@warn "WARNING: This might preclude good performance."
-        Compat.@warn "WARNING: If you can, try to use HSL."
-        Compat.@warn "WARNING: See details in the installation section at https://github.com/pjssilva/Algencan.jl ."
+        Compat.@warn "You are installing Algencan.jl without HSL libraries."
+        Compat.@warn "This might preclude good performance."
+        Compat.@warn "If you can, try to use HSL."
+        Compat.@warn "See details in the installation section at https://github.com/pjssilva/Algencan.jl ."
 
         # Get Algencan sources and unpack
         GetSources(libalgencan)
