@@ -41,14 +41,14 @@ if compilehsl
         # Build Metis
         @build_steps begin
           ChangeDirectory(metispath)
-          `make COPTIONS=-fPIC`
+          `make COPTIONS="-fPIC -O3"`
         end
 
         # Build HSL
         @build_steps begin
           ChangeDirectory(ma57path)
           `patch -p1 -i../../patches/patch_ma57.txt`
-          `./configure --with-metis=$metispath/libmetis.a --prefix=$ma57path CFLAGS=-fPIC FCFLAGS=-fPIC FFLAGS=-fPIC`
+          `./configure --with-metis=$metispath/libmetis.a --prefix=$ma57path CFLAGS="-fPIC -O3" FCFLAGS="-fPIC -O3" FFLAGS="-fPIC -O3"`
           `make`
           `make install`
         end
