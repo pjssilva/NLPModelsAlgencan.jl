@@ -79,5 +79,5 @@ julia> using Algencan
 
 This [wiki
 page](https://github.com/pjssilva/Algencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-Algencan.jl)
-documents the steps I use to compile myself a version of documents the steps I
-use to compile myself a version of `libalgencan.so`.
+documents the steps I used to compile a version of `libalgencan.so` with HSL
+support.
