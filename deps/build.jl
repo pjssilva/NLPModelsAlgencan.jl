@@ -1,6 +1,6 @@
 using BinDeps
-import Compat
-import Compat.Sys
+# import Compat
+# import Compat.Sys
 
 @BinDeps.setup
 
@@ -20,10 +20,10 @@ else
         # HSL is not present, compile Algencan sources only.
         provides(SimpleBuild,
         (@build_steps begin
-            Compat.@warn "You are installing Algencan.jl without HSL libraries."
-            Compat.@warn "This might preclude good performance."
-            Compat.@warn "If you can, try to use HSL."
-            Compat.@warn "See details in the installation section at https://github.com/pjssilva/Algencan.jl ."
+            @warn "You are installing Algencan.jl without HSL libraries."
+            @warn "This might preclude good performance."
+            @warn "If you can, try to use HSL."
+            @warn "See details in the installation section at https://github.com/pjssilva/Algencan.jl ."
 
             # Get Algencan sources and unpack
             GetSources(libalgencan)
@@ -46,7 +46,7 @@ else
                 if Sys.isapple()
                     `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -Wl,-noall_load -lgfortran -lblas -llapack`
                 else
-                    `    gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -lgfortran -lblas -llapack`
+                    `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -lgfortran -lblas -llapack`
                 end
             end
         end), libalgencan, os = :Unix
@@ -114,7 +114,7 @@ else
                 end
             end), libalgencan, os = :Unix
         )
-    end 
+    end
 end
 
 @BinDeps.install Dict(:libalgencan => :libalgencan)
