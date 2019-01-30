@@ -1,7 +1,4 @@
 using BinDeps
-# import Compat
-# import Compat.Sys
-
 @BinDeps.setup
 
 libalgencan = library_dependency("libalgencan")
