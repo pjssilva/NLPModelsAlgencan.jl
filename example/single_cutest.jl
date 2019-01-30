@@ -28,4 +28,5 @@ end
 # Calls a simple problem to compile the Julia code in order to get a reasonable
 # timing information at the end.
 solve_cutest("HS110")
+println("\n\n", '*'^40, " Solving ", ARGS[1], "\n")
 solve_cutest(ARGS[1])
