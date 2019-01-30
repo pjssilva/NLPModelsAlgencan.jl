@@ -4,10 +4,10 @@
 to the [Algencan](https://www.ime.usp.br/~egbirgin/tango/codes.php)
 nonlinear solver.
 
-Algencan is a high performance and large scale Augmented Lagrangian solver
-written by Ernesto Birgin and Mario Martínez. It has many special features like
-being able to use HSL library functions to speed up the linear algebra with
-sparse matrices and some smart acceleration strategies.
+Algencan is a large scale high performance augmented Lagrangian solver written
+by Ernesto Birgin and Mario Martínez. It has many special features like being
+able to use the HSL library to speed up the sparse matrix linear algebra and
+some smart acceleration strategies.
 
 ## Status
 
