@@ -53,9 +53,10 @@ Just type
 in package mode in Julia's REPL.
 
 This will download Algencan's code, compile it and make it available to the
-Algencan.jl package. **However there is a major caveat here. At this point I am
-compiling Algencan without any HSL support. This has major influence on Algencan
-behavior and performance. You should use HSL whenever you have access to it.**
+Algencan.jl package. **However there is a major caveat here. The Algencan solver
+will be compiled without any HSL support. This will have a major negative
+impact on its behavior and performance. You should use HSL whenever you have
+access to it.**
 
 ### Pre-compiled `libalgencan.so`
 
