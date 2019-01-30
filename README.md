@@ -11,7 +11,7 @@ matrices and some smart acceleration strategies.
 
 ## Status
 
-At this point this is alpha software. From verision v0.2.0 on the code will work
+At this point this is alpha software. From version v0.2.0 on the code will work
 with Julia 1.0 or later only. If you need to run Algencan.jl with the old Julia
 0.6, please install the version v0.1.x.
 
@@ -20,7 +20,7 @@ with Julia 1.0 or later only. If you need to run Algencan.jl with the old Julia
 There are three main modes of installation, depending on how you want to compile
 Algencan.
 
-### The preferred mode: using HSL
+### The preferred way: using HSL
 
 Obs: We only give support for MA57 at this point.
 
@@ -44,7 +44,7 @@ precompilation.
 julia> using Algencan
 ```
 
-### The easy mode
+### The easy way
 
 Just type
 ```julia
@@ -60,11 +60,12 @@ behavior and performance. You should use HSL whenever you have access to it.**
 ### Pre-compiled `libalgencan.so`
 
 If you have your own copy of `libalgencan.so` (note that you need a shared
-library), you can use it. Just create an environment variable like belo *before*
-using Algencan.jl for the first time.
+library), you can use it. Just create an environment variable like below
+pointing to the directory where the library find resides *before* installing
+Algencan.jl.
 
 ```bash
-export ALGENCAN_LIB_DIR=/tmp/libalgencan.so
+export ALGENCAN_LIB_DIR=/path/where/algencan/libray/is
 ```
 
 You can then proceed to install Algencan.jl from the REPL
