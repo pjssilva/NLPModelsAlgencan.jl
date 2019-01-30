@@ -8,14 +8,16 @@ module Algencan
 using LinearAlgebra
 import Libdl
 
-# TODO: This looks like things to allow for automatic download and
-#       compilation of dependencies. Deal with it later.
-# if isfile(joinpath(dirname(@__FILE__),"..","deps","deps.jl"))
-#     include("../deps/deps.jl")
-# else
-#     error("Ipopt not properly installed. Please run Pkg.build(\"Ipopt\")")
-# end
-# amplexe = joinpath(dirname(libipopt), "..", "bin", "ipopt")
+if isfile(joinpath(dirname(@__FILE__),"..","deps","deps.jl"))
+    include("../deps/deps.jl")
+    const algencan_lib_path = libalgencan
+elseif "ALGENCAN_LIB_DIR" in keys(ENV)
+    const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"],
+        "libalgencan.so"))
+else
+    error("Algencan not properly installed. Please run Pkg.build(\"Algenacn\")")
+    error("or set the LAGENCAL_LIB_DIR enviroment variable.")
+end
 
 # Compiles to the *static* path of the algencan library
 if "ALGENCAN_LIB_DIR" in keys(ENV)
