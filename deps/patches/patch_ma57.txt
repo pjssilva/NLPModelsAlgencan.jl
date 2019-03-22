@@ -1,6 +1,33 @@
-diff -Naur hsl_ma57-5.2.0/src/hsl_ma57d.f90 hsl_ma57-5.2.0_algencan/src/hsl_ma57d.f90
---- hsl_ma57-5.2.0/src/hsl_ma57d.f90	2013-08-02 09:15:32.000000000 -0400
-+++ hsl_ma57-5.2.0_algencan/src/hsl_ma57d.f90	2019-01-14 14:44:51.769601041 -0500
+diff -Naur hsl_ma57-5.2.0_orig/src/ddeps.f hsl_ma57-5.2.0_mod/src/ddeps.f
+--- hsl_ma57-5.2.0_orig/src/ddeps.f	2013-08-02 10:15:34.000000000 -0300
++++ hsl_ma57-5.2.0_mod/src/ddeps.f	2019-03-22 10:57:18.264573395 -0300
+@@ -12493,6 +12493,7 @@
+       GO TO 1000
+  970  INFO(1) = -5
+       INFO(2) = NTOTPV + 1
++      RINFO(20) = PIVOT
+       IF (LDIAG.GT.0 .AND. LP.GE.0)
+      *    WRITE(LP,99992) INFO(1),PIVOT,CNTL(2),INFO(2),ICNTL(7)
+ 99992 FORMAT (/'*** Error message from routine MA57BD **',
+@@ -12502,6 +12503,7 @@
+       RETURN
+  980  INFO(1) = -6
+       INFO(2) = NTOTPV + 1
++      RINFO(20) = PIVOT
+       IF (LDIAG.GT.0 .AND. LP.GE.0)
+      *    WRITE(LP,99993) INFO(1),INFO(2),ICNTL(7)
+ 99993 FORMAT (/'*** Error message from routine MA57BD **',
+@@ -12512,6 +12514,7 @@
+       NIRBDU = IWPOS - 3
+       IF (NTOTPV.NE.N) THEN
+         INFO(1) = 4
++        RINFO(20) = PIVOT
+         IF (LDIAG.GT.0 .AND. WP.GE.0)
+      *      WRITE(WP,99994) INFO(1),NTOTPV
+ 99994 FORMAT (/'*** Warning message from routine MA57BD **',
+diff -Naur hsl_ma57-5.2.0_orig/src/hsl_ma57d.f90 hsl_ma57-5.2.0_mod/src/hsl_ma57d.f90
+--- hsl_ma57-5.2.0_orig/src/hsl_ma57d.f90	2013-08-02 10:15:32.000000000 -0300
++++ hsl_ma57-5.2.0_mod/src/hsl_ma57d.f90	2019-03-22 10:43:08.546943384 -0300
 @@ -132,6 +132,7 @@
        integer :: modstep = -1 ! First pivot modification when pivoting=4
        integer :: rank = -1    ! Rank of original factorization
