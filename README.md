@@ -1,7 +1,7 @@
-# Algencan.jl
+# NLPModelsAlgencan.jl
 
-**Algencan.jl** is a [JuMP / MathProgBase](https://www.juliaopt.org/) interface
-to the [Algencan](https://www.ime.usp.br/~egbirgin/tango/codes.php)
+**NLPModelsAlgencan.jl** is a [NLPModels](https://github.com/JuliaSmoothOptimizers/NLPModels.jl)
+interface to the [Algencan](https://www.ime.usp.br/~egbirgin/tango/codes.php)
 nonlinear solver.
 
 Algencan is a large scale high performance augmented Lagrangian solver written
