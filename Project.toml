@@ -1,0 +1,12 @@
+name = "NLPModelsAlgencan"
+uuid = "04216931-dc08-4b80-8a27-8a88dc4b9604"
+authors = ["Paulo J. S. Silva <pjssilva@gmail.com>", "Ilan Francisco da Silva <ilanfsilva@gmail.com>]"]
+version = "0.4.0"
+
+[deps]
+BinDeps = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
+Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
+SolverTools = "b5612192-2639-5dc1-abfe-fbedd65fab29"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
