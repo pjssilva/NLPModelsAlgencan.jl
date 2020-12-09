@@ -43,7 +43,7 @@ After that just install NLPModelsAlgencan.jl from Julia's REPL and import it to 
 pre-compilation.
 
 ```julia
-(v1.0) pkg> add https://github.com/pjssilva/NLPModelsAlgencan.jl
+(@v1.x) pkg> add https://github.com/pjssilva/NLPModelsAlgencan.jl
 julia> using NLPModelsAlgencan
 ```
 
@@ -51,7 +51,8 @@ julia> using NLPModelsAlgencan
 
 Just type
 ```julia
-(v1.0) pkg> add https://github.com/pjssilva/NLPModelsAlgencan.jl
+(@v1.x) pkg> add https://github.com/pjssilva/NLPModelsAlgencan.jl
+julia> using NLPModelsAlgencan
 ```
 in package mode in Julia's REPL.
 
@@ -74,7 +75,7 @@ export ALGENCAN_LIB_DIR=/path/where/algencan/libray/is
 
 You can then proceed to install NLPModelsAlgencan.jl from the REPL
 ```julia
-(v1.0) pkg> add https://github.com/pjssilva/NLPModelsAlgencan.jl
+(@v1.x) pkg> add https://github.com/pjssilva/NLPModelsAlgencan.jl
 julia> using NLPModelsAlgencan
 ```
 
