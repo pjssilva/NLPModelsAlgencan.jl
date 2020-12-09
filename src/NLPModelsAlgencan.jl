@@ -58,10 +58,10 @@ mutable struct AlgencanModelData
         model.sense = nlp.meta.minimize == true ? 1.0 : -1.0
         model.n = nlp.meta.nvar
         model.m = nlp.meta.ncon
-        model.x = nlp.meta.x0
+        model.x = copy(nlp.meta.x0)
         model.lb = nlp.meta.lvar
         model.ub = nlp.meta.uvar
-        model.mult = nlp.meta.y0
+        model.mult = copy(nlp.meta.y0)
 
         jrow_inds, jcol_inds = jac_structure(nlp)
         model.j_row_inds, model.j_col_inds = jrow_inds .- 1, jcol_inds .- 1
