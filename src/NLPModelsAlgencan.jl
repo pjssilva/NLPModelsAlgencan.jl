@@ -1,26 +1,18 @@
 module NLPModelsAlgencan
 
-using LinearAlgebra, NLPModels, SparseArrays, SolverTools
+using LinearAlgebra, SparseArrays, NLPModels, SolverTools
 import Libdl
 
-if isfile(joinpath(dirname(@__FILE__),"..","deps","deps.jl"))
-    include("../deps/deps.jl")
-    const algencan_lib_path = libalgencan
-elseif "ALGENCAN_LIB_DIR" in keys(ENV)
-    const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"],
-        "libalgencan.so"))
-else
-    error("Algencan not properly installed. Please run Pkg.build(\"Algencan\")")
-    error("or set the LALGENCAN_LIB_DIR enviroment variable.")
-end
-
-# Compiles to the *static* path of the algencan library
+# Gets the path of the Algencan library
 if "ALGENCAN_LIB_DIR" in keys(ENV)
     const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"],
         "libalgencan.so"))
 elseif isfile(joinpath(dirname(@__FILE__),"..","deps","deps.jl"))
     include("../deps/deps.jl")
     const algencan_lib_path = libalgencan
+else
+    error("Algencan not properly installed. Please run Pkg.build(\"Algencan\")")
+    error("or set the ALGENCAN_LIB_DIR enviroment variable.")
 end
 
 export algencan
