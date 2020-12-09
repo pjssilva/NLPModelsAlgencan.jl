@@ -27,14 +27,14 @@ Algencan.
 
 Obs: We only give support for MA57 at this point.
 
-The preferred way to use Algencan is to link it against a HSL function to solve
+The preferred way to use Algencan is to link it against an HSL function to solve
 sparse linear systems. To do this you need to grab your copy of MA57 from
 [HSL](http://www.hsl.rl.ac.uk/catalogue/hsl_ma57.html). It has a free academic
 license. You should receive a file named `hsl_ma57-5.2.0.tar.gz`.
 
 All you need to do is to create an environment variable named
 `MA57_SOURCE` pointing to this file *before* installing NLPModelsAlgencan.jl. For
-example, if the file is located at the `/tmp` folder, in bash you would do
+example, if the file is located at the `/tmp` folder, in bash you would do:
 ```bash
 export MA57_SOURCE=/tmp/hsl_ma57-5.2.0.tar.gz
 ```
@@ -62,7 +62,7 @@ Algencan solver will be compiled without any HSL support. This will have a major
 negative impact on its behavior and performance. You should use HSL whenever you
 have access to it.**
 
-### Pre-compiled `libalgencan.so`
+### Precompiled `libalgencan.so`
 
 If you have your own copy of `libalgencan.so` (note that you need a shared
 library), you can use it. Just create an environment variable like below
