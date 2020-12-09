@@ -12,10 +12,13 @@ some smart acceleration strategies.
 ## Status
 
 At this point this is alpha software. From version v0.2.0 on, the code will work
-only with Julia 1.0 or later. If you need to run Algencan.jl with the old Julia
+only with Julia 1.0 or later. If you need to run NLPModelsAlgencan.jl with the old Julia
 0.6, please install the version v0.1.x.
 
 ## Installation
+
+We have not registered the NLPModelsAlgencan.jl package yet. Hence, to add it you
+will need to give the full URL to the github directory. See examples below.
 
 There are three main modes of installation, depending on how you want to compile
 Algencan.
@@ -30,54 +33,54 @@ sparse linear systems. To do this you need to grab your copy of MA57 from
 license. You should receive a file named `hsl_ma57-5.2.0.tar.gz`.
 
 All you need to do is to create an environment variable named
-`MA57_SOURCE` pointing to this file *before* installing Algencan.jl. For
+`MA57_SOURCE` pointing to this file *before* installing NLPModelsAlgencan.jl. For
 example, if the file is located at the `/tmp` folder, in bash you would do
 ```bash
 export MA57_SOURCE=/tmp/hsl_ma57-5.2.0.tar.gz
 ```
 
-After that just install Algencan.jl from Julia's REPL and import it to force
-precompilation.
+After that just install NLPModelsAlgencan.jl from Julia's REPL and import it to force
+pre-compilation.
 
 ```julia
-(v1.0) pkg> add Algencan
-julia> using Algencan
+(v1.0) pkg> add https://github.com/pjssilva/NLPModelsAlgencan.jl
+julia> using NLPModelsAlgencan
 ```
 
 ### The easy way
 
 Just type
 ```julia
-(v1.0) pkg> add Algencan
+(v1.0) pkg> add https://github.com/pjssilva/NLPModelsAlgencan.jl
 ```
 in package mode in Julia's REPL.
 
 This will download Algencan's code, compile it and make it available to the
-Algencan.jl package. **However there is a major caveat here. The Algencan solver
-will be compiled without any HSL support. This will have a major negative
-impact on its behavior and performance. You should use HSL whenever you have
-access to it.**
+NLPModelsAlgencan.jl package. **However, there is a major caveat here. The
+Algencan solver will be compiled without any HSL support. This will have a major
+negative impact on its behavior and performance. You should use HSL whenever you
+have access to it.**
 
 ### Pre-compiled `libalgencan.so`
 
 If you have your own copy of `libalgencan.so` (note that you need a shared
 library), you can use it. Just create an environment variable like below
 pointing to the directory where the library find resides *before* installing
-Algencan.jl.
+NLPModelsAlgencan.jl.
 
 ```bash
 export ALGENCAN_LIB_DIR=/path/where/algencan/libray/is
 ```
 
-You can then proceed to install Algencan.jl from the REPL
+You can then proceed to install NLPModelsAlgencan.jl from the REPL
 ```julia
-(v1.0) pkg> add Algencan
-julia> using Algencan
+(v1.0) pkg> add https://github.com/pjssilva/NLPModelsAlgencan.jl
+julia> using NLPModelsAlgencan
 ```
 
 ## Hints to self compilation of Algencan with HSL libraries
 
 This [wiki
-page](https://github.com/pjssilva/Algencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-Algencan.jl)
+page](https://github.com/pjssilva/NLPModelsAlgencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-NLPModelsAlgencan.jl)
 documents the steps I used to compile a version of `libalgencan.so` with HSL
 support.
