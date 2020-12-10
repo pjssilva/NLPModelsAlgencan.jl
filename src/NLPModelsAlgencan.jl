@@ -268,10 +268,10 @@ function algencan(nlp::AbstractNLPModel)
     Δt = (time_ns() - start_time) / 1.0e+9
 
     return GenericExecutionStats(model.status, model.nlp, solution=model.x,
-                                 objective=model.obj_val, #dual_feas=dual_feas, primal_feas=primal_feas
-                                 elapsed_time=Δt, multipliers=model.mult[1:model.m],
-                                 multipliers_L=model.mult[model.m+1:m],
-                                 multipliers_U=eltype(model.x)[]
+                                 objective=model.obj_val,
+                                 #dual_feas=dual_feas, primal_feas=primal_feas
+                                 elapsed_time=Δt,
+                                 multipliers=model.mult[1:model.m]
                                 )
 end
 
