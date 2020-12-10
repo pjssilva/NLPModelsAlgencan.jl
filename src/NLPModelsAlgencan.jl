@@ -163,7 +163,6 @@ function algencan(nlp::AbstractNLPModel)
     checkder = UInt8(0)
 
     # Deal with lower bounds
-    #m = model.m
     m = model.m + length(model.g_two_smap)
     model.mult = zeros(m)
     mult = zeros(m)
@@ -254,7 +253,7 @@ function algencan(nlp::AbstractNLPModel)
     @assert !(algencan_lib_path in Libdl.dllist())
 
     # Fix sign of objetive function
-    model.obj_val = model.sense*f[1] #TODO verify if it is needed
+    model.obj_val = model.sense*f[1]
 
     # Deal with lower bound and two-sided contraints
     model.mult = model.g_sense .* mult[1:model.m]
@@ -271,7 +270,7 @@ function algencan(nlp::AbstractNLPModel)
     return GenericExecutionStats(model.status, model.nlp, solution=model.x,
                                  objective=model.obj_val, #dual_feas=dual_feas, primal_feas=primal_feas
                                  elapsed_time=Δt, multipliers=model.mult[1:model.m],
-                                 multipliers_L=model.mult[model.m+1:m], # fix model.m and m # don't know how to get those separately
+                                 multipliers_L=model.mult[model.m+1:m],
                                  multipliers_U=eltype(model.x)[]
                                 )
 end
