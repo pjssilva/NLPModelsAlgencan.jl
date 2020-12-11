@@ -153,7 +153,7 @@ function algencan(nlp::AbstractNLPModel)
     myevalgjacp = C_NULL
     myevalhl = c_julia_hl
     myevalhlp = c_julia_hlp
-    jcnnzmax = length(model.j_row_inds)
+    jcnnzmax = 2*length(model.j_row_inds)
     hnnzmax = length(model.h_row_inds)
     coded = zeros(UInt8, 11)
     coded[7] = UInt8(1)
@@ -164,14 +164,15 @@ function algencan(nlp::AbstractNLPModel)
 
     # Deal with lower bounds
     m = model.m + length(model.g_two_smap)
-    model.mult = zeros(m)
     mult = zeros(m)
+    mult[1:model.m] .= model.mult[1:model.m]
     is_equality = zeros(UInt8, m)
-    is_equality[1:m] .= 1
+    is_equality[1:m] .= model.is_equality
     is_g_linear = zeros(UInt8, m)
     is_g_linear[1:model.m] .= model.is_g_linear
     for i = 1:length(model.g_two_smap)
         is_g_linear[model.m + i] = model.is_g_linear[model.g_two_smap[i]]
+        mult[model.m + i] = -mult[model.g_two_smap[i]]
     end
 
     # Parameters controling precision
@@ -245,7 +246,7 @@ function algencan(nlp::AbstractNLPModel)
         myevalf, myevalg, myevalh, myevalc, myevaljac, myevalhc, myevalfc,
         myevalgjac, myevalgjacp, myevalhl, myevalhlp, jcnnzmax, hnnzmax,
         epsfeas, epsopt, efstain, eostain, efacc, eoacc, outputfnm, specfnm,
-        nvparam, vparam, model.n, model.x, model.lb, model.ub, m, model.mult,
+        nvparam, vparam, model.n, model.x, model.lb, model.ub, m, mult,
         is_equality, is_g_linear, coded, checkder, f, cnorm, snorm,
         nlpsupn, inform
     )
@@ -365,7 +366,7 @@ function julia_fc(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, obj_pt
     obj_val = obj(model.nlp, x)
     unsafe_store!(obj_ptr, model.sense * obj_val)
     g = unsafe_wrap(Array, g_ptr, Int(m))
-    cons!(model.nlp, x, g)
+    g[1:model.m] .= cons(model.nlp, x)
 
     # Treat lower bounds and two-sided constraints
     if model.g_has_lb
@@ -414,7 +415,7 @@ function julia_gjac(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, f_gr
 
     # Compute the constraints Jacobian
     J = unsafe_wrap(Array, jval_ptr, Int(lim))
-    jac_coord!(model.nlp, x, J)
+    J[1:nnz] .= jac_coord(model.nlp, x)
 
     # Treat the presence of lower bound in the constraints
     if model.g_has_lb
