@@ -59,8 +59,8 @@ mutable struct AlgencanModelData
         model.n = nlp.meta.nvar
         model.m = nlp.meta.ncon
         model.x = copy(nlp.meta.x0)
-        model.lb = nlp.meta.lvar
-        model.ub = nlp.meta.uvar
+        model.lb = copy(nlp.meta.lvar)
+        model.ub = copy(nlp.meta.uvar)
         model.mult = copy(nlp.meta.y0)
 
         jrow_inds, jcol_inds = jac_structure(nlp)
@@ -79,7 +79,7 @@ mutable struct AlgencanModelData
             :specfnm=>""
         )
 
-        g_lb, g_ub = float(nlp.meta.lcon), float(nlp.meta.ucon)
+        g_lb, g_ub = float(copy(nlp.meta.lcon)), float(copy(nlp.meta.ucon))
         model.g_sense, model.g_two_sinvmap, model.g_two_smap = treat_lower_bounds(nlp,
             g_lb, g_ub)
         model.g_has_lb = (model.m > 0 && (minimum(model.g_sense) == -1 ||
@@ -167,7 +167,7 @@ function algencan(nlp::AbstractNLPModel)
     mult = zeros(m)
     mult[1:model.m] .= model.mult[1:model.m]
     is_equality = zeros(UInt8, m)
-    is_equality[1:m] .= model.is_equality
+    is_equality[1:model.m] .= model.is_equality
     is_g_linear = zeros(UInt8, m)
     is_g_linear[1:model.m] .= model.is_g_linear
     for i = 1:length(model.g_two_smap)
