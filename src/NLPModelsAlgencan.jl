@@ -329,6 +329,7 @@ function option2vparam(model::AlgencanModelData)
         key, value = option
         if key in parameters
             continue
+        end
         key = replace(string(key), "_" => "-")
         push!(vparam, "$key $value")
     end
