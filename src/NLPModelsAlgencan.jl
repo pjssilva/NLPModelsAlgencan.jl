@@ -1,3 +1,8 @@
+
+"""
+Algencan interface to NLPModels.
+See its [GitHub page](https://github.com/pjssilva/NLPModelsAlgencan.jl)
+"""
 module NLPModelsAlgencan
 
 using LinearAlgebra, SparseArrays, NLPModels, SolverTools
@@ -101,10 +106,23 @@ mutable struct AlgencanModelData
     end
 end
 
-function algencan(nlp::AbstractNLPModel)
-    # TODO: Allow warm start primal and specially dual
-    #copy!(model.inner.x, model.warmstart) # set warmstart
-    # TODO: No options for now
+# TODO: describe the keywords
+"""`output = algencan(nlp; kwargs...)`
+Solves the `NLPModel` problem `nlp` using `Algencan`.
+
+# Optional keyword arguments
+* `epsfeas`:
+* `epsopt`:
+* `efstain`:
+* `eostain`:
+* `efacc`:
+* `eoacc`:
+* `outputfnm`: output filename
+* `specfnm`: specification filename
+
+All other keyword arguments will be passed to Algencan as an option.
+"""
+function algencan(nlp::AbstractNLPModel; kwargs...)
     # for (name,value) in model.options
     #     sname = string(name)
     #     if match(r"(^resto_)", sname) != nothing
@@ -173,6 +191,11 @@ function algencan(nlp::AbstractNLPModel)
     for i = 1:length(model.g_two_smap)
         is_g_linear[model.m + i] = model.is_g_linear[model.g_two_smap[i]]
         mult[model.m + i] = -mult[model.g_two_smap[i]]
+    end
+
+    # Optional keyword arguments
+    for (key, value) in kwargs
+        model.options[key] = value
     end
 
     # Parameters controling precision
@@ -306,8 +329,7 @@ function option2vparam(model::AlgencanModelData)
         key, value = option
         if key in parameters
             continue
-        end
-        key = replace(string(key), "_", "-")
+        key = replace(string(key), "_" => "-")
         push!(vparam, "$key $value")
     end
     return vparam
