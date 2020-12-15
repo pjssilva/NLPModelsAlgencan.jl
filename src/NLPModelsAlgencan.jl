@@ -212,6 +212,10 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     vparam = option2vparam(model)
     nvparam = length(vparam)
 
+    if !isempty(specfnm)
+        read_options_from_specification_file(model)
+    end
+
     # Return information
     f = [0.0]
     cnorm = [0.0]
@@ -299,6 +303,40 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
                                 )
 end
 
+"Read additional parameters present in the specification file"
+function read_options_from_specification_file(model::AlgencanModelData)
+    # Options that are present in our data model
+    spec_params = Dict(
+        "FEASIBILITY-TOLERANCE"=>:epsfeas,
+        "OPTIMALITY-TOLERANCE"=>:epsopt,
+        "STAINF-FEASIBILITY-TOLERANCE"=>:efstain,
+        "STAINF-OPTIMALITY-TOLERANCE"=>:eostain,
+        "ACC-FEASIBILITY-THRESHOLD"=>:efacc,
+        "ACC-OPTIMALITY-THRESHOLD"=>:eoacc
+    )
+
+    specfnm = model.options[:specfnm]
+    open(specfnm, "r") do io
+        for line in split(read(io, String), "\n")
+            # Skip comments
+            line  = split(line, ['#', '*'])[1]
+
+            # Only key and value
+            words = split(line, ' ')
+            if length(words) == 2
+                key = uppercase(words[1])
+
+                # Set the options that are present
+                if key in keys(spec_params)
+                    value = parse(Float64, words[2])
+                    opt_key = spec_params[key]
+                    model.options[opt_key] = value
+                end
+            end
+        end
+    end
+end
+
 "Analyse the lower and upper bounds on the constraints and prepare the
  data structure to treat lower bounds."
 function treat_lower_bounds(nlp::AbstractNLPModel, lb, ub)
@@ -349,7 +387,6 @@ function find_status(model::AlgencanModelData, cnorm::Float64, snorm::Float64,
     bounded_obj = model.sense*model.obj_val > fmin
 
     # Optimality thresholds
-    # TODO: Deal with the possibility that specfnm may overrid these constans
     epsopt, epsfeas = model.options[:epsopt], model.options[:epsfeas]
 
     # Conditions for constrained problems
