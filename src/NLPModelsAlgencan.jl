@@ -22,6 +22,8 @@ end
 
 export algencan
 
+"Processes and stores data from an AbstractNLPModel to be used by Algencan
+subroutines"
 mutable struct AlgencanModelData
     # Problem data
     n::Int                          # Num variables
@@ -106,21 +108,26 @@ mutable struct AlgencanModelData
     end
 end
 
-# TODO: describe the keywords
+# TODO: describe the keywords better
 """`output = algencan(nlp; kwargs...)`
 Solves the `NLPModel` problem `nlp` using `Algencan`.
 
 # Optional keyword arguments
-* `epsfeas`:
-* `epsopt`:
-* `efstain`:
-* `eostain`:
-* `efacc`:
-* `eoacc`:
+* `epsfeas`: feasibility tolerance
+* `epsopt`: optimality tolerance
+* `efstain`: stainf feasibility tolerance
+* `eostain`: stainf output tolerance
+* `efacc`: acc feasibility tolerance
+* `eoacc`: acc optimality tolerance
 * `outputfnm`: output filename
 * `specfnm`: specification filename
 
 All other keyword arguments will be passed to Algencan as an option.
+See Birgin and Martínez [1] on page 120 for the list of options accepted.
+
+[1] Birgin, Ernesto G., and José Mario Martínez. Practical augmented Lagrangian
+    methods for constrained optimization. Society for Industrial and Applied
+    Mathematics, 2014. https://books.google.com.br/books?id=og1_AwAAQBAJ.
 """
 function algencan(nlp::AbstractNLPModel; kwargs...)
     # for (name,value) in model.options
