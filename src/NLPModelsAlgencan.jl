@@ -60,7 +60,7 @@ mutable struct AlgencanModelData
 
         model.nlp = nlp;
 
-        model.sense = nlp.meta.minimize == true ? 1.0 : -1.0
+        model.sense = nlp.meta.minimize ? 1.0 : -1.0
         model.n = nlp.meta.nvar
         model.m = nlp.meta.ncon
         model.x = copy(nlp.meta.x0)
@@ -85,10 +85,10 @@ mutable struct AlgencanModelData
         )
 
         g_lb, g_ub = float(copy(nlp.meta.lcon)), float(copy(nlp.meta.ucon))
-        model.g_sense, model.g_two_sinvmap, model.g_two_smap = treat_lower_bounds(nlp,
-            g_lb, g_ub)
-        model.g_has_lb = (model.m > 0 && (minimum(model.g_sense) == -1 ||
-            length(model.g_two_smap) > 0)) # TODO replace
+        model.g_sense, model.g_two_sinvmap,
+                        model.g_two_smap = treat_lower_bounds(nlp, g_lb, g_ub)
+        model.g_has_lb = length(model.nlp.meta.jrng) +
+                            length(model.nlp.meta.jlow) > 0
         model.g_lb, model.g_ub = g_lb, g_ub
 
         # Contraints with only lower bound will be multiplied by -1.0, hence
@@ -171,8 +171,8 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     myevalgjacp = C_NULL
     myevalhl = c_julia_hl
     myevalhlp = c_julia_hlp
-    jcnnzmax = 2*length(model.j_row_inds)
-    hnnzmax = length(model.h_row_inds)
+    jcnnzmax = 2*model.nlp.meta.nnzj
+    hnnzmax = model.nlp.meta.nnzh
     coded = zeros(UInt8, 11)
     coded[7] = UInt8(1)
     coded[8] = UInt8(1)
@@ -460,7 +460,7 @@ function julia_gjac(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, f_gr
     f_grad[1:Int(n)] .*= model.sense
 
     # Find structure of the constraints Jacobian
-    nnz = length(model.j_row_inds)
+    nnz = model.nlp.meta.nnzj
     if nnz > Int(lim)
         unsafe_store!(lmem_ptr, Cint(1))
         unsafe_store!(flag_ptr, Cint(1))
@@ -479,7 +479,7 @@ function julia_gjac(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, f_gr
 
     # Treat the presence of lower bound in the constraints
     if model.g_has_lb
-        @inbounds for i = 1:length(model.j_row_inds)
+        @inbounds for i = 1:model.nlp.meta.nnzj
             # +1, -1 to translate from C indexing to Julia indexing
             rind, cind = model.j_row_inds[i] + 1, model.j_col_inds[i]
             if model.g_two_sinvmap[rind] > 0
@@ -508,7 +508,7 @@ function julia_hl(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, m::Cin
     lmem_ptr::Ptr{UInt8}, flag_ptr::Ptr{Cint})
 
     # Get nonzero indexes.
-    nnz = length(model.h_row_inds)
+    nnz = model.nlp.meta.nnzh
     if nnz > Int(lim)
         unsafe_store!(lmem_ptr, 1)
         unsafe_store!(flag_ptr, 1)
