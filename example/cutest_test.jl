@@ -9,33 +9,31 @@
 # solvers.
 
 using Printf
-using MathProgBase
-MPB = MathProgBase
 using NLPModels
-using NLPModelsJuMP
 using CUTEst
-using Algencan
+using NLPModelsAlgencan
 
 
 function cutest_bench(name, solver)
     nlp = CUTEstModel(name)
-    model = NLPtoMPB(nlp, solver)
-    bench_data = @timed MPB.optimize!(model)
-    finalize(nlp)
+    bench_data = @timed stats = solver(nlp)
     etime = bench_data[2]
-    flag = MPB.status(model)
-    objval = MPB.getobjval(model)
-    n_fc, n_ggrad, n_hl, n_hlp = getnfevals(model)
+    flag = stats.status
+    objval = obj(nlp, stats.solution)
+    c = stats.counters.counters
+    n_fc, n_ggrad, n_hl, n_hlp = c.neval_obj, c.neval_jac, c.neval_hess, c.neval_hprod 
+    finalize(nlp)
     return flag, etime, n_fc, n_ggrad, n_hl, n_hlp, objval
 end
 
 
 function run_tests()
     # Algencan tolerances
-    solver = AlgencanSolver(epsfeas=1.0e-5, epsopt=1.0e-5, specfnm="algencan.dat")
+    solver(model) = algencan(model, epsfeas=1.0e-5, epsopt=1.0e-5, specfnm="algencan.dat")
     solver_name = "algencan_hsl_accel"
 
     # First run to compile
+    set_mastsif()
     cutest_bench("HS6", solver)
 
     # Grab a list of CUTEst tests

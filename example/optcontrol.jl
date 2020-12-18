@@ -2,9 +2,10 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-using JuMP, Ipopt, Algencan
+using JuMP
+using NLPModels, NLPModelsJuMP, NLPModelsIpopt, NLPModelsAlgencan
 
-solver = AlgencanSolver() #IpoptSolver()
+solver = algencan #ipopt
 
 # clnlbeam
 # Based on AMPL model
@@ -27,7 +28,7 @@ let
     h     = 1/ni
     alpha = 350
 
-    m = Model(solver=solver)
+    m = Model()
 
     @variable(m, -1 <= t[1:(ni+1)] <= 1)
     @variable(m, -0.05 <= x[1:(ni+1)] <= 0.05)
@@ -44,6 +45,6 @@ let
         @constraint(m, t[i+1] - t[i] - (0.5h)*u[i+1] - (0.5h)*u[i] == 0)
     end
 
-    solve(m)
-
+    nlp = MathOptNLPModel(m)
+    solver(nlp)
 end
