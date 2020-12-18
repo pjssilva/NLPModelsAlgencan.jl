@@ -178,8 +178,19 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     myevalgjacp = C_NULL
     myevalhl = c_julia_hl
     myevalhlp = c_julia_hlp
-    jcnnzmax = 2*model.nlp.meta.nnzj
-    hnnzmax = model.nlp.meta.nnzh
+    jcnnzmax = model.nlp.meta.nnzj
+    # Using the same workaround as Birgin in the CUTEst interface.
+    # hnnzmax must be an upper bound on the number of elements of the
+    # Hessian of the Lagrangian plus the new elements that appear when
+    # adding (to the Hessian of the Lagrangian) matrix rho \sum_j \nabla
+    # cj(x) \nabla cj(x)^t to obtain the Hessian of the Augmented
+    # Lagrangian. But this additional space is only need when Algencan
+    # uses an Euclidian trust-region approach that is recommended only
+    # for problems with no more than 500 variables. Therefore, since we
+    # are not able to estimate this quantity here (when using CUTEst),
+    # we arbitrarily add to hnnzmax the quantity 1,000,000 >= 500^2.
+    hnnzmax = model.nlp.meta.nnzh + 1000000
+    println("maxnnz = $jcnnzmax, $hnnzmax")
     coded = zeros(UInt8, 11)
     coded[7] = UInt8(1)
     coded[8] = UInt8(1)
@@ -518,11 +529,11 @@ function julia_hl(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, m::Cin
     # Get nonzero indexes.
     nnz = model.nlp.meta.nnzh
     if nnz > Int(lim)
-        unsafe_store!(lmem_ptr, 1)
-        unsafe_store!(flag_ptr, 1)
+        unsafe_store!(lmem_ptr, Cint(1))
+        unsafe_store!(flag_ptr, Cint(1))
         return nothing
     else
-        unsafe_store!(lmem_ptr, 0)
+        unsafe_store!(lmem_ptr, Cint(0))
     end
     unsafe_store!(hnnz_ptr, Cint(nnz))
     hcol_ind = unsafe_wrap(Array, hcol_ptr, Int(lim))
