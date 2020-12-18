@@ -178,7 +178,9 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     myevalgjacp = C_NULL
     myevalhl = c_julia_hl
     myevalhlp = c_julia_hlp
-    jcnnzmax = model.nlp.meta.nnzj
+    # Since I can duplicate the two sided constraints, I need
+    # to take that into account here
+    jcnnzmax = 2*model.nlp.meta.nnzj
     # Using the same workaround as Birgin in the CUTEst interface.
     # hnnzmax must be an upper bound on the number of elements of the
     # Hessian of the Lagrangian plus the new elements that appear when
@@ -190,7 +192,6 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     # are not able to estimate this quantity here (when using CUTEst),
     # we arbitrarily add to hnnzmax the quantity 1,000,000 >= 500^2.
     hnnzmax = model.nlp.meta.nnzh + 1000000
-    println("maxnnz = $jcnnzmax, $hnnzmax")
     coded = zeros(UInt8, 11)
     coded[7] = UInt8(1)
     coded[8] = UInt8(1)
