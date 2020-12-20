@@ -558,7 +558,7 @@ function julia_hl(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, m::Cin
     # Evaluate the Hessian
     x = unsafe_wrap(Array, x_ptr, Int(n))
     H = unsafe_wrap(Array, hval_ptr, Int(lim))
-    hess_coord!(model.nlp, x, μ, H; obj_weight = σ)
+    H[1:nnz] = hess_coord(model.nlp, x, μ; obj_weight = σ)
 
     # Declare success
     unsafe_store!(flag_ptr, Cint(0))
