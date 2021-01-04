@@ -182,6 +182,7 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     # to take that into account here
     jcnnzmax = 2*model.nlp.meta.nnzj
     # Using the same workaround as Birgin in the CUTEst interface.
+    # See comment below:
     # hnnzmax must be an upper bound on the number of elements of the
     # Hessian of the Lagrangian plus the new elements that appear when
     # adding (to the Hessian of the Lagrangian) matrix rho \sum_j \nabla
