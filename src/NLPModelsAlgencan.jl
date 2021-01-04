@@ -247,58 +247,61 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     algencandl = Libdl.dlopen(algencan_lib_path)
     @assert algencan_lib_path in Libdl.dllist()
     algencansym = Libdl.dlsym(algencandl, :c_algencan)
-    ccall(
-        algencansym,                                     # function
-        Nothing,                                         # Return type
-        (                                                # Parameters types
-            Ptr{Nothing},                                # *myevalf,
-            Ptr{Nothing},                                # *myevalg,
-            Ptr{Nothing},                                # *myevalh,
-            Ptr{Nothing},                                # *myevalc,
-            Ptr{Nothing},                                # *myevaljac,
-            Ptr{Nothing},                                # *myevalhc,
-            Ptr{Nothing},                                # *myevalfc,
-            Ptr{Nothing},                                # *myevalgjac,
-            Ptr{Nothing},                                # *myevalgjacp,
-            Ptr{Nothing},                                # *myevalhl,
-            Ptr{Nothing},                                # *myevalhlp,
-            Cint,                                        # jcnnzmax,
-            Cint,                                        # hnnzmax,
-            Ref{Cdouble},                                # *epsfeas,
-            Ref{Cdouble},                                # *epsopt,
-            Ref{Cdouble},                                # *efstain,
-            Ref{Cdouble},                                # *eostain,
-            Ref{Cdouble},                                # *efacc,
-            Ref{Cdouble},                                # *eoacc,
-            Cstring,                                     # *outputfnm,
-            Cstring,                                     # *specfnm,
-            Cint,                                        # nvparam,
-            Ptr{Ptr{UInt8}},                             # **vparam,
-            Cint,                                        # int n,
-            Ref{Cdouble},                                # *x,
-            Ref{Cdouble},                                # *l,
-            Ref{Cdouble},                                # *u,
-            Cint,                                        #  m,
-            Ref{Cdouble},                                # double *lambda,
-            Ref{UInt8},                                  # *equatn,
-            Ref{UInt8},                                  # _Bool *linear,
-            Ref{UInt8},                                  # _Bool *coded,
-            UInt8,                                       # _Bool checkder,
-            Ref{Cdouble},                                # double *f,
-            Ref{Cdouble},                                # double *cnorm,
-            Ref{Cdouble},                                # double *snorm,
-            Ref{Cdouble},                                # double *nlpsupn,
-            Ref{Cint}                                    # int *inform
-        ),
-        myevalf, myevalg, myevalh, myevalc, myevaljac, myevalhc, myevalfc,
-        myevalgjac, myevalgjacp, myevalhl, myevalhlp, jcnnzmax, hnnzmax,
-        epsfeas, epsopt, efstain, eostain, efacc, eoacc, outputfnm, specfnm,
-        nvparam, vparam, model.n, model.x, model.lb, model.ub, m, mult,
-        is_equality, is_g_linear, coded, checkder, f, cnorm, snorm,
-        nlpsupn, inform
-    )
-    Libdl.dlclose(algencandl)
-    @assert !(algencan_lib_path in Libdl.dllist())
+    try
+        ccall(
+            algencansym,                                     # function
+            Nothing,                                         # Return type
+            (                                                # Parameters types
+                Ptr{Nothing},                                # *myevalf,
+                Ptr{Nothing},                                # *myevalg,
+                Ptr{Nothing},                                # *myevalh,
+                Ptr{Nothing},                                # *myevalc,
+                Ptr{Nothing},                                # *myevaljac,
+                Ptr{Nothing},                                # *myevalhc,
+                Ptr{Nothing},                                # *myevalfc,
+                Ptr{Nothing},                                # *myevalgjac,
+                Ptr{Nothing},                                # *myevalgjacp,
+                Ptr{Nothing},                                # *myevalhl,
+                Ptr{Nothing},                                # *myevalhlp,
+                Cint,                                        # jcnnzmax,
+                Cint,                                        # hnnzmax,
+                Ref{Cdouble},                                # *epsfeas,
+                Ref{Cdouble},                                # *epsopt,
+                Ref{Cdouble},                                # *efstain,
+                Ref{Cdouble},                                # *eostain,
+                Ref{Cdouble},                                # *efacc,
+                Ref{Cdouble},                                # *eoacc,
+                Cstring,                                     # *outputfnm,
+                Cstring,                                     # *specfnm,
+                Cint,                                        # nvparam,
+                Ptr{Ptr{UInt8}},                             # **vparam,
+                Cint,                                        # int n,
+                Ref{Cdouble},                                # *x,
+                Ref{Cdouble},                                # *l,
+                Ref{Cdouble},                                # *u,
+                Cint,                                        #  m,
+                Ref{Cdouble},                                # double *lambda,
+                Ref{UInt8},                                  # *equatn,
+                Ref{UInt8},                                  # _Bool *linear,
+                Ref{UInt8},                                  # _Bool *coded,
+                UInt8,                                       # _Bool checkder,
+                Ref{Cdouble},                                # double *f,
+                Ref{Cdouble},                                # double *cnorm,
+                Ref{Cdouble},                                # double *snorm,
+                Ref{Cdouble},                                # double *nlpsupn,
+                Ref{Cint}                                    # int *inform
+            ),
+            myevalf, myevalg, myevalh, myevalc, myevaljac, myevalhc, myevalfc,
+            myevalgjac, myevalgjacp, myevalhl, myevalhlp, jcnnzmax, hnnzmax,
+            epsfeas, epsopt, efstain, eostain, efacc, eoacc, outputfnm, specfnm,
+            nvparam, vparam, model.n, model.x, model.lb, model.ub, m, mult,
+            is_equality, is_g_linear, coded, checkder, f, cnorm, snorm,
+            nlpsupn, inform
+        )
+    finally
+        Libdl.dlclose(algencandl)
+        @assert !(algencan_lib_path in Libdl.dllist())
+    end
 
     # Fix sign of objetive function
     model.obj_val = model.sense*f[1]
@@ -559,7 +562,7 @@ function julia_hl(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, m::Cin
     # Evaluate the Hessian
     x = unsafe_wrap(Array, x_ptr, Int(n))
     H = unsafe_wrap(Array, hval_ptr, Int(lim))
-    hess_coord!(model.nlp, x, μ, H; obj_weight = σ)
+    H[1:nnz] = hess_coord(model.nlp, x, μ; obj_weight = σ)
 
     # Declare success
     unsafe_store!(flag_ptr, Cint(0))
