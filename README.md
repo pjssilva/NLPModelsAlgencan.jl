@@ -1,4 +1,4 @@
-# NLPModelsAlgencan.jl
+# NLPModelsAlgencan.jl [![Build Status](https://travis-ci.com/pjssilva/NLPModelsAlgencan.jl.svg?branch=master)](https://travis-ci.com/pjssilva/NLPModelsAlgencan.jl) [![Coverage Status](https://coveralls.io/repos/github/pjssilva/NLPModelsAlgencan.jl/badge.svg?branch=master)](https://coveralls.io/github/pjssilva/NLPModelsAlgencan.jl?branch=master) 
 
 **NLPModelsAlgencan.jl** is a [NLPModels](https://github.com/JuliaSmoothOptimizers/NLPModels.jl)
 interface to the [Algencan](https://www.ime.usp.br/~egbirgin/tango/codes.php)
