@@ -108,36 +108,15 @@ mutable struct AlgencanModelData
     end
 end
 
-# TODO: describe the keywords better
 """`output = algencan(nlp; kwargs...)`
+
 Solves the `NLPModel` problem `nlp` using `Algencan`.
 
-# Optional keyword arguments
-* `epsfeas`: feasibility tolerance
-* `epsopt`: optimality tolerance
-* `efstain`: stainf feasibility tolerance
-* `eostain`: stainf output tolerance
-* `efacc`: acc feasibility tolerance
-* `eoacc`: acc optimality tolerance
-* `outputfnm`: output filename
-* `specfnm`: specification filename
-
-All other keyword arguments will be passed to Algencan as an option.
-See Birgin and Martínez [1] on page 120 for the list of options accepted.
-
-[1] Birgin, Ernesto G., and José Mario Martínez. Practical augmented Lagrangian
-    methods for constrained optimization. Society for Industrial and Applied
-    Mathematics, 2014. https://books.google.com.br/books?id=og1_AwAAQBAJ.
+There is a set of optional keywords arguments allowed, see [Optional parameters]
+(https://pjssilva.github.io/NLPModelsAlgencan.jl/dev/parameters/)
+for the list of options accepted.
 """
 function algencan(nlp::AbstractNLPModel; kwargs...)
-    # for (name,value) in model.options
-    #     sname = string(name)
-    #     if match(r"(^resto_)", sname) != nothing
-    #         sname = replace(sname, r"(^resto_)", "resto.")
-    #     end
-    #     addOption(model.inner, sname, value)
-    # end
-
     start_time = time_ns()
     ###########################################################################
     # Algencan callback function wrappers
@@ -182,7 +161,6 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     # to take that into account here
     jcnnzmax = 2*model.nlp.meta.nnzj
     # Using the same workaround as Birgin in the CUTEst interface.
-    # See comment below:
     # hnnzmax must be an upper bound on the number of elements of the
     # Hessian of the Lagrangian plus the new elements that appear when
     # adding (to the Hessian of the Lagrangian) matrix rho \sum_j \nabla

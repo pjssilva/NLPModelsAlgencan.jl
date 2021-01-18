@@ -86,4 +86,5 @@ support.
 
 ## Usage
 
-See [Examples of usage](@ref).
+See [First steps](@ref) for the fundamental usage. In addition, if there is a
+need to configure the solver algorithm, you may also check [Optional parameters](@ref).
