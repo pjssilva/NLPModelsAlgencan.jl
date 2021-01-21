@@ -1,2 +1,231 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples of usage · NLPModelsAlgencan.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">NLPModelsAlgencan.jl</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Get started</span><ul><li><a class="tocitem" href="../first_steps/">First steps</a></li><li><a class="tocitem" href="../parameters/">Optional parameters</a></li></ul></li><li class="is-active"><a class="tocitem" href>Examples of usage</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Examples of usage</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples of usage</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/pjssilva/NLPModelsAlgencan.jl/blob/master/docs/src/examples.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples-of-usage"><a class="docs-heading-anchor" href="#Examples-of-usage">Examples of usage</a><a id="Examples-of-usage-1"></a><a class="docs-heading-anchor-permalink" href="#Examples-of-usage" title="Permalink"></a></h1></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../parameters/">« Optional parameters</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 18 January 2021 18:32">Monday 18 January 2021</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples of usage · NLPModelsAlgencan.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">NLPModelsAlgencan.jl</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Get started</span><ul><li><a class="tocitem" href="../first_steps/">First steps</a></li><li><a class="tocitem" href="../parameters/">Optional parameters</a></li></ul></li><li class="is-active"><a class="tocitem" href>Examples of usage</a><ul class="internal"><li><a class="tocitem" href="#Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models"><span>Using CUTEst Models</span></a></li><li><a class="tocitem" href="#Utilizing-a-specification-file"><span>Utilizing a specification file</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Examples of usage</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples of usage</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/pjssilva/NLPModelsAlgencan.jl/blob/master/docs/src/examples.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples-of-usage"><a class="docs-heading-anchor" href="#Examples-of-usage">Examples of usage</a><a id="Examples-of-usage-1"></a><a class="docs-heading-anchor-permalink" href="#Examples-of-usage" title="Permalink"></a></h1><h2 id="Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models"><a class="docs-heading-anchor" href="#Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models">Using <a href="https://github.com/JuliaSmoothOptimizers/CUTEst.jl">CUTEst</a> Models</a><a id="Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models-1"></a><a class="docs-heading-anchor-permalink" href="#Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models" title="Permalink"></a></h2><pre><code class="language-julia">using NLPModels
+using CUTEst
+using NLPModelsAlgencan
+
+set_mastsif()
+
+nlp = CUTEstModel(&quot;HS6&quot;)
+
+stats = algencan(nlp)
+
+print(stats)
+
+finalize(nlp)</code></pre><pre class="documenter-example-output">┌ Info: using problem repository
+└   ENV[&quot;MASTSIF&quot;] = &quot;/home/travis/.julia/artifacts/a7ea0d0aaf29a39ca0fe75588fc077cdd5b5ed54/optrove-sif-99c5b38e7d03&quot;
+┌ Info: using full SIF collection located at
+└   ENV[&quot;MASTSIF&quot;] = &quot;/home/travis/.julia/artifacts/a7ea0d0aaf29a39ca0fe75588fc077cdd5b5ed54/optrove-sif-99c5b38e7d03&quot;
+
+ ==============================================================================
+ This is ALGENCAN 3.1.1.
+ ALGENCAN, an Augmented Lagrangian method for nonlinear programming, is part of
+ the TANGO Project: Trustable Algorithms for Nonlinear General Optimization.
+ See http://www.ime.usp.br/~egbirgin/tango/ for details.
+ ==============================================================================
+
+ There are no strings to be processed in the array of parameters.
+
+ The specification file is not being used.
+
+ Available HSL subroutines = NONE
+
+ ALGENCAN PARAMETERS:
+
+ firstde                =                    T
+ seconde                =                    T
+ truehpr                =                    T
+ hptype in TN           =               TRUEHP
+ lsslvr in TR           =            NONE/NONE
+ lsslvr in NW           =            NONE/NONE
+ lsslvr in ACCPROC      =            NONE/NONE
+ innslvr                =                   TN
+ accproc                =                    F
+ rmfixv                 =                    T
+ slacks                 =                    F
+ scale                  =                    T
+ epsfeas                =           1.0000D-08
+ epsopt                 =           1.0000D-08
+ efstain                =           1.0000D-04
+ eostain                =           1.0000D-12
+ efacc                  =           1.0000D-04
+ eoacc                  =           1.0000D-04
+ iprint                 =                   10
+ ncomp                  =                    6
+
+ Specification filename =                   &#39;&#39;
+ Output filename        =                   &#39;&#39;
+ Solution filename      =                   &#39;&#39;
+
+ Number of variables               :       2
+ Number of equality constraints    :       1
+ Number of inequality constraints  :       0
+ Number of bound constraints       :       0
+ Number of fixed variables         :       0
+
+ There are no fixed variables to be removed.
+
+ Objective function scale factor   : 2.3D-01
+ Smallest constraints scale factor : 4.2D-02
+
+ Entry to ALGENCAN.
+ Number of variables  :       2
+ Number of constraints:       1
+
+out penalt  objective infeas  scaled    scaled infeas norm   |Grad| inner Newton
+ite         function  ibilty  obj-funct infeas +compl graLag infeas totit forKKT
+  0         4.840D+00 4.D+00  1.100D+00 2.D-01 2.D-01 1.D+00 2.D-01    0   0   0
+  1 1.D+01  3.989D-11 2.D-04  9.066D-12 9.D-06 9.D-06 8.D-05 8.D-06    8C  0   0
+  2 1.D+01  5.001D-18 2.D-04  1.137D-18 1.D-05 1.D-05 9.D-10 8.D-06    9C  0   0
+  3 1.D+02  1.728D-23 4.D-11  3.927D-24 2.D-12 2.D-12 2.D-12 1.D-12   10C  0   0
+
+ Flag of ALGENCAN: Solution was found.
+
+ User-provided subroutines calls counters:
+
+ Subroutine fsub     (coded=F):        0
+ Subroutine gsub     (coded=F):        0
+ Subroutine hsub     (coded=F):        0
+ Subroutine csub     (coded=F):        0 (       0 calls per constraint in avg)
+ Subroutine jacsub   (coded=F):        0 (       0 calls per constraint in avg)
+ Subroutine hcsub    (coded=F):        0 (       0 calls per constraint in avg)
+ Subroutine fcsub    (coded=T):       20
+ Subroutine gjacsub  (coded=T):       21
+ Subroutine gjacpsub (coded=F):        0
+ Subroutine hlsub    (coded=T):       10
+ Subroutine hlpsub   (coded=F):        0
+
+
+ Total CPU time in seconds =     0.35
+Generic Execution stats
+  status: first-order stationary
+  objective value: 1.7279793074334713e-23
+  primal feasibility: 3.986144747614162e-11
+  dual feasibility: 1.895396718364487e-12
+  solution: [1.000000000004157  1.0000000000123]
+  multipliers: [-1.2975731600306517e-15]
+  iterations: -1
+  elapsed time: 1.231345664</pre><h2 id="Utilizing-a-specification-file"><a class="docs-heading-anchor" href="#Utilizing-a-specification-file">Utilizing a specification file</a><a id="Utilizing-a-specification-file-1"></a><a class="docs-heading-anchor-permalink" href="#Utilizing-a-specification-file" title="Permalink"></a></h2><p><strong>specfnm.dat</strong></p><pre><code class="language-none">FEASIBILITY-TOLERANCE 1.0e-5
+OPTIMALITY-TOLERANCE 1.0e-5
+STAINF-FEASIBILITY-TOLERANCE 3.162278e-03
+STAINF-OPTIMALITY-TOLERANCE 3.162278e-08
+ACC-FEASIBILITY-THRESHOLD 3.162278e-3
+ACC-OPTIMALITY-THRESHOLD 3.162278e-3
+ITERATIONS-OUTPUT-DETAIL 10
+NUMBER-OF-ARRAYS-COMPONENTS-IN-OUTPUT 0
+SKIP-ACCELERATION-PROCESS 1</code></pre><p><strong>Code</strong></p><pre><code class="language-julia">using NLPModels
+using CUTEst
+using NLPModelsAlgencan
+
+set_mastsif()
+
+nlp = CUTEstModel(&quot;HS6&quot;)
+
+stats = algencan(nlp, specfnm=&quot;specfnm.dat&quot;)
+
+print(stats)
+
+finalize(nlp)</code></pre><pre class="documenter-example-output">┌ Info: using full SIF collection located at
+└   ENV[&quot;MASTSIF&quot;] = &quot;/home/travis/.julia/artifacts/a7ea0d0aaf29a39ca0fe75588fc077cdd5b5ed54/optrove-sif-99c5b38e7d03&quot;
+
+ ==============================================================================
+ This is ALGENCAN 3.1.1.
+ ALGENCAN, an Augmented Lagrangian method for nonlinear programming, is part of
+ the TANGO Project: Trustable Algorithms for Nonlinear General Optimization.
+ See http://www.ime.usp.br/~egbirgin/tango/ for details.
+ ==============================================================================
+
+ There are no strings to be processed in the array of parameters.
+
+ The specification file was found.
+
+ Processing specification file:
+
+ FEASIBILITY-TOLERANCE                                           1.00000000D-05
+ OPTIMALITY-TOLERANCE                                            1.00000000D-05
+ STAINF-FEASIBILITY-TOLERANCE                                    3.16227800D-03
+ STAINF-OPTIMALITY-TOLERANCE                                     3.16227800D-08
+ ACC-FEASIBILITY-THRESHOLD                                       3.16227800D-03
+ ACC-OPTIMALITY-THRESHOLD                                        3.16227800D-03
+ ITERATIONS-OUTPUT-DETAIL                                                    10
+ NUMBER-OF-ARRAYS-COMPONENTS-IN-OUTPUT                                        0
+ SKIP-ACCELERATION-PROCESS
+
+ Available HSL subroutines = NONE
+
+ ALGENCAN PARAMETERS:
+
+ firstde                =                    T
+ seconde                =                    T
+ truehpr                =                    T
+ hptype in TN           =               TRUEHP
+ lsslvr in TR           =            NONE/NONE
+ lsslvr in NW           =            NONE/NONE
+ lsslvr in ACCPROC      =            NONE/NONE
+ innslvr                =                   TN
+ accproc                =                    F
+ rmfixv                 =                    T
+ slacks                 =                    F
+ scale                  =                    T
+ epsfeas                =           1.0000D-05
+ epsopt                 =           1.0000D-05
+ efstain                =           3.1623D-03
+ eostain                =           3.1623D-08
+ efacc                  =           3.1623D-03
+ eoacc                  =           3.1623D-03
+ iprint                 =                   10
+ ncomp                  =                    0
+
+ Specification filename =        &#39;specfnm.dat&#39;
+ Output filename        =                   &#39;&#39;
+ Solution filename      =                   &#39;&#39;
+
+ Number of variables               :       2
+ Number of equality constraints    :       1
+ Number of inequality constraints  :       0
+ Number of bound constraints       :       0
+ Number of fixed variables         :       0
+
+ There are no fixed variables to be removed.
+
+ Objective function scale factor   : 2.3D-01
+ Smallest constraints scale factor : 4.2D-02
+
+ Entry to ALGENCAN.
+ Number of variables  :       2
+ Number of constraints:       1
+
+out penalt  objective infeas  scaled    scaled infeas norm   |Grad| inner Newton
+ite         function  ibilty  obj-funct infeas +compl graLag infeas totit forKKT
+  0         4.840D+00 4.D+00  1.100D+00 2.D-01 2.D-01 1.D+00 2.D-01    0   0   0
+  1 1.D+01  2.214D-05 2.D-03  5.032D-06 7.D-05 7.D-05 2.D-03 6.D-05    7C  0   0
+  2 1.D+01  1.450D-10 2.D-03  3.296D-11 6.D-05 6.D-05 7.D-05 5.D-05    8C  0   0
+  3 1.D+02  1.994D-14 2.D-05  4.533D-15 9.D-07 9.D-07 7.D-08 8.D-07    9C  0   0
+  4 1.D+02  5.646D-22 1.D-09  1.283D-22 6.D-11 6.D-11 1.D-11 5.D-11   10C  0   0
+
+ Flag of ALGENCAN: Solution was found.
+
+ User-provided subroutines calls counters:
+
+ Subroutine fsub     (coded=F):        0
+ Subroutine gsub     (coded=F):        0
+ Subroutine hsub     (coded=F):        0
+ Subroutine csub     (coded=F):        0 (       0 calls per constraint in avg)
+ Subroutine jacsub   (coded=F):        0 (       0 calls per constraint in avg)
+ Subroutine hcsub    (coded=F):        0 (       0 calls per constraint in avg)
+ Subroutine fcsub    (coded=T):       23
+ Subroutine gjacsub  (coded=T):       24
+ Subroutine gjacpsub (coded=F):        0
+ Subroutine hlsub    (coded=T):       10
+ Subroutine hlpsub   (coded=F):        0
+
+
+ Total CPU time in seconds =     0.00
+Generic Execution stats
+  status: first-order stationary
+  objective value: 5.646322815701419e-22
+  primal feasibility: 1.4843615225856865e-9
+  dual feasibility: 6.18483967744036e-11
+  solution: [0.999999999976238  1.0000000001009122]
+  multipliers: [-1.5356314551376866e-13]
+  iterations: -1
+  elapsed time: 0.132571422</pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../parameters/">« Optional parameters</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 21 January 2021 17:12">Thursday 21 January 2021</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
