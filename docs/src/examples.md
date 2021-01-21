@@ -20,7 +20,7 @@ finalize(nlp)
 
 ## Utilizing a specification file
 
-**specfnm.dat**
+**spec.dat**
 ```
 FEASIBILITY-TOLERANCE 1.0e-5
 OPTIMALITY-TOLERANCE 1.0e-5
