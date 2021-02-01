@@ -71,10 +71,10 @@ using JuMP, NLPModelsJuMP, NLPModelsAlgencan
 model = Model()
 
 @variable(model, 0 ≤ x[1:2] ≤ 5)
-set_start_value(x[1], 0.0)
+set_start_value(x[1], 1.0)
 set_start_value(x[2], 1.0)
 
-@objective(model, Min, x[1]*x[2] + 5)
+@NLobjective(model, Min, x[1]*x[2] + 5)
 
 @constraint(model, x[1] + x[2] ≤ 5)
 @NLconstraint(model, x[1]^2 + x[2]^2 == 10)
