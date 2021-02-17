@@ -11,12 +11,20 @@ some smart acceleration strategies.
 
 ## Status
 
-At this point this is alpha software. It will only work only with Julia 1.0 or later. 
+At this point this is alpha software. It will only work with Julia 1.0 or later. 
+
+## Prerequisites
+
+The package downloads and installs Algencan upon installation. Therefore, you
+need to have a minimal development environment installed. You need at least
+`gcc`, `gfortran`, `make` and a development version of a BLAS/Lapack libraries
+(for example `libopenblas-dev`). The BLAS/Lapack implmentation is important to
+get good performance. Use a high quality one like Openblas or Intel MKL.
 
 ## Installation
 
 We have not registered the NLPModelsAlgencan.jl package yet. Hence, to add it you
-will need to give the full URL to the github directory. See examples below.
+will need to give the full URL to the Github directory. See examples below.
 
 There are three main modes of installation, depending on how you want to compile
 Algencan.
