@@ -23,9 +23,6 @@ get good performance. Use a high quality one like Openblas or Intel MKL.
 
 ## Installation
 
-We have not registered the NLPModelsAlgencan.jl package yet. Hence, to add it you
-will need to give the full URL to the Github directory. See examples below.
-
 There are three main modes of installation, depending on how you want to compile
 Algencan.
 
