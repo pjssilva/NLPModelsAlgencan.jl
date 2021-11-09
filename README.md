@@ -88,5 +88,3 @@ This [wiki
 page](https://github.com/pjssilva/NLPModelsAlgencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-NLPModelsAlgencan.jl)
 documents the steps I used to compile a version of `libalgencan.so` with HSL
 support.
-
-**Small text to be deleted in online class**
