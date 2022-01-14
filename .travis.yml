@@ -4,9 +4,9 @@ matrix:
   include:
     - os: linux
       dist: focal
-      julia: 1.4
+      julia: 1.6
     - os: osx
-      julia: 1.4
+      julia: 1.6
 
 addons:
   apt_packages:
