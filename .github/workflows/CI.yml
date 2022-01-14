@@ -24,7 +24,7 @@ jobs:
       - name: install gfortran and lapack
         run: |
             sudo apt update
-            sudo apt install gfortran liblapack3 liblapack3-dev libopenblas-base libopenblas-dev
+            sudo apt install gfortran liblapack3 liblapack-dev libopenblas-base libopenblas-dev
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
