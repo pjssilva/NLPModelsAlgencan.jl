@@ -5,7 +5,7 @@ See its [GitHub page](https://github.com/pjssilva/NLPModelsAlgencan.jl)
 """
 module NLPModelsAlgencan
 
-using LinearAlgebra, SparseArrays, NLPModels, SolverTools
+using LinearAlgebra, SparseArrays, NLPModels, SolverTools, SolverCore
 import Libdl
 
 # Gets the path of the Algencan library

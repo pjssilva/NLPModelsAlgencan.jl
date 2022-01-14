@@ -1,4 +1,4 @@
-using NLPModels, NLPModelsAlgencan, Test, CUTEst
+using ADNLPModels, NLPModelsAlgencan, Test, CUTEst
 
 include("problems/autodiff/hs12.jl")
 include("problems/autodiff/hs52.jl")
