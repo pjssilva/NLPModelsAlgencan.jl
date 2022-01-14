@@ -21,6 +21,10 @@ jobs:
           - x64
     steps:
       - uses: actions/checkout@v1
+      - name: install gfortran and lapack
+        run: |
+            sudo apt update
+            sudo apt install gfortran lapack3 lapack3-dev libopenblas-base libopenblas-dev
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
