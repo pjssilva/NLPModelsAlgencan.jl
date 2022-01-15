@@ -20,8 +20,8 @@ jobs:
         arch:
           - x64
     steps:
-     - uses: actions/checkout@v1
-     - name: install gfortran and lapack
+      - uses: actions/checkout@v1
+      - name: install gfortran and lapack
         run: |
             sudo apt update
             sudo apt install build-essential gfortran liblapack3 liblapack-dev libopenblas-base libopenblas-dev
