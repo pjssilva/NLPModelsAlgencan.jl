@@ -21,9 +21,7 @@ jobs:
           - x64
     steps:
       - uses: actions/checkout@v1
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-      - name: install gfortran and lapack
+     - name: install gfortran and lapack
         run: |
             sudo apt update
             sudo apt install build-essential gfortran liblapack3 liblapack-dev libopenblas-base libopenblas-dev
@@ -31,6 +29,8 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - uses: julia-actions/julia-runtest@latest
       - uses: julia-actions/julia-uploadcodecov@latest
         env:
