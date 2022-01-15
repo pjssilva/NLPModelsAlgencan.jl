@@ -21,6 +21,8 @@ jobs:
           - x64
     steps:
       - uses: actions/checkout@v1
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: install gfortran and lapack
         run: |
             sudo apt update
