@@ -21,7 +21,7 @@ At this point this is beta software. It will only work with Julia LTS or later.
 The package downloads and installs Algencan upon installation. Therefore, you
 need to have a minimal development environment installed. You need at least
 `gcc`, `gfortran`, `make` and a development version of a BLAS/Lapack libraries
-(for example `libopenblas-dev`). The BLAS/Lapack implmentation is important to
+(for example `libopenblas-dev`). The BLAS/Lapack implementation is important to
 get good performance. Use a high quality one like Openblas or Intel MKL.
 
 ## Installation
@@ -72,7 +72,7 @@ have access to it.**
 
 If you have your own copy of `libalgencan.so` (note that you need a shared
 library), you can use it. Just create an environment variable like below
-pointing to the directory where the library find resides *before* installing
+pointing to the directory where the library resides *before* installing
 NLPModelsAlgencan.jl.
 
 ```bash
@@ -85,11 +85,9 @@ You can then proceed to install NLPModelsAlgencan.jl from the REPL
 julia> using NLPModelsAlgencan
 ```
 
-## Hints to self compilation of Algencan with HSL libraries
+## Hints for self compiling Algencan with HSL libraries
 
 This [wiki
 page](https://github.com/pjssilva/NLPModelsAlgencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-NLPModelsAlgencan.jl)
 documents the steps I used to compile a version of `libalgencan.so` with HSL
 support.
-
-**Small text to be deleted in online class**
