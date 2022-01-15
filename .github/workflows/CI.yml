@@ -20,7 +20,7 @@ jobs:
         arch:
           - x64
     steps:
-      - uses: actions/checkout@v1
+     - uses: actions/checkout@v1
      - name: install gfortran and lapack
         run: |
             sudo apt update
