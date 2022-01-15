@@ -16,7 +16,7 @@ elseif isfile(joinpath(dirname(@__FILE__),"..","deps","deps.jl"))
     include("../deps/deps.jl")
     const algencan_lib_path = libalgencan
 else
-    error("Algencan not properly installed. Please run Pkg.build(\"Algencan\")")
+    error("Algencan not properly installed. Please run Pkg.build(\"NLPModelsAlgencan\")")
     error("or set the ALGENCAN_LIB_DIR enviroment variable.")
 end
 
