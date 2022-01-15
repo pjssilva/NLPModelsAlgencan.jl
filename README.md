@@ -1,6 +1,9 @@
-# NLPModelsAlgencan.jl [![Build Status](https://travis-ci.com/pjssilva/NLPModelsAlgencan.jl.svg?branch=master)](https://app.travis-ci.com/github/pjssilva/NLPModelsAlgencan.jl) [![Coverage Status](https://coveralls.io/repos/github/pjssilva/NLPModelsAlgencan.jl/badge.svg?branch=master)](https://coveralls.io/github/pjssilva/NLPModelsAlgencan.jl?branch=master) 
+# NLPModelsAlgencan.jl
+![CI](https://github.com/pjssilva/NLPModelsAlgencan.jl/workflows/CI/badge.svg?branch=master)
+[![codecov](https://codecov.io/gh/pjssilva/NLPModelsAlgencan.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/pjssilva/NLPModelsAlgencan.jl)
 
-**NLPModelsAlgencan.jl** is a [NLPModels](https://github.com/JuliaSmoothOptimizers/NLPModels.jl)
+**NLPModelsAlgencan.jl** is a 
+[NLPModels](https://github.com/JuliaSmoothOptimizers/NLPModels.jl)
 interface to the [Algencan](https://www.ime.usp.br/~egbirgin/tango/codes.php)
 nonlinear solver.
 
@@ -11,7 +14,7 @@ some smart acceleration strategies.
 
 ## Status
 
-At this point this is alpha software. It will only work with Julia 1.0 or later. 
+At this point this is beta software. It will only work with Julia LTS or later. 
 
 ## Prerequisites
 
