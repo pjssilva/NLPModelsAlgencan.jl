@@ -5,7 +5,7 @@ libalgencan = library_dependency("libalgencan")
 depspath = BinDeps.depsdir(libalgencan)
 algencanpath = joinpath(depspath, "src", "algencan-3.1.1")
 provides(Sources,
-URI("http://www.ime.usp.br/~egbirgin/tango/sources/algencan-3.1.1.tgz"),
+URI("https://www.ime.usp.br/~egbirgin/tango/sources/algencan-3.1.1.tgz"),
 libalgencan, unpackedpath="algencan-3.1.1")
 srcpath = joinpath(depspath, "src")
 
