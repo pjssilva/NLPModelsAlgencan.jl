@@ -296,7 +296,7 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
 
     Δt = (time_ns() - start_time) / 1.0e+9
 
-    return GenericExecutionStats(model.status, model.nlp, solution=model.x,
+    return GenericExecutionStats(model.nlp, status=model.status, solution=model.x,
                                  objective=model.obj_val,
                                  dual_feas=max(nlpsupn[1], snorm[1]),
                                  primal_feas=cnorm[1],
