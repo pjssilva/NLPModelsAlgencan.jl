@@ -12,7 +12,7 @@ import Libdl
 if "ALGENCAN_LIB_DIR" in keys(ENV)
     const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"],
         "libalgencan.so"))
-elseif isfile(joinpath(dirname(@__FILE__),"..","deps","deps.jl"))
+elseif isfile(joinpath(dirname(@__FILE__), "..", "deps", "deps.jl"))
     include("../deps/deps.jl")
     const algencan_lib_path = libalgencan
 else
@@ -37,7 +37,7 @@ mutable struct AlgencanModelData
     g_two_sinvmap::Vector{Int}
     g_two_smap::Vector{Int}
     g_has_lb::Bool                  # true if at least one constraint has lower
-                                    # bound
+    # bound
     j_row_inds::Vector{Int}         # NNZ row indexes of sparse const. Jacobian.
     j_col_inds::Vector{Int}         # NNZ col indexes of sparse const. Jacobian.
     h_row_inds::Vector{Int}         # NNZ row indexes of sparse Lag. Hessian.
@@ -60,7 +60,7 @@ mutable struct AlgencanModelData
     function AlgencanModelData(nlp::AbstractNLPModel)
         model = new()
 
-        model.nlp = nlp;
+        model.nlp = nlp
 
         model.sense = nlp.meta.minimize ? 1.0 : -1.0
         model.n = nlp.meta.nvar
@@ -76,21 +76,21 @@ mutable struct AlgencanModelData
         model.h_row_inds, model.h_col_inds = hrow_inds .- 1, hcol_inds .- 1
 
         model.options = Dict(
-            :epsfeas=>1.0e-08,
-            :epsopt=>1.0e-08,
-            :efstain=>sqrt.(1.0e-8),
-            :eostain=>(1.0e-8)^1.5,
-            :efacc=>sqrt(1.0e-8),
-            :eoacc=>sqrt(1.0e-8),
-            :outputfnm=>"",
-            :specfnm=>""
+            :epsfeas => 1.0e-08,
+            :epsopt => 1.0e-08,
+            :efstain => sqrt.(1.0e-8),
+            :eostain => (1.0e-8)^1.5,
+            :efacc => sqrt(1.0e-8),
+            :eoacc => sqrt(1.0e-8),
+            :outputfnm => "",
+            :specfnm => ""
         )
 
         g_lb, g_ub = float(copy(nlp.meta.lcon)), float(copy(nlp.meta.ucon))
         model.g_sense, model.g_two_sinvmap,
-                        model.g_two_smap = treat_lower_bounds(nlp, g_lb, g_ub)
+        model.g_two_smap = treat_lower_bounds(nlp, g_lb, g_ub)
         model.g_has_lb = length(model.nlp.meta.jrng) +
-                            length(model.nlp.meta.jlow) > 0
+                         length(model.nlp.meta.jlow) > 0
         model.g_lb, model.g_ub = g_lb, g_ub
 
         # Contraints with only lower bound will be multiplied by -1.0, hence
@@ -128,7 +128,7 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     local_julia_gjac = (n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr, jval_ptr, jnnz_ptr, lim, lmem_ptr, flag_ptr) -> julia_gjac(model, n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr, jval_ptr, jnnz_ptr, lim, lmem_ptr, flag_ptr)
     c_julia_gjac = @cfunction($local_julia_gjac,
         Nothing, (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Cint}, Ptr{Cint},
-        Ptr{Float64}, Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
+            Ptr{Float64}, Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
 
     local_julia_hl = (n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, hrow_ptr, hcol_ptr, hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr) -> julia_hl(model, n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, hrow_ptr, hcol_ptr, hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr)
     c_julia_hl = @cfunction($local_julia_hl, Nothing, (Cint, Ptr{Float64}, Cint,
@@ -137,8 +137,8 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
 
     local_julia_hlp = (n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, p_ptr, hp_ptr, goth_ptr, flag_ptr) -> julia_hlp(model, n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, p_ptr, hp_ptr, goth_ptr, flag_ptr)
     c_julia_hlp = @cfunction($local_julia_hlp, Nothing, (Cint, Ptr{Float64}, Cint,
-            Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Float64}, Ptr{Float64},
-            Ptr{UInt8}, Ptr{Cint}))
+        Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Float64}, Ptr{Float64},
+        Ptr{UInt8}, Ptr{Cint}))
 
     model = AlgencanModelData(nlp)
 
@@ -159,7 +159,7 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     myevalhlp = c_julia_hlp
     # Since I can duplicate the two sided constraints, I need
     # to take that into account here
-    jcnnzmax = 2*model.nlp.meta.nnzj
+    jcnnzmax = 2 * model.nlp.meta.nnzj
     # Using the same workaround as Birgin in the CUTEst interface.
     # hnnzmax must be an upper bound on the number of elements of the
     # Hessian of the Lagrangian plus the new elements that appear when
@@ -187,8 +187,8 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     is_g_linear = zeros(UInt8, m)
     is_g_linear[1:model.m] .= model.is_g_linear
     for i = 1:length(model.g_two_smap)
-        is_g_linear[model.m + i] = model.is_g_linear[model.g_two_smap[i]]
-        mult[model.m + i] = -mult[model.g_two_smap[i]]
+        is_g_linear[model.m+i] = model.is_g_linear[model.g_two_smap[i]]
+        mult[model.m+i] = -mult[model.g_two_smap[i]]
     end
 
     # Optional keyword arguments
@@ -201,12 +201,12 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     epsopt = [model.options[:epsopt]]
     efstain = [model.options[:efstain]]
     eostain = [model.options[:eostain]]
-    efacc  = [model.options[:efacc]]
-    eoacc  = [model.options[:eoacc]]
+    efacc = [model.options[:efacc]]
+    eoacc = [model.options[:eoacc]]
 
     # Extra parameters
     outputfnm = model.options[:outputfnm]
-    specfnm   = model.options[:specfnm]
+    specfnm = model.options[:specfnm]
     vparam = option2vparam(model)
     nvparam = length(vparam)
 
@@ -282,12 +282,12 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     end
 
     # Fix sign of objetive function
-    model.obj_val = model.sense*f[1]
+    model.obj_val = model.sense * f[1]
 
     # Deal with lower bound and two-sided contraints
     model.mult = model.g_sense .* mult[1:model.m]
     for i = 1:length(model.g_two_smap)
-        model.mult[model.g_two_smap[i]] -= mult[model.m + i]
+        model.mult[model.g_two_smap[i]] -= mult[model.m+i]
     end
 
     # Recover status information
@@ -297,31 +297,31 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     Δt = (time_ns() - start_time) / 1.0e+9
 
     return GenericExecutionStats(model.nlp, status=model.status, solution=model.x,
-                                 objective=model.obj_val,
-                                 dual_feas=max(nlpsupn[1], snorm[1]),
-                                 primal_feas=cnorm[1],
-                                 elapsed_time=Δt,
-                                 multipliers=model.mult[1:model.m]
-                                )
+        objective=model.obj_val,
+        dual_feas=max(nlpsupn[1], snorm[1]),
+        primal_feas=cnorm[1],
+        elapsed_time=Δt,
+        multipliers=model.mult[1:model.m]
+    )
 end
 
 "Read additional parameters present in the specification file"
 function read_options_from_specification_file(model::AlgencanModelData)
     # Options that are present in our data model
     spec_params = Dict(
-        "FEASIBILITY-TOLERANCE"=>:epsfeas,
-        "OPTIMALITY-TOLERANCE"=>:epsopt,
-        "STAINF-FEASIBILITY-TOLERANCE"=>:efstain,
-        "STAINF-OPTIMALITY-TOLERANCE"=>:eostain,
-        "ACC-FEASIBILITY-THRESHOLD"=>:efacc,
-        "ACC-OPTIMALITY-THRESHOLD"=>:eoacc
+        "FEASIBILITY-TOLERANCE" => :epsfeas,
+        "OPTIMALITY-TOLERANCE" => :epsopt,
+        "STAINF-FEASIBILITY-TOLERANCE" => :efstain,
+        "STAINF-OPTIMALITY-TOLERANCE" => :eostain,
+        "ACC-FEASIBILITY-THRESHOLD" => :efacc,
+        "ACC-OPTIMALITY-THRESHOLD" => :eoacc
     )
 
     specfnm = model.options[:specfnm]
     open(specfnm, "r") do io
         for line in split(read(io, String), "\n")
             # Skip comments
-            line  = split(line, ['#', '*'])[1]
+            line = split(line, ['#', '*'])[1]
 
             # Only key and value
             words = split(line, ' ')
@@ -386,7 +386,7 @@ function find_status(model::AlgencanModelData, cnorm::Float64, snorm::Float64,
 
     # These constants come from Algencan code
     max_multiplier, fmin = 1.0e+20, -1.0e+20
-    bounded_obj = model.sense*model.obj_val > fmin
+    bounded_obj = model.sense * model.obj_val > fmin
 
     # Optimality thresholds
     epsopt, epsfeas = model.options[:epsopt], model.options[:epsfeas]
@@ -434,8 +434,8 @@ function julia_fc(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, obj_pt
     if model.g_has_lb
         first_g = view(g, 1:model.m)
         first_g .*= model.g_sense
-        for i = model.m + 1:m
-            mapped_i = model.g_two_smap[i - model.m]
+        for i = model.m+1:m
+            mapped_i = model.g_two_smap[i-model.m]
             g[i] = -first_g[mapped_i] + model.g_lb[mapped_i]
         end
         first_g .-= model.g_ub
@@ -533,14 +533,14 @@ function julia_hl(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, m::Cin
     else
         μ = model.g_sense .* scale_g[1:model.m] .* alg_mult[1:model.m]
         for i = 1:length(model.g_two_smap)
-            μ[model.g_two_smap[i]] -= scale_g[model.m + i] * alg_mult[model.m + i]
+            μ[model.g_two_smap[i]] -= scale_g[model.m+i] * alg_mult[model.m+i]
         end
     end
 
     # Evaluate the Hessian
     x = unsafe_wrap(Array, x_ptr, Int(n))
     H = unsafe_wrap(Array, hval_ptr, Int(lim))
-    H[1:nnz] = hess_coord(model.nlp, x, μ; obj_weight = σ)
+    H[1:nnz] = hess_coord(model.nlp, x, μ; obj_weight=σ)
 
     # Declare success
     unsafe_store!(flag_ptr, Cint(0))
@@ -555,7 +555,7 @@ function julia_hlp(nlp::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, m::Cint
     flag_ptr::Ptr{Cint})
 
     # Compute scaled multipliers
-    σ =  model.sense * scale_f
+    σ = model.sense * scale_f
     alg_mult = unsafe_wrap(Array, mult_ptr, Int(m))
     scale_g = unsafe_wrap(Array, scale_g_ptr, Int(m))
     if !model.g_has_lb
@@ -563,7 +563,7 @@ function julia_hlp(nlp::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, m::Cint
     else
         μ = model.g_sense .* alg_mult[1:model.m] .* scale_g[1:model.m]
         for i = 1:length(model.g_two_smap)
-            μ[model.g_two_smap[i]] -= scale_g[model.m + i] * alg_mult[model.m + i]
+            μ[model.g_two_smap[i]] -= scale_g[model.m+i] * alg_mult[model.m+i]
         end
     end
 
