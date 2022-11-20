@@ -27,8 +27,8 @@ jobs:
               sudo apt-get update
               sudo apt-get install --yes build-essential gfortran liblapack3 liblapack-dev libopenblas-base libopenblas-dev
             elif ${{ contains(matrix.os, 'macOS') }}; then
-              ln -s /usr/local/bin/gfortran-10 /usr/local/bin/gfortran
-              ln -s /usr/local/bin/gcc-10 /usr/local/bin/gcc
+              ln -s /usr/local/bin/gfortran-11 /usr/local/bin/gfortran
+              ln -s /usr/local/bin/gcc-11 /usr/local/bin/gcc
               brew install openblas
             fi
       - uses: julia-actions/setup-julia@latest
