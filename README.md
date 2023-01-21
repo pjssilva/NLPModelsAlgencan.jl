@@ -1,4 +1,5 @@
 # NLPModelsAlgencan.jl
+[![Docs](https://img.shields.io/badge/docs-blue.svg)](https://pjssilva.github.io/NLPModelsAlgencan.jl/dev/)
 ![CI](https://github.com/pjssilva/NLPModelsAlgencan.jl/workflows/CI/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/pjssilva/NLPModelsAlgencan.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/pjssilva/NLPModelsAlgencan.jl)
 
