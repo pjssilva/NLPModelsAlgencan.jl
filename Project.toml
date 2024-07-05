@@ -1,6 +1,6 @@
 name = "NLPModelsAlgencan"
 uuid = "04216931-dc08-4b80-8a27-8a88dc4b9604"
-authors = ["Paulo J. S. Silva <pjssilva@gmail.com>", "Ilan Francisco da Silva <ilanfsilva@gmail.com>]"]
+authors = ["Paulo J. S. Silva <pjssilva@gmail.com>", "Ilan Francisco da Silva <ilanfsilva@gmail.com>"]
 version = "0.6.1"
 
 [deps]
@@ -16,9 +16,9 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 [compat]
 Coverage = "1.2 - 1.6"
 BinDeps = "1.0"
-NLPModels = "0.18 - 0.20"
+NLPModels = "0.18 - 0.21"
 SolverCore = "0.3"
-SolverTools = "0.8"
+SolverTools = "0.8 - 0.9"
 julia = "^1.6.0"
 
 [extras]
