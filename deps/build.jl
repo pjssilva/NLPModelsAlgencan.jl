@@ -36,17 +36,12 @@ else
             end
             @warn "Done Buiding"
 
-            # Create the shared library
-            @warn "Create dirs for libraries"
-            @build_steps begin
-                ChangeDirectory(BinDeps.depsdir(libalgencan))
-                CreateDirectory("usr")
-                CreateDirectory("usr/lib")
-            end
             @warn "Create library"
             @build_steps begin
                 @info algencanpath
                 ChangeDirectory(algencanpath)
+                CreateDirectory("usr")
+                CreateDirectory("usr/lib")
                 if Sys.isapple()
                     @info "Contents of ../../lib", readdir("../../usr/lib")
                     @info "Contents of lib", readdir("/lib")
