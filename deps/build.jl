@@ -1,44 +1,39 @@
 using BinDeps
-@BinDeps.setup
+BinDeps.@setup
 
 libalgencan = library_dependency("libalgencan")
 depspath = BinDeps.depsdir(libalgencan)
 algencanpath = joinpath(depspath, "src", "algencan-3.1.1")
 provides(Sources,
-URI("https://www.ime.usp.br/~egbirgin/tango/sources/algencan-3.1.1.tgz"),
-libalgencan, unpackedpath="algencan-3.1.1")
+    URI("https://www.ime.usp.br/~egbirgin/tango/sources/algencan-3.1.1.tgz"),
+    libalgencan, unpackedpath="algencan-3.1.1")
 srcpath = joinpath(depspath, "src")
 
 # Check if there is an already compiled library
 if "ALGENCAN_LIB_DIR" in keys(ENV)
-    provides(Binaries, ENV["ALGENCAN_LIB_DIR"], libalgencan, os = :Unix)
+    provides(Binaries, ENV["ALGENCAN_LIB_DIR"], libalgencan, os=:Unix)
 else
     if !("MA57_SOURCE" in keys(ENV))
         # HSL is not present, compile Algencan sources only.
         provides(SimpleBuild,
-        (@build_steps begin
-            @warn "You are installing Algencan.jl without HSL libraries."
-            @warn "This might preclude good performance."
-            @warn "If you can, try to use HSL."
-            @warn "See details in the installation section at https://github.com/pjssilva/Algencan.jl ."
+            (@build_steps begin
+                @warn "You are installing Algencan.jl without HSL libraries."
+                @warn "This might preclude good performance."
+                @warn "If you can, try to use HSL."
+                @warn "See details in the installation section at https://github.com/pjssilva/Algencan.jl ."
 
-            # Get Algencan sources and unpack
-            GetSources(libalgencan)
-            `tar xf downloads/algencan-3.1.1.tgz --directory=$srcpath`
+                # Get Algencan sources and unpack
+                GetSources(libalgencan)
+                `tar xf downloads/algencan-3.1.1.tgz --directory=$srcpath`
 
-            # Build Algencan
-            @build_steps begin
+                # Build Algencan
                 ChangeDirectory(algencanpath)
                 `make CFLAGS="-O3 -fPIC" FFLAGS="-O3 -ffree-form -fPIC"`
-            end
 
-            # Create the shared library
-            @build_steps begin
+                # Create the shared library
                 ChangeDirectory(BinDeps.depsdir(libalgencan))
                 CreateDirectory("usr")
                 CreateDirectory("usr/lib")
-            end
-            @build_steps begin
                 ChangeDirectory(algencanpath)
                 if Sys.isapple()
                     @info "Contents of ../../lib", readdir("../../usr/lib")
@@ -47,8 +42,7 @@ else
                 else
                     `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -lgfortran -lblas -llapack`
                 end
-            end
-        end), libalgencan, os = :Unix
+            end), libalgencan, os=:Unix
         )
     else
         # HSL is present, compile METIS, MA67 and Algencan
@@ -111,9 +105,9 @@ else
                         `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -lgfortran -lblas -llapack`
                     end
                 end
-            end), libalgencan, os = :Unix
+            end), libalgencan, os=:Unix
         )
     end
 end
 
-@BinDeps.install Dict(:libalgencan => :libalgencan)
+BinDeps.@install Dict(:libalgencan => :libalgencan)
