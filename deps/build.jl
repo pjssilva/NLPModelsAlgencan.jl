@@ -20,24 +20,30 @@ else
             @warn "You are installing Algencan.jl without HSL libraries."
             @warn "This might preclude good performance."
             @warn "If you can, try to use HSL."
-            @warn "See details in the installation section at https://github.com/pjssilva/Algencan.jl ."
+            @warn "See details in the installation section at https://github.com/pjssilva/Algencan.jl"
 
             # Get Algencan sources and unpack
+            @warn "Get Algencan sources"
             GetSources(libalgencan)
             `tar xf downloads/algencan-3.1.1.tgz --directory=$srcpath`
-
+            @warn "Done get sources"
+            
             # Build Algencan
+            @warn "Buiding Algencan"
             @build_steps begin
                 ChangeDirectory(algencanpath)
                 `make CFLAGS="-O3 -fPIC" FFLAGS="-O3 -ffree-form -fPIC"`
             end
+            @warn "Done Buiding"
 
             # Create the shared library
+            @warn "Create dirs for libraries"
             @build_steps begin
                 ChangeDirectory(BinDeps.depsdir(libalgencan))
                 CreateDirectory("usr")
                 CreateDirectory("usr/lib")
             end
+            @warn "Create library"
             @build_steps begin
                 @info algencanpath
                 ChangeDirectory(algencanpath)
@@ -49,10 +55,11 @@ else
                     `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -lgfortran -lblas -llapack`
                 end
             end
+            @warn "Done library creation"
         end), libalgencan, os = :Unix
         )
     else
-        # HSL is present, compile METIS, MA67 and Algencan
+        # HSL is present, compile METIS, MA57 and Algencan
         metispath = joinpath(BinDeps.depsdir(libalgencan), "src", "metis-4.0.3")
         metistarpath = joinpath(BinDeps.depsdir(libalgencan), "downloads", "metis-4.0.3.tar.gz")
         ENV["METISPATH"] = metispath
