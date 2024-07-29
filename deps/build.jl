@@ -42,7 +42,9 @@ else
                 ChangeDirectory(algencanpath)
                 if Sys.isapple()
                     `ls -al ../../usr/lib`
-                    `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -Wl,-noall_load -lgfortran -lblas -llapack`
+                    `ls -al lib`
+                    `echo "**************** OUT *********************`
+                    `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -lgfortran -lblas -llapack`
                 else
                     `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -lgfortran -lblas -llapack`
                 end
