@@ -32,6 +32,9 @@ jobs:
               ln -s /opt/homebrew/bin/gfortran-11 /usr/local/bin/gfortran
               ln -s /opt/homebrew/bin/gcc-11 /usr/local/bin/gcc
               brew install openblas
+              export LDFLAGS="-L/opt/homebrew/opt/openblas/lib"
+              export CPPFLAGS="-I/opt/homebrew/opt/openblas/include"
+              export PKG_CONFIG_PATH="/opt/homebrew/opt/openblas/lib/pkgconfig" 
             fi
       - uses: julia-actions/setup-julia@latest
         with:
