@@ -43,8 +43,6 @@ else
                 CreateDirectory("../../usr")
                 CreateDirectory("../../usr/lib")
                 if Sys.isapple()
-                    @info "Contents of ../../lib", readdir("../../usr/lib")
-                    @info "Contents of lib", readdir("/lib")
                     `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -lgfortran -lblas -llapack`
                 else
                     `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -lgfortran -lblas -llapack`
