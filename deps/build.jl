@@ -41,7 +41,7 @@ else
             @build_steps begin
                 ChangeDirectory(algencanpath)
                 if Sys.isapple()
-                    `ls -al ../../usr/lib`
+                    @info "Contents of ../../lib", readdir("../../usr/lib")
                     `ls -al lib`
                     `echo "**************** OUT *********************"`
                     `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -lgfortran -lblas -llapack`
