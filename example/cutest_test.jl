@@ -20,8 +20,10 @@ function cutest_bench(name, solver)
     etime = bench_data[2]
     flag = stats.status
     objval = obj(nlp, stats.solution)
-    c = stats.counters.counters
-    n_fc, n_ggrad, n_hl, n_hlp = c.neval_obj, c.neval_jac, c.neval_hess, c.neval_hprod 
+    n_fc, n_ggrad, n_hl, n_hlp = (
+        stats.solver_specific[:nfc], stats.solver_specific[:ngjac], 
+        stats.solver_specific[:nhl], stats.solver_specific[:nhlp]
+    )
     finalize(nlp)
     return flag, etime, n_fc, n_ggrad, n_hl, n_hlp, objval
 end

@@ -15,8 +15,10 @@ function solve_cutest(pname)
     bench_data = @timed status = algencan(nlp)
     finalize(nlp)
     println("Solver status = ", status)
-    c = status.counters.counters
-    n_fc, n_ggrad, n_hl, n_hlp = c.neval_obj, c.neval_jac, c.neval_hess, c.neval_hprod
+    n_fc, n_ggrad, n_hl, n_hlp = (
+        status.solver_specific[:nfc], status.solver_specific[:ngjac], 
+        status.solver_specific[:nhl], status.solver_specific[:nhlp]
+    )
     println("Perfomance data (time, n_fc, n_ggrad, n_hl, n_nlp)")
     @printf("%.4e\t%10d\t%10d\t%10d\t%10d\n", bench_data[2], n_fc, n_ggrad, n_hl, n_hlp)
 end

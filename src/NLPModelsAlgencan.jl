@@ -1,4 +1,3 @@
-
 """
 Algencan interface to NLPModels.
 See its [GitHub page](https://github.com/pjssilva/NLPModelsAlgencan.jl)
@@ -54,6 +53,12 @@ mutable struct AlgencanModelData
 
     nlp::AbstractNLPModel
 
+    # Counters for different function Calls
+    nfc::Int
+    ngjac::Int
+    nhl::Int
+    nhlp::Int
+
     # Options to be passed to the solver
     options
 
@@ -103,6 +108,12 @@ mutable struct AlgencanModelData
         model.is_equality[nlp.meta.jfix] .= 1
         model.is_g_linear = zeros(UInt8, model.m)
         model.is_g_linear[nlp.meta.lin] .= 1
+
+        # Initialize counters
+        model.nfc = 0
+        model.ngjac = 0
+        model.nhl = 0
+        model.nhlp = 0
 
         return model
     end
@@ -301,7 +312,9 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
         dual_feas=max(nlpsupn[1], snorm[1]),
         primal_feas=cnorm[1],
         elapsed_time=Δt,
-        multipliers=model.mult[1:model.m]
+        multipliers=model.mult[1:model.m],
+        solver_specific=Dict(:nfc => model.nfc, :ngjac => model.ngjac,
+            :nhl => model.nhl, :nhlp => model.nhlp)
     )
 end
 
@@ -445,6 +458,7 @@ function julia_fc(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, obj_pt
 
     # Report that evaluation of successful
     unsafe_store!(flag_ptr, Cint(0))
+    model.nfc += 1
     nothing
 end
 
@@ -498,6 +512,7 @@ function julia_gjac(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, f_gr
 
     # Declare success
     unsafe_store!(flag_ptr, Cint(0))
+    model.ngjac += 1
     nothing
 end
 
@@ -544,6 +559,7 @@ function julia_hl(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, m::Cin
 
     # Declare success
     unsafe_store!(flag_ptr, Cint(0))
+    model.nhl += 1
     nothing
 end
 
@@ -575,6 +591,7 @@ function julia_hlp(nlp::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, m::Cint
 
     # Declare success
     unsafe_store!(flag_ptr, Cint(0))
+    model.nhlp += 1
     nothing
 end
 
