@@ -27,6 +27,7 @@ jobs:
               sudo apt-get update
               sudo apt-get install --yes build-essential gfortran liblapack3 liblapack-dev libopenblas-base libopenblas-dev
             elif ${{ contains(matrix.os, 'macOS') }}; then
+              which gfortran-11
               brew install gcc@11
               ln -s /usr/local/bin/gfortran-11 /usr/local/bin/gfortran
               ln -s /usr/local/bin/gcc-11 /usr/local/bin/gcc
