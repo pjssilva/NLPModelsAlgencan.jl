@@ -40,8 +40,8 @@ else
             @build_steps begin
                 @info algencanpath
                 ChangeDirectory(algencanpath)
-                CreateDirectory("usr")
-                CreateDirectory("usr/lib")
+                CreateDirectory("../../usr")
+                CreateDirectory("../../usr/lib")
                 if Sys.isapple()
                     @info "Contents of ../../lib", readdir("../../usr/lib")
                     @info "Contents of lib", readdir("/lib")
