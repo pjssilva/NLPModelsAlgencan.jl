@@ -29,8 +29,8 @@ jobs:
             elif ${{ contains(matrix.os, 'macOS') }}; then
               which gfortran-11
               brew install gcc@11
-              ln -s /usr/local/bin/gfortran-11 /usr/local/bin/gfortran
-              ln -s /usr/local/bin/gcc-11 /usr/local/bin/gcc
+              ln -s /opt/homebrew/bin/gfortran-11 /usr/local/bin/gfortran
+              ln -s /opt/homebrew/bin/gcc-11 /usr/local/bin/gcc
               brew install openblas
             fi
       - uses: julia-actions/setup-julia@latest
