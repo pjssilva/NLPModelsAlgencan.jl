@@ -68,8 +68,8 @@ else
                 # Get Algencan sources and unpack
                 GetSources(libalgencan)
                 `tar xf downloads/algencan-3.1.1.tgz --directory=$srcpath`
-                # Get Metis sources and unpack
-                FileDownloader("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz", metistarpath)
+                # Get Metis sources and unpack - I am using mfem copy for reliability
+                FileDownloader("https://github.com/mfem/tpls/raw/gh-pages/metis-4.0.3.tar.gz", metistarpath)
                 `tar xf downloads/metis-4.0.3.tar.gz --directory=$srcpath`
 
                 # Unpack HSL sources
