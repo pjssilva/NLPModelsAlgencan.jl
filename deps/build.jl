@@ -79,7 +79,7 @@ else
                 # Build Metis
                 @build_steps begin
                     ChangeDirectory(metispath)
-                    `make COPTIONS="-fPIC -O3"`
+                    `make COPTIONS="-fPIC -O3 -ansi"`
                 end
 
                 # Build HSL
