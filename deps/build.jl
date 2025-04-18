@@ -1,6 +1,12 @@
 using BinDeps
 @BinDeps.setup
 
+# Blas and Lapack
+libblas = library_dependency("libblas")
+liblapack = library_dependency("liblapack")
+provides(AptGet, Dict("libopenblas-dev" => libblas, "libopenblas-dev" => liblapack))
+
+# Algencan
 libalgencan = library_dependency("libalgencan")
 depspath = BinDeps.depsdir(libalgencan)
 algencanpath = joinpath(depspath, "src", "algencan-3.1.1")
