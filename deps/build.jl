@@ -1,11 +1,6 @@
 using BinDeps
 @BinDeps.setup
 
-# Blas and Lapack
-libblas = library_dependency("libblas")
-liblapack = library_dependency("liblapack")
-provides(AptGet, Dict("libopenblas-dev" => libblas, "libopenblas-dev" => liblapack))
-
 # Algencan
 libalgencan = library_dependency("libalgencan")
 depspath = BinDeps.depsdir(libalgencan)
@@ -49,9 +44,9 @@ else
                 CreateDirectory("../../usr")
                 CreateDirectory("../../usr/lib")
                 if Sys.isapple()
-                    `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -lgfortran -lblas -llapack`
+                    `gfortran -shared -o ../../usr/lib/libalgencan.dylib -Wl,-all_load lib/libalgencan.a -lgfortran`
                 else
-                    `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -lgfortran -lblas -llapack`
+                    `gfortran -shared -o ../../usr/lib/libalgencan.so -Wl,--whole-archive lib/libalgencan.a -Wl,--no-whole-archive -lgfortran`
                 end
             end
             @warn "Done library creation"
