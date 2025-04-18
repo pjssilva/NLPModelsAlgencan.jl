@@ -1,7 +1,7 @@
 name = "NLPModelsAlgencan"
 uuid = "04216931-dc08-4b80-8a27-8a88dc4b9604"
 authors = ["Paulo J. S. Silva <pjssilva@gmail.com>", "Ilan Francisco da Silva <ilanfsilva@gmail.com>"]
-version = "0.7.0"
+version = "0.7.1"
 
 [deps]
 BinDeps = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
