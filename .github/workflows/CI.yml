@@ -25,7 +25,7 @@ jobs:
         run: |
             if ${{ contains(matrix.os, 'ubuntu') }}; then
               sudo apt-get update
-              sudo apt-get install --yes build-essential gfortran liblapack3 liblapack-dev libopenblas-base libopenblas-dev
+              sudo apt-get install --yes build-essential gfortran liblapack3 liblapack-dev libopenblas0 libopenblas-dev
             elif ${{ contains(matrix.os, 'macOS') }}; then
               which gfortran-11
               brew install gcc@11
