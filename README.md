@@ -13,6 +13,33 @@ by Ernesto Birgin and Mario Martínez. It has many special features like being
 able to use the HSL library to speed up the sparse matrix linear algebra and
 some smart acceleration strategies.
 
+## How to cite
+
+NLPModelsAlgencan.jl is based on Algencan that is a software from the [Tango
+Project](https://www.ime.usp.br/~egbirgin/tango/). If you use this software in
+your research, we kindly ask you to cite it according to [its
+guidelines](https://www.ime.usp.br/~egbirgin/tango/license.php). In
+particular, if you use Algencan we suggest citing:
+
+1. R. Andreani, E. G. Birgin, J. M. Martínez and M. L. Schuverdt, "On
+   Augmented Lagrangian methods with general lower-level constraints", SIAM
+   Journal on Optimization 18, pp. 1286-1309, 2007.
+1. R. Andreani, E. G. Birgin, J. M. Martínez and M. L. Schuverdt, "Augmented
+   Lagrangian methods under the Constant Positive Linear Dependence constraint
+   qualification", Mathematical Programming 111, pp. 5-32, 2008.
+
+If your work uses Gencan, the suggested references are:
+
+1. E. G. Birgin and J. M. Martínez, "Large-scale active-set box-constrained
+   optimization method with spectral projected gradients", Computational
+   Optimization and Applications 23, pp. 101-125, 2002.
+1. M. Andretta, E. G. Birgin and J. M. Martínez, "Practical active-set
+   Euclidian trust-region method with spectral projected gradients for
+   bound-constrained minimization", Optimization 54, pp. 305-325, 2005.
+1. E. G. Birgin and J. M. Martínez, "A box-constrained optimization algorithm
+   with negative curvature directions and spectral projected gradients",
+   Computing [Suppl] 15, pp. 49-60, 2001.
+
 ## Status
 
 At this point this is beta software. It will only work with Julia LTS or later. 
@@ -92,3 +119,5 @@ This [wiki
 page](https://github.com/pjssilva/NLPModelsAlgencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-NLPModelsAlgencan.jl)
 documents the steps I used to compile a version of `libalgencan.so` with HSL
 support.
+
+
