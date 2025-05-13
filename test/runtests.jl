@@ -1,4 +1,6 @@
-using ADNLPModels, NLPModelsAlgencan, Test, CUTEst
+using Test
+using ADNLPModels, NLPModelsAlgencan, CUTEst
+using JuMP, NLPModelsJuMP 
 
 include("problems/autodiff/hs12.jl")
 include("problems/autodiff/hs52.jl")
@@ -112,4 +114,26 @@ end
     0.87405512] rtol = 1.0e-6
 
   finalize(nlp)
+end
+
+@testset "JuMP interface test" begin
+
+  # Create a simple model and optimize
+  model = Model(NLPModelsJuMP.Optimizer)
+  set_attribute(model, "solver", NLPModelsAlgencan.AlgencanSolver)
+  @variable(model, x >= 0)
+  @constraint(model, x <= 1)
+  @objective(model, Min, x^2)
+  optimize!(model)
+
+  @test value.(x) ≈ 0.0
+
+  center = pi
+  @objective(model, Min, (x - center)^2)
+  optimize!(model)
+  @test value.(x) ≈ 1
+  center = pi / 10
+  @objective(model, Min, (x - center)^2)
+  optimize!(model)
+  @test value.(x) ≈ center
 end
