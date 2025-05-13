@@ -19,12 +19,13 @@ else
     error("or set the ALGENCAN_LIB_DIR enviroment variable.")
 end
 
-export algencan
+export algencan, solve!
 
 "Processes and stores data from an AbstractNLPModel to be used by Algencan
 subroutines"
-mutable struct AlgencanModelData
+mutable struct AlgencanModelSolver <: AbstractOptimizationSolver
     # Problem data
+    nlp::AbstractNLPModel
     n::Int                          # Num variables
     lb::Vector{Float64}             # Lower bounds on vars
     ub::Vector{Float64}             # Upper bounds on var
@@ -51,8 +52,6 @@ mutable struct AlgencanModelData
     obj_val::Float64                # Final objective
     status::Symbol                  # Final status
 
-    nlp::AbstractNLPModel
-
     # Counters for different function Calls
     nfc::Int
     ngjac::Int
@@ -62,7 +61,17 @@ mutable struct AlgencanModelData
     # Options to be passed to the solver
     options
 
-    function AlgencanModelData(nlp::AbstractNLPModel)
+    function AlgencanModelSolver(nlp::AbstractNLPModel;
+        specfnm = "", 
+        x::Vector{Float64} = nlp.meta.x0, 
+        atol::Float64 = 1.0e-08, 
+        rtol::Float64 = 0.0,
+        max_eval::Int = -1,
+        max_iter::Int = Int(typemax(Int32)),
+        max_time::Float64 = -1.0,
+        verbose::Int = 10,
+        callback = nothing
+    )
         model = new()
 
         model.nlp = nlp
@@ -70,7 +79,7 @@ mutable struct AlgencanModelData
         model.sense = nlp.meta.minimize ? 1.0 : -1.0
         model.n = nlp.meta.nvar
         model.m = nlp.meta.ncon
-        model.x = copy(nlp.meta.x0)
+        model.x = copy(x)
         model.lb = copy(nlp.meta.lvar)
         model.ub = copy(nlp.meta.uvar)
         model.mult = copy(nlp.meta.y0)
@@ -81,14 +90,16 @@ mutable struct AlgencanModelData
         model.h_row_inds, model.h_col_inds = hrow_inds .- 1, hcol_inds .- 1
 
         model.options = Dict(
-            :epsfeas => 1.0e-08,
-            :epsopt => 1.0e-08,
-            :efstain => sqrt.(1.0e-8),
-            :eostain => (1.0e-8)^1.5,
-            :efacc => sqrt(1.0e-8),
-            :eoacc => sqrt(1.0e-8),
+            :epsfeas => atol,
+            :epsopt => atol,
+            :efstain => sqrt.(atol),
+            :eostain => (atol)^1.5,
+            :efacc => sqrt(atol),
+            :eoacc => sqrt(atol),
             :outputfnm => "",
-            :specfnm => ""
+            :specfnm => specfnm,
+            "outer_iterations_limit" => max_iter,
+            "iterations_output_detail" => verbose, 
         )
 
         g_lb, g_ub = float(copy(nlp.meta.lcon)), float(copy(nlp.meta.ucon))
@@ -115,9 +126,24 @@ mutable struct AlgencanModelData
         model.nhl = 0
         model.nhlp = 0
 
+        # Treat paramaters that are not implemented or only available in specfnm
+        if rtol != 0
+            @warn("rtol: Relative stopping criteria is not available in Algencan.")
+        end
+        if max_iter != typemax(Int32) || max_eval != -1
+            @warn("max_eval, max_iter: OUTER-ITERATIONS-LIMIT set to $max_iter.")
+            @warn("Consider setting INNER-ITERATIONS-LIMIT in spec file.")
+        end
+        if max_time != -1.0
+            @warn("max_time: Algencan does not implement time limit.")
+        end
+        if callback !== nothing
+            @warn("callback: not implemented in Algencan.")
+        end
         return model
     end
 end
+
 
 """`output = algencan(nlp; kwargs...)`
 
@@ -128,6 +154,17 @@ There is a set of optional keywords arguments allowed, see [Optional parameters]
 for the list of options accepted.
 """
 function algencan(nlp::AbstractNLPModel; kwargs...)
+    model = AlgencanModelSolver(nlp; kwargs...)
+    stats = GenericExecutionStats(nlp)
+    return solve!(model, nlp, stats)
+end
+
+function SolverCore.solve!(
+    model::AlgencanModelSolver, 
+    nlp::AbstractNLPModel, 
+    stats::GenericExecutionStats; 
+    kwargs...
+)
     start_time = time_ns()
     ###########################################################################
     # Algencan callback function wrappers
@@ -150,8 +187,6 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     c_julia_hlp = @cfunction($local_julia_hlp, Nothing, (Cint, Ptr{Float64}, Cint,
         Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Float64}, Ptr{Float64},
         Ptr{UInt8}, Ptr{Cint}))
-
-    model = AlgencanModelData(nlp)
 
     # Call Algencan. I will do it slowly, first I create variables for all
     # Algencan's parameters, that are a lot, and then I call it.
@@ -307,19 +342,21 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
 
     Δt = (time_ns() - start_time) / 1.0e+9
 
-    return GenericExecutionStats(model.nlp, status=model.status, solution=model.x,
-        objective=model.obj_val,
-        dual_feas=max(nlpsupn[1], snorm[1]),
-        primal_feas=cnorm[1],
-        elapsed_time=Δt,
-        multipliers=model.mult[1:model.m],
-        solver_specific=Dict(:nfc => model.nfc, :ngjac => model.ngjac,
+    SolverCore.reset!(stats)
+    stats.status = model.status
+    stats.solution = model.x
+    stats.objective = model.obj_val
+    stats.dual_feas = max(nlpsupn[1], snorm[1])
+    stats.primal_feas = cnorm[1]
+    stats.elapsed_time = Δt
+    stats.multipliers = model.mult[1:model.m]
+    stats.solver_specific=Dict(:nfc => model.nfc, :ngjac => model.ngjac,
             :nhl => model.nhl, :nhlp => model.nhlp)
-    )
+    return stats
 end
 
 "Read additional parameters present in the specification file"
-function read_options_from_specification_file(model::AlgencanModelData)
+function read_options_from_specification_file(model::AlgencanModelSolver)
     # Options that are present in our data model
     spec_params = Dict(
         "FEASIBILITY-TOLERANCE" => :epsfeas,
@@ -374,7 +411,7 @@ function treat_lower_bounds(nlp::AbstractNLPModel, lb, ub)
 end
 
 "Transform the option dictionary into a vparam string array"
-function option2vparam(model::AlgencanModelData)
+function option2vparam(model::AlgencanModelSolver)
     parameters = [:epsfeas, :epsopt, :efstain, :eostain, :efacc, :eoacc,
         :outputfnm, :specfnm]
     vparam = Array{String}(undef, 0)
@@ -390,7 +427,7 @@ function option2vparam(model::AlgencanModelData)
 end
 
 "Find final status of Algencan"
-function find_status(model::AlgencanModelData, cnorm::Float64, snorm::Float64,
+function find_status(model::AlgencanModelSolver, cnorm::Float64, snorm::Float64,
     nlpsupn::Float64, inform::Int)
 
     if inform != 0
@@ -433,7 +470,7 @@ end
 ###########################################################################
 
 "Compute objective and constraints as required by Algencan"
-function julia_fc(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
+function julia_fc(model::AlgencanModelSolver, n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
     m::Cint, g_ptr::Ptr{Float64}, flag_ptr::Ptr{Cint})
 
     # Evaluate objective and constraints
@@ -463,7 +500,7 @@ function julia_fc(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, obj_pt
 end
 
 "Compute objective gradient and constraints Jacobian as required by Algencan"
-function julia_gjac(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
+function julia_gjac(model::AlgencanModelSolver, n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
     m::Cint, jrow_ptr::Ptr{Cint}, jcol_ptr::Ptr{Cint},
     jval_ptr::Ptr{Float64}, jnnz_ptr::Ptr{Cint}, lim::Cint,
     lmem_ptr::Ptr{UInt8}, flag_ptr::Ptr{Cint})
@@ -518,7 +555,7 @@ end
 
 
 "Compute the Hessian of the Lagrangian as required by Algencan"
-function julia_hl(model::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, m::Cint,
+function julia_hl(model::AlgencanModelSolver, n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     mult_ptr::Ptr{Float64}, scale_f::Float64, scale_g_ptr::Ptr{Float64},
     hrow_ptr::Ptr{Cint}, hcol_ptr::Ptr{Cint},
     hval_ptr::Ptr{Float64}, hnnz_ptr::Ptr{Cint}, lim::Cint,
@@ -565,7 +602,7 @@ end
 
 
 "Compute the Hessian of the Lagrangian times p as required by Algencan"
-function julia_hlp(nlp::AlgencanModelData, n::Cint, x_ptr::Ptr{Float64}, m::Cint,
+function julia_hlp(model::AlgencanModelSolver, n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     mult_ptr::Ptr{Float64}, scale_f::Float64, scale_g_ptr::Ptr{Float64},
     p_ptr::Ptr{Float64}, hp_ptr::Ptr{Float64}, goth_ptr::Ptr{UInt8},
     flag_ptr::Ptr{Cint})
