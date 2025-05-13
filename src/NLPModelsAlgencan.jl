@@ -5,12 +5,11 @@ See its [GitHub page](https://github.com/pjssilva/NLPModelsAlgencan.jl)
 module NLPModelsAlgencan
 
 using LinearAlgebra, SparseArrays, NLPModels, SolverTools, SolverCore
-import Libdl
+using Libdl: Libdl
 
 # Gets the path of the Algencan library
 if "ALGENCAN_LIB_DIR" in keys(ENV)
-    const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"],
-        "libalgencan.so"))
+    const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"], "libalgencan.so"))
 elseif isfile(joinpath(dirname(@__FILE__), "..", "deps", "deps.jl"))
     include("../deps/deps.jl")
     const algencan_lib_path = libalgencan
@@ -59,20 +58,13 @@ mutable struct AlgencanSolver <: AbstractOptimizationSolver
     nhlp::Int
 
     # Options to be passed to the solver
-    options
+    options::Any
 
-    function AlgencanSolver(nlp::AbstractNLPModel;
-        specfnm = "", 
-        x::Vector{Float64} = nlp.meta.x0, 
-        atol::Float64 = 1.0e-08, 
-        rtol::Float64 = 0.0,
-        max_eval::Int = -1,
-        max_iter::Int = Int(typemax(Int32)),
-        max_time::Float64 = -1.0,
-        verbose::Int = 10,
-        callback = nothing,
-        kwargs...
-    )
+    function AlgencanSolver(nlp::AbstractNLPModel; specfnm="",
+                            x::Vector{Float64}=nlp.meta.x0, atol::Float64=1.0e-08,
+                            rtol::Float64=0.0, max_eval::Int=-1,
+                            max_iter::Int=Int(typemax(Int32)), max_time::Float64=-1.0,
+                            verbose::Int=10, callback=nothing, kwargs...)
         solver = new()
 
         solver.nlp = nlp
@@ -90,16 +82,9 @@ mutable struct AlgencanSolver <: AbstractOptimizationSolver
         hrow_inds, hcol_inds = hess_structure(nlp)
         solver.h_row_inds, solver.h_col_inds = hrow_inds .- 1, hcol_inds .- 1
 
-        solver.options = Dict(
-            :epsfeas => atol,
-            :epsopt => atol,
-            :efstain => sqrt.(atol),
-            :eostain => (atol)^1.5,
-            :efacc => sqrt(atol),
-            :eoacc => sqrt(atol),
-            :outputfnm => "",
-            :specfnm => specfnm,
-        )
+        solver.options = Dict(:epsfeas => atol, :epsopt => atol, :efstain => sqrt.(atol),
+                              :eostain => (atol)^1.5, :efacc => sqrt(atol),
+                              :eoacc => sqrt(atol), :outputfnm => "", :specfnm => specfnm)
         if verbose != 10
             solver.options["iterations_output_detail"] = verbose
         end
@@ -111,10 +96,10 @@ mutable struct AlgencanSolver <: AbstractOptimizationSolver
         end
 
         g_lb, g_ub = float(copy(nlp.meta.lcon)), float(copy(nlp.meta.ucon))
-        solver.g_sense, solver.g_two_sinvmap,
-        solver.g_two_smap = treat_lower_bounds(nlp, g_lb, g_ub)
-        solver.g_has_lb = length(solver.nlp.meta.jrng) +
-                         length(solver.nlp.meta.jlow) > 0
+        solver.g_sense, solver.g_two_sinvmap, solver.g_two_smap = treat_lower_bounds(nlp,
+                                                                                     g_lb,
+                                                                                     g_ub)
+        solver.g_has_lb = length(solver.nlp.meta.jrng) + length(solver.nlp.meta.jlow) > 0
         solver.g_lb, solver.g_ub = g_lb, g_ub
 
         # Contraints with only lower bound will be multiplied by -1.0, hence
@@ -152,7 +137,6 @@ mutable struct AlgencanSolver <: AbstractOptimizationSolver
     end
 end
 
-
 """`output = algencan(nlp; kwargs...)`
 
 Solves the `NLPModel` problem `nlp` using `Algencan`.
@@ -167,34 +151,46 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     return solve!(model, nlp, stats)
 end
 
-function SolverCore.solve!(
-    solver::AlgencanSolver, 
-    nlp::AbstractNLPModel, 
-    stats::GenericExecutionStats; 
-    kwargs...
-)
+function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
+                           stats::GenericExecutionStats; kwargs...)
     start_time = time_ns()
     ###########################################################################
     # Algencan callback function wrappers
     ###########################################################################
-    local_julia_fc = (n, x_ptr, obj_ptr, m, g_ptr, flag_ptr) -> julia_fc(solver, n, x_ptr, obj_ptr, m, g_ptr, flag_ptr)
-    c_julia_fc = @cfunction($local_julia_fc,
-        Nothing, (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Cint}))
+    function local_julia_fc(n, x_ptr, obj_ptr, m, g_ptr, flag_ptr)
+        return julia_fc(solver, n, x_ptr, obj_ptr, m, g_ptr, flag_ptr)
+    end
+    c_julia_fc = @cfunction($local_julia_fc, Nothing,
+                            (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64},
+                             Ptr{Cint}))
 
-    local_julia_gjac = (n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr, jval_ptr, jnnz_ptr, lim, lmem_ptr, flag_ptr) -> julia_gjac(solver, n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr, jval_ptr, jnnz_ptr, lim, lmem_ptr, flag_ptr)
-    c_julia_gjac = @cfunction($local_julia_gjac,
-        Nothing, (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Cint}, Ptr{Cint},
-            Ptr{Float64}, Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
+    function local_julia_gjac(n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr, jval_ptr,
+                              jnnz_ptr, lim, lmem_ptr, flag_ptr)
+        return julia_gjac(solver, n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr, jval_ptr,
+                          jnnz_ptr, lim, lmem_ptr, flag_ptr)
+    end
+    c_julia_gjac = @cfunction($local_julia_gjac, Nothing,
+                              (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Cint}, Ptr{Cint},
+                               Ptr{Float64}, Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
 
-    local_julia_hl = (n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, hrow_ptr, hcol_ptr, hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr) -> julia_hl(solver, n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, hrow_ptr, hcol_ptr, hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr)
-    c_julia_hl = @cfunction($local_julia_hl, Nothing, (Cint, Ptr{Float64}, Cint,
-        Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Cint}, Ptr{Cint}, Ptr{Float64},
-        Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
+    function local_julia_hl(n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, hrow_ptr, hcol_ptr,
+                            hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr)
+        return julia_hl(solver, n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, hrow_ptr,
+                        hcol_ptr, hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr)
+    end
+    c_julia_hl = @cfunction($local_julia_hl, Nothing,
+                            (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Float64, Ptr{Float64},
+                             Ptr{Cint}, Ptr{Cint}, Ptr{Float64}, Ptr{Cint}, Cint,
+                             Ptr{UInt8}, Ptr{Cint}))
 
-    local_julia_hlp = (n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, p_ptr, hp_ptr, goth_ptr, flag_ptr) -> julia_hlp(solver, n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, p_ptr, hp_ptr, goth_ptr, flag_ptr)
-    c_julia_hlp = @cfunction($local_julia_hlp, Nothing, (Cint, Ptr{Float64}, Cint,
-        Ptr{Float64}, Float64, Ptr{Float64}, Ptr{Float64}, Ptr{Float64},
-        Ptr{UInt8}, Ptr{Cint}))
+    function local_julia_hlp(n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, p_ptr, hp_ptr,
+                             goth_ptr, flag_ptr)
+        return julia_hlp(solver, n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, p_ptr, hp_ptr,
+                         goth_ptr, flag_ptr)
+    end
+    c_julia_hlp = @cfunction($local_julia_hlp, Nothing,
+                             (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Float64, Ptr{Float64},
+                              Ptr{Float64}, Ptr{Float64}, Ptr{UInt8}, Ptr{Cint}))
 
     # Call Algencan. I will do it slowly, first I create variables for all
     # Algencan's parameters, that are a lot, and then I call it.
@@ -235,14 +231,14 @@ function SolverCore.solve!(
     # Deal with lower bounds
     m = solver.m + length(solver.g_two_smap)
     mult = zeros(m)
-    mult[1:solver.m] .= solver.mult[1:solver.m]
+    mult[1:(solver.m)] .= solver.mult[1:(solver.m)]
     is_equality = zeros(UInt8, m)
-    is_equality[1:solver.m] .= solver.is_equality
+    is_equality[1:(solver.m)] .= solver.is_equality
     is_g_linear = zeros(UInt8, m)
-    is_g_linear[1:solver.m] .= solver.is_g_linear
-    for i = 1:length(solver.g_two_smap)
-        is_g_linear[solver.m+i] = solver.is_g_linear[solver.g_two_smap[i]]
-        mult[solver.m+i] = -mult[solver.g_two_smap[i]]
+    is_g_linear[1:(solver.m)] .= solver.is_g_linear
+    for i in 1:length(solver.g_two_smap)
+        is_g_linear[solver.m + i] = solver.is_g_linear[solver.g_two_smap[i]]
+        mult[solver.m + i] = -mult[solver.g_two_smap[i]]
     end
 
     # Optional keyword arguments
@@ -250,8 +246,8 @@ function SolverCore.solve!(
     # names from default SolverCore to Algencan here also
     for (key, value) in kwargs
         if key == :verbose
-            solver.options[:iterations_output_detail] = value 
-        else 
+            solver.options[:iterations_output_detail] = value
+        else
             solver.options[key] = value
         end
     end
@@ -286,56 +282,84 @@ function SolverCore.solve!(
     @assert algencan_lib_path in Libdl.dllist()
     algencansym = Libdl.dlsym(algencandl, :c_algencan)
     try
-        ccall(
-            algencansym,                                     # function
-            Nothing,                                         # Return type
-            (                                                # Parameters types
-                Ptr{Nothing},                                # *myevalf,
-                Ptr{Nothing},                                # *myevalg,
-                Ptr{Nothing},                                # *myevalh,
-                Ptr{Nothing},                                # *myevalc,
-                Ptr{Nothing},                                # *myevaljac,
-                Ptr{Nothing},                                # *myevalhc,
-                Ptr{Nothing},                                # *myevalfc,
-                Ptr{Nothing},                                # *myevalgjac,
-                Ptr{Nothing},                                # *myevalgjacp,
-                Ptr{Nothing},                                # *myevalhl,
-                Ptr{Nothing},                                # *myevalhlp,
-                Cint,                                        # jcnnzmax,
-                Cint,                                        # hnnzmax,
-                Ref{Cdouble},                                # *epsfeas,
-                Ref{Cdouble},                                # *epsopt,
-                Ref{Cdouble},                                # *efstain,
-                Ref{Cdouble},                                # *eostain,
-                Ref{Cdouble},                                # *efacc,
-                Ref{Cdouble},                                # *eoacc,
-                Cstring,                                     # *outputfnm,
-                Cstring,                                     # *specfnm,
-                Cint,                                        # nvparam,
-                Ptr{Ptr{UInt8}},                             # **vparam,
-                Cint,                                        # int n,
-                Ref{Cdouble},                                # *x,
-                Ref{Cdouble},                                # *l,
-                Ref{Cdouble},                                # *u,
-                Cint,                                        #  m,
-                Ref{Cdouble},                                # double *lambda,
-                Ref{UInt8},                                  # *equatn,
-                Ref{UInt8},                                  # _Bool *linear,
-                Ref{UInt8},                                  # _Bool *coded,
-                UInt8,                                       # _Bool checkder,
-                Ref{Cdouble},                                # double *f,
-                Ref{Cdouble},                                # double *cnorm,
-                Ref{Cdouble},                                # double *snorm,
-                Ref{Cdouble},                                # double *nlpsupn,
-                Ref{Cint}                                    # int *inform
-            ),
-            myevalf, myevalg, myevalh, myevalc, myevaljac, myevalhc, myevalfc,
-            myevalgjac, myevalgjacp, myevalhl, myevalhlp, jcnnzmax, hnnzmax,
-            epsfeas, epsopt, efstain, eostain, efacc, eoacc, outputfnm, specfnm,
-            nvparam, vparam, solver.n, solver.x, solver.lb, solver.ub, m, mult,
-            is_equality, is_g_linear, coded, checkder, f, cnorm, snorm,
-            nlpsupn, inform
-        )
+        ccall(algencansym,                                     # function
+              Nothing,                                         # Return type
+              (Ptr{Nothing},                                # *myevalf,
+               Ptr{Nothing},                                # *myevalg,
+               Ptr{Nothing},                                # *myevalh,
+               Ptr{Nothing},                                # *myevalc,
+               Ptr{Nothing},                                # *myevaljac,
+               Ptr{Nothing},                                # *myevalhc,
+               Ptr{Nothing},                                # *myevalfc,
+               Ptr{Nothing},                                # *myevalgjac,
+               Ptr{Nothing},                                # *myevalgjacp,
+               Ptr{Nothing},                                # *myevalhl,
+               Ptr{Nothing},                                # *myevalhlp,
+               Cint,                                        # jcnnzmax,
+               Cint,                                        # hnnzmax,
+               Ref{Cdouble},                                # *epsfeas,
+               Ref{Cdouble},                                # *epsopt,
+               Ref{Cdouble},                                # *efstain,
+               Ref{Cdouble},                                # *eostain,
+               Ref{Cdouble},                                # *efacc,
+               Ref{Cdouble},                                # *eoacc,
+               Cstring,                                     # *outputfnm,
+               Cstring,                                     # *specfnm,
+               Cint,                                        # nvparam,
+               Ptr{Ptr{UInt8}},                             # **vparam,
+               Cint,                                        # int n,
+               Ref{Cdouble},                                # *x,
+               Ref{Cdouble},                                # *l,
+               Ref{Cdouble},                                # *u,
+               Cint,                                        #  m,
+               Ref{Cdouble},                                # double *lambda,
+               Ref{UInt8},                                  # *equatn,
+               Ref{UInt8},                                  # _Bool *linear,
+               Ref{UInt8},                                  # _Bool *coded,
+               UInt8,                                       # _Bool checkder,
+               Ref{Cdouble},                                # double *f,
+               Ref{Cdouble},                                # double *cnorm,
+               Ref{Cdouble},                                # double *snorm,
+               Ref{Cdouble},                                # double *nlpsupn,
+               Ref{Cint}),
+              myevalf,
+              myevalg,
+              myevalh,
+              myevalc,
+              myevaljac,
+              myevalhc,
+              myevalfc,
+              myevalgjac,
+              myevalgjacp,
+              myevalhl,
+              myevalhlp,
+              jcnnzmax,
+              hnnzmax,
+              epsfeas,
+              epsopt,
+              efstain,
+              eostain,
+              efacc,
+              eoacc,
+              outputfnm,
+              specfnm,
+              nvparam,
+              vparam,
+              solver.n,
+              solver.x,
+              solver.lb,
+              solver.ub,
+              m,
+              mult,
+              is_equality,
+              is_g_linear,
+              coded,
+              checkder,
+              f,
+              cnorm,
+              snorm,
+              nlpsupn,
+              inform)
     finally
         Libdl.dlclose(algencandl)
         @assert !(algencan_lib_path in Libdl.dllist())
@@ -345,14 +369,13 @@ function SolverCore.solve!(
     solver.obj_val = solver.sense * f[1]
 
     # Deal with lower bound and two-sided contraints
-    solver.mult = solver.g_sense .* mult[1:solver.m]
-    for i = 1:length(solver.g_two_smap)
-        solver.mult[solver.g_two_smap[i]] -= mult[solver.m+i]
+    solver.mult = solver.g_sense .* mult[1:(solver.m)]
+    for i in 1:length(solver.g_two_smap)
+        solver.mult[solver.g_two_smap[i]] -= mult[solver.m + i]
     end
 
     # Recover status information
-    solver.status = find_status(solver, cnorm[1], snorm[1], nlpsupn[1],
-        Int(inform[1]))
+    solver.status = find_status(solver, cnorm[1], snorm[1], nlpsupn[1], Int(inform[1]))
 
     Δt = (time_ns() - start_time) / 1.0e+9
 
@@ -363,23 +386,21 @@ function SolverCore.solve!(
     stats.dual_feas = max(nlpsupn[1], snorm[1])
     stats.primal_feas = cnorm[1]
     stats.elapsed_time = Δt
-    stats.multipliers = solver.mult[1:solver.m]
-    stats.solver_specific=Dict(:nfc => solver.nfc, :ngjac => solver.ngjac,
-            :nhl => solver.nhl, :nhlp => solver.nhlp)
+    stats.multipliers = solver.mult[1:(solver.m)]
+    stats.solver_specific = Dict(:nfc => solver.nfc, :ngjac => solver.ngjac,
+                                 :nhl => solver.nhl, :nhlp => solver.nhlp)
     return stats
 end
 
 "Read additional parameters present in the specification file"
 function read_options_from_specification_file(solver::AlgencanSolver)
     # Options that are present in the solver data
-    spec_params = Dict(
-        "FEASIBILITY-TOLERANCE" => :epsfeas,
-        "OPTIMALITY-TOLERANCE" => :epsopt,
-        "STAINF-FEASIBILITY-TOLERANCE" => :efstain,
-        "STAINF-OPTIMALITY-TOLERANCE" => :eostain,
-        "ACC-FEASIBILITY-THRESHOLD" => :efacc,
-        "ACC-OPTIMALITY-THRESHOLD" => :eoacc
-    )
+    spec_params = Dict("FEASIBILITY-TOLERANCE" => :epsfeas,
+                       "OPTIMALITY-TOLERANCE" => :epsopt,
+                       "STAINF-FEASIBILITY-TOLERANCE" => :efstain,
+                       "STAINF-OPTIMALITY-TOLERANCE" => :eostain,
+                       "ACC-FEASIBILITY-THRESHOLD" => :efacc,
+                       "ACC-OPTIMALITY-THRESHOLD" => :eoacc)
 
     specfnm = solver.options[:specfnm]
     open(specfnm, "r") do io
@@ -416,7 +437,7 @@ function treat_lower_bounds(nlp::AbstractNLPModel, lb, ub)
     two_smap = nlp.meta.jrng
     new_ind = 1
     two_sinvmap = zeros(m)
-    for i = two_smap
+    for i in two_smap
         two_sinvmap[i] = new_ind
         new_ind += 1
     end
@@ -426,8 +447,8 @@ end
 
 "Transform the option dictionary into a vparam string array"
 function option2vparam(solver::AlgencanSolver)
-    parameters = [:epsfeas, :epsopt, :efstain, :eostain, :efacc, :eoacc,
-        :outputfnm, :specfnm]
+    parameters = [:epsfeas, :epsopt, :efstain, :eostain, :efacc, :eoacc, :outputfnm,
+                  :specfnm]
     vparam = Array{String}(undef, 0)
     for option in solver.options
         key, value = option
@@ -442,8 +463,7 @@ end
 
 "Find final status of Algencan"
 function find_status(solver::AlgencanSolver, cnorm::Float64, snorm::Float64,
-    nlpsupn::Float64, inform::Int)
-
+                     nlpsupn::Float64, inform::Int)
     if inform != 0
         return :exception
     end
@@ -484,22 +504,22 @@ end
 ###########################################################################
 
 "Compute objective and constraints as required by Algencan"
-function julia_fc(solver::AlgencanSolver, n::Cint, x_ptr::Ptr{Float64}, obj_ptr::Ptr{Float64},
-    m::Cint, g_ptr::Ptr{Float64}, flag_ptr::Ptr{Cint})
+function julia_fc(solver::AlgencanSolver, n::Cint, x_ptr::Ptr{Float64},
+                  obj_ptr::Ptr{Float64}, m::Cint, g_ptr::Ptr{Float64}, flag_ptr::Ptr{Cint})
 
     # Evaluate objective and constraints
     x = unsafe_wrap(Array, x_ptr, Int(n))
     obj_val = obj(solver.nlp, x)
     unsafe_store!(obj_ptr, solver.sense * obj_val)
     g = unsafe_wrap(Array, g_ptr, Int(m))
-    g[1:solver.m] .= cons(solver.nlp, x)
+    g[1:(solver.m)] .= cons(solver.nlp, x)
 
     # Treat lower bounds and two-sided constraints
     if solver.g_has_lb
-        first_g = view(g, 1:solver.m)
+        first_g = view(g, 1:(solver.m))
         first_g .*= solver.g_sense
-        for i = solver.m+1:m
-            mapped_i = solver.g_two_smap[i-solver.m]
+        for i in (solver.m + 1):m
+            mapped_i = solver.g_two_smap[i - solver.m]
             g[i] = -first_g[mapped_i] + solver.g_lb[mapped_i]
         end
         first_g .-= solver.g_ub
@@ -510,14 +530,14 @@ function julia_fc(solver::AlgencanSolver, n::Cint, x_ptr::Ptr{Float64}, obj_ptr:
     # Report that evaluation of successful
     unsafe_store!(flag_ptr, Cint(0))
     solver.nfc += 1
-    nothing
+    return nothing
 end
 
 "Compute objective gradient and constraints Jacobian as required by Algencan"
-function julia_gjac(solver::AlgencanSolver, n::Cint, x_ptr::Ptr{Float64}, f_grad_ptr::Ptr{Float64},
-    m::Cint, jrow_ptr::Ptr{Cint}, jcol_ptr::Ptr{Cint},
-    jval_ptr::Ptr{Float64}, jnnz_ptr::Ptr{Cint}, lim::Cint,
-    lmem_ptr::Ptr{UInt8}, flag_ptr::Ptr{Cint})
+function julia_gjac(solver::AlgencanSolver, n::Cint, x_ptr::Ptr{Float64},
+                    f_grad_ptr::Ptr{Float64}, m::Cint, jrow_ptr::Ptr{Cint},
+                    jcol_ptr::Ptr{Cint}, jval_ptr::Ptr{Float64}, jnnz_ptr::Ptr{Cint},
+                    lim::Cint, lmem_ptr::Ptr{UInt8}, flag_ptr::Ptr{Cint})
 
     # Compute gradient of the objective
     x = unsafe_wrap(Array, x_ptr, Int(n))
@@ -546,7 +566,7 @@ function julia_gjac(solver::AlgencanSolver, n::Cint, x_ptr::Ptr{Float64}, f_grad
 
     # Treat the presence of lower bound in the constraints
     if solver.g_has_lb
-        @inbounds for i = 1:solver.nlp.meta.nnzj
+        @inbounds for i in 1:(solver.nlp.meta.nnzj)
             # +1, -1 to translate from C indexing to Julia indexing
             rind, cind = solver.j_row_inds[i] + 1, solver.j_col_inds[i]
             if solver.g_two_sinvmap[rind] > 0
@@ -564,16 +584,14 @@ function julia_gjac(solver::AlgencanSolver, n::Cint, x_ptr::Ptr{Float64}, f_grad
     # Declare success
     unsafe_store!(flag_ptr, Cint(0))
     solver.ngjac += 1
-    nothing
+    return nothing
 end
-
 
 "Compute the Hessian of the Lagrangian as required by Algencan"
 function julia_hl(solver::AlgencanSolver, n::Cint, x_ptr::Ptr{Float64}, m::Cint,
-    mult_ptr::Ptr{Float64}, scale_f::Float64, scale_g_ptr::Ptr{Float64},
-    hrow_ptr::Ptr{Cint}, hcol_ptr::Ptr{Cint},
-    hval_ptr::Ptr{Float64}, hnnz_ptr::Ptr{Cint}, lim::Cint,
-    lmem_ptr::Ptr{UInt8}, flag_ptr::Ptr{Cint})
+                  mult_ptr::Ptr{Float64}, scale_f::Float64, scale_g_ptr::Ptr{Float64},
+                  hrow_ptr::Ptr{Cint}, hcol_ptr::Ptr{Cint}, hval_ptr::Ptr{Float64},
+                  hnnz_ptr::Ptr{Cint}, lim::Cint, lmem_ptr::Ptr{UInt8}, flag_ptr::Ptr{Cint})
 
     # Get nonzero indexes.
     nnz = solver.nlp.meta.nnzh
@@ -597,9 +615,9 @@ function julia_hl(solver::AlgencanSolver, n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     if !solver.g_has_lb
         μ = scale_g .* alg_mult
     else
-        μ = solver.g_sense .* scale_g[1:solver.m] .* alg_mult[1:solver.m]
-        for i = 1:length(solver.g_two_smap)
-            μ[solver.g_two_smap[i]] -= scale_g[solver.m+i] * alg_mult[solver.m+i]
+        μ = solver.g_sense .* scale_g[1:(solver.m)] .* alg_mult[1:(solver.m)]
+        for i in 1:length(solver.g_two_smap)
+            μ[solver.g_two_smap[i]] -= scale_g[solver.m + i] * alg_mult[solver.m + i]
         end
     end
 
@@ -611,15 +629,14 @@ function julia_hl(solver::AlgencanSolver, n::Cint, x_ptr::Ptr{Float64}, m::Cint,
     # Declare success
     unsafe_store!(flag_ptr, Cint(0))
     solver.nhl += 1
-    nothing
+    return nothing
 end
-
 
 "Compute the Hessian of the Lagrangian times p as required by Algencan"
 function julia_hlp(solver::AlgencanSolver, n::Cint, x_ptr::Ptr{Float64}, m::Cint,
-    mult_ptr::Ptr{Float64}, scale_f::Float64, scale_g_ptr::Ptr{Float64},
-    p_ptr::Ptr{Float64}, hp_ptr::Ptr{Float64}, goth_ptr::Ptr{UInt8},
-    flag_ptr::Ptr{Cint})
+                   mult_ptr::Ptr{Float64}, scale_f::Float64, scale_g_ptr::Ptr{Float64},
+                   p_ptr::Ptr{Float64}, hp_ptr::Ptr{Float64}, goth_ptr::Ptr{UInt8},
+                   flag_ptr::Ptr{Cint})
 
     # Compute scaled multipliers
     σ = solver.sense * scale_f
@@ -628,9 +645,9 @@ function julia_hlp(solver::AlgencanSolver, n::Cint, x_ptr::Ptr{Float64}, m::Cint
     if !solver.g_has_lb
         μ = solver.g_sense .* alg_mult .* scale_g
     else
-        μ = solver.g_sense .* alg_mult[1:solver.m] .* scale_g[1:solver.m]
-        for i = 1:length(solver.g_two_smap)
-            μ[solver.g_two_smap[i]] -= scale_g[solver.m+i] * alg_mult[solver.m+i]
+        μ = solver.g_sense .* alg_mult[1:(solver.m)] .* scale_g[1:(solver.m)]
+        for i in 1:length(solver.g_two_smap)
+            μ[solver.g_two_smap[i]] -= scale_g[solver.m + i] * alg_mult[solver.m + i]
         end
     end
 
@@ -643,7 +660,7 @@ function julia_hlp(solver::AlgencanSolver, n::Cint, x_ptr::Ptr{Float64}, m::Cint
     # Declare success
     unsafe_store!(flag_ptr, Cint(0))
     solver.nhlp += 1
-    nothing
+    return nothing
 end
 
 end
