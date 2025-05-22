@@ -1,5 +1,41 @@
 # Examples of usage
 
+## Using NLPModels
+
+```@example
+using ADNLPModels
+using NLPModelsAlgencan
+
+# Define the HS52 problem
+x0 = [2.0; 2.0; 2.0; 2.0; 2.0]
+f(x) = (4 * x[1] - x[2])^2 + (x[2] + x[3] - 2)^2 + (x[4] - 1)^2 + (x[5] - 1)^2
+c(x) = [x[1] + 3 * x[2]; x[3] + x[4] - 2 * x[5]; x[2] - x[5]]
+lcon = [0.0; 0.0; 0.0]
+ucon = [0.0; 0.0; 0.0]
+model = ADNLPModel(f, x0, c, lcon, ucon; name="hs52_autodiff")
+stats = algencan(model)
+@show stats.solution
+``` 
+
+## Using JuMP
+
+```@example
+using JuMP
+using NLPModelsJuMP
+using NLPModelsAlgencan
+
+# Define a problem usng JuMP
+model = Model(NLPModelsJuMP.Optimizer)
+set_attribute(model, "solver", NLPModelsAlgencan.AlgencanSolver)
+@variable(model, x[i=1:2], start = [-1.2; 1.0][i])
+@objective(model, Min, (x[1] - 1)^2 + 100 * (x[2] - x[1]^2)^2)
+@constraint(model, x[1]^2 + x[2]^2 == 1)
+
+# Solve problem
+optimize!(model)
+@show values.(x)
+```
+
 ## Using [CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl) Models
 
 ```@example
