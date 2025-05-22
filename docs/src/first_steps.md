@@ -27,7 +27,7 @@ As an example, the following optimization problem is defined as:
 And could be modeled as an ADNLModel as follows:
 
 ```julia
-using NLPModels, NLPModelsAlgencan
+using ADNLPModels, NLPModelsAlgencan
 
 x0   = [1.0; 1.0]
 f(x) = x[1]*x[2] + 5
@@ -45,7 +45,7 @@ provided by a return instance of a [GenericExecutionStats]
 (https://juliasmoothoptimizers.github.io/SolverTools.jl/dev/api/#SolverTools.GenericExecutionStats):
 
 ```@example
-using NLPModels, NLPModelsAlgencan # hide
+using ADNLPModels, NLPModelsAlgencan # hide
 x0   = [1.0;1.0] # hide
 f(x) = x[1]*x[2] + 5 # hide
 lvar = [0.0; 0.0] # hide
@@ -68,19 +68,18 @@ model the same problem as before, it could be done as follows:
 ```@example
 using JuMP, NLPModelsJuMP, NLPModelsAlgencan
 
-model = Model()
+model = Model(NLPModelsJuMP.Optimizer)
+set_attribute(model, "solver", NLPModelsAlgencan.AlgencanSolver)
 
 @variable(model, 0 ≤ x[1:2] ≤ 5)
 set_start_value(x[1], 1.0)
 set_start_value(x[2], 1.0)
 
-@NLobjective(model, Min, x[1]*x[2] + 5)
+@objective(model, Min, x[1]*x[2] + 5)
 
 @constraint(model, x[1] + x[2] ≤ 5)
-@NLconstraint(model, x[1]^2 + x[2]^2 == 10)
+@constraint(model, x[1]^2 + x[2]^2 == 10)
 
-nlp = MathOptNLPModel(model)
-
-stats = algencan(nlp)
-print(stats)
+optimize!(model)
+@show value.(x)
 ```
