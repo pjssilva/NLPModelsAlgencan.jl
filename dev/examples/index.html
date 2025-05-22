@@ -1,5 +1,36 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples of usage · NLPModelsAlgencan.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">NLPModelsAlgencan.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Get started</span><ul><li><a class="tocitem" href="../first_steps/">First steps</a></li><li><a class="tocitem" href="../parameters/">Optional parameters</a></li></ul></li><li class="is-active"><a class="tocitem" href>Examples of usage</a><ul class="internal"><li><a class="tocitem" href="#Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models"><span>Using CUTEst Models</span></a></li><li><a class="tocitem" href="#Utilizing-a-specification-file"><span>Utilizing a specification file</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Examples of usage</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples of usage</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/pjssilva/NLPModelsAlgencan.jl/blob/master/docs/src/examples.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples-of-usage"><a class="docs-heading-anchor" href="#Examples-of-usage">Examples of usage</a><a id="Examples-of-usage-1"></a><a class="docs-heading-anchor-permalink" href="#Examples-of-usage" title="Permalink"></a></h1><h2 id="Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models"><a class="docs-heading-anchor" href="#Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models">Using <a href="https://github.com/JuliaSmoothOptimizers/CUTEst.jl">CUTEst</a> Models</a><a id="Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models-1"></a><a class="docs-heading-anchor-permalink" href="#Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models" title="Permalink"></a></h2><pre><code class="language-julia hljs">using NLPModels
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples of usage · NLPModelsAlgencan.jl</title><meta name="title" content="Examples of usage · NLPModelsAlgencan.jl"/><meta property="og:title" content="Examples of usage · NLPModelsAlgencan.jl"/><meta property="twitter:title" content="Examples of usage · NLPModelsAlgencan.jl"/><meta name="description" content="Documentation for NLPModelsAlgencan.jl."/><meta property="og:description" content="Documentation for NLPModelsAlgencan.jl."/><meta property="twitter:description" content="Documentation for NLPModelsAlgencan.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">NLPModelsAlgencan.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Get started</span><ul><li><a class="tocitem" href="../first_steps/">First steps</a></li><li><a class="tocitem" href="../parameters/">Optional parameters</a></li></ul></li><li class="is-active"><a class="tocitem" href>Examples of usage</a><ul class="internal"><li><a class="tocitem" href="#Using-NLPModels"><span>Using NLPModels</span></a></li><li><a class="tocitem" href="#Using-JuMP"><span>Using JuMP</span></a></li><li><a class="tocitem" href="#Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models"><span>Using CUTEst Models</span></a></li><li><a class="tocitem" href="#Utilizing-a-specification-file"><span>Utilizing a specification file</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Examples of usage</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples of usage</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/pjssilva/NLPModelsAlgencan.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/pjssilva/NLPModelsAlgencan.jl/blob/master/docs/src/examples.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples-of-usage"><a class="docs-heading-anchor" href="#Examples-of-usage">Examples of usage</a><a id="Examples-of-usage-1"></a><a class="docs-heading-anchor-permalink" href="#Examples-of-usage" title="Permalink"></a></h1><h2 id="Using-NLPModels"><a class="docs-heading-anchor" href="#Using-NLPModels">Using NLPModels</a><a id="Using-NLPModels-1"></a><a class="docs-heading-anchor-permalink" href="#Using-NLPModels" title="Permalink"></a></h2><pre><code class="language-julia hljs">using ADNLPModels
+using NLPModelsAlgencan
+
+# Define the HS52 problem
+x0 = [2.0; 2.0; 2.0; 2.0; 2.0]
+f(x) = (4 * x[1] - x[2])^2 + (x[2] + x[3] - 2)^2 + (x[4] - 1)^2 + (x[5] - 1)^2
+c(x) = [x[1] + 3 * x[2]; x[3] + x[4] - 2 * x[5]; x[2] - x[5]]
+lcon = [0.0; 0.0; 0.0]
+ucon = [0.0; 0.0; 0.0]
+model = ADNLPModel(f, x0, c, lcon, ucon; name=&quot;hs52_autodiff&quot;)
+stats = algencan(model)
+@show stats.solution</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">5-element Vector{Float64}:
+ -0.09455586631313877
+  0.031518623291415776
+  0.5157594596206773
+ -0.452722209491473
+  0.03151862413235691</code></pre><h2 id="Using-JuMP"><a class="docs-heading-anchor" href="#Using-JuMP">Using JuMP</a><a id="Using-JuMP-1"></a><a class="docs-heading-anchor-permalink" href="#Using-JuMP" title="Permalink"></a></h2><pre><code class="language-julia hljs">using JuMP
+using NLPModelsJuMP
+using NLPModelsAlgencan
+
+# Define a problem usng JuMP
+model = Model(NLPModelsJuMP.Optimizer)
+set_attribute(model, &quot;solver&quot;, NLPModelsAlgencan.AlgencanSolver)
+@variable(model, x[i=1:2], start = [-1.2; 1.0][i])
+@objective(model, Min, (x[1] - 1)^2 + 100 * (x[2] - x[1]^2)^2)
+@constraint(model, x[1]^2 + x[2]^2 == 1)
+
+# Solve problem
+optimize!(model)
+@show values.(x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{JuMP.VariableRef}:
+ x[1]
+ x[2]</code></pre><h2 id="Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models"><a class="docs-heading-anchor" href="#Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models">Using <a href="https://github.com/JuliaSmoothOptimizers/CUTEst.jl">CUTEst</a> Models</a><a id="Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models-1"></a><a class="docs-heading-anchor-permalink" href="#Using-[CUTEst](https://github.com/JuliaSmoothOptimizers/CUTEst.jl)-Models" title="Permalink"></a></h2><pre><code class="language-julia hljs">using NLPModels
 using CUTEst
 using NLPModelsAlgencan
 
@@ -11,11 +42,7 @@ stats = algencan(nlp)
 
 print(stats)
 
-finalize(nlp)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌ Info: using problem repository
-└   ENV[&quot;MASTSIF&quot;] = &quot;/home/travis/.julia/artifacts/a7ea0d0aaf29a39ca0fe75588fc077cdd5b5ed54/optrove-sif-99c5b38e7d03&quot;
-┌ Info: using full SIF collection located at
-└   ENV[&quot;MASTSIF&quot;] = &quot;/home/travis/.julia/artifacts/a7ea0d0aaf29a39ca0fe75588fc077cdd5b5ed54/optrove-sif-99c5b38e7d03&quot;
-
+finalize(nlp)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
  ==============================================================================
  This is ALGENCAN 3.1.1.
  ALGENCAN, an Augmented Lagrangian method for nonlinear programming, is part of
@@ -95,7 +122,7 @@ ite         function  ibilty  obj-funct infeas +compl graLag infeas totit forKKT
  Subroutine hlpsub   (coded=F):        0
 
 
- Total CPU time in seconds =     0.34
+ Total CPU time in seconds =     0.20
 Generic Execution stats
   status: first-order stationary
   objective value: 1.7279793074334713e-23
@@ -104,7 +131,12 @@ Generic Execution stats
   solution: [1.000000000004157  1.0000000000123]
   multipliers: [-1.2975731600306517e-15]
   iterations: -1
-  elapsed time: 1.106540038</code></pre><h2 id="Utilizing-a-specification-file"><a class="docs-heading-anchor" href="#Utilizing-a-specification-file">Utilizing a specification file</a><a id="Utilizing-a-specification-file-1"></a><a class="docs-heading-anchor-permalink" href="#Utilizing-a-specification-file" title="Permalink"></a></h2><p><strong>spec.dat</strong></p><pre><code class="nohighlight hljs">FEASIBILITY-TOLERANCE 1.0e-5
+  elapsed time: 0.206033979
+  solver specific:
+    nfc: 20
+    ngjac: 21
+    nhlp: 0
+    nhl: 10</code></pre><h2 id="Utilizing-a-specification-file"><a class="docs-heading-anchor" href="#Utilizing-a-specification-file">Utilizing a specification file</a><a id="Utilizing-a-specification-file-1"></a><a class="docs-heading-anchor-permalink" href="#Utilizing-a-specification-file" title="Permalink"></a></h2><p><strong>spec.dat</strong></p><pre><code class="nohighlight hljs">FEASIBILITY-TOLERANCE 1.0e-5
 OPTIMALITY-TOLERANCE 1.0e-5
 STAINF-FEASIBILITY-TOLERANCE 3.162278e-03
 STAINF-OPTIMALITY-TOLERANCE 3.162278e-08
@@ -124,9 +156,7 @@ stats = algencan(nlp, specfnm=&quot;specfnm.dat&quot;)
 
 print(stats)
 
-finalize(nlp)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌ Info: using full SIF collection located at
-└   ENV[&quot;MASTSIF&quot;] = &quot;/home/travis/.julia/artifacts/a7ea0d0aaf29a39ca0fe75588fc077cdd5b5ed54/optrove-sif-99c5b38e7d03&quot;
-
+finalize(nlp)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
  ==============================================================================
  This is ALGENCAN 3.1.1.
  ALGENCAN, an Augmented Lagrangian method for nonlinear programming, is part of
@@ -228,4 +258,9 @@ Generic Execution stats
   solution: [0.999999999976238  1.0000000001009122]
   multipliers: [-1.5356314551376866e-13]
   iterations: -1
-  elapsed time: 0.099272039</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../parameters/">« Optional parameters</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.10 on <span class="colophon-date" title="Tuesday 9 November 2021 12:08">Tuesday 9 November 2021</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  elapsed time: 0.088623722
+  solver specific:
+    nfc: 23
+    ngjac: 24
+    nhlp: 0
+    nhl: 10</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../parameters/">« Optional parameters</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.11.4 on <span class="colophon-date" title="Thursday 22 May 2025 17:47">Thursday 22 May 2025</span>. Using Julia version 1.10.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
