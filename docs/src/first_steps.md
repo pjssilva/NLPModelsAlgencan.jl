@@ -68,18 +68,19 @@ model the same problem as before, it could be done as follows:
 ```@example
 using JuMP, NLPModelsJuMP, NLPModelsAlgencan
 
+# Create a new JuMP Model and set Algencan as solver
 model = Model(NLPModelsJuMP.Optimizer)
 set_attribute(model, "solver", NLPModelsAlgencan.AlgencanSolver)
 
+# Define the model
 @variable(model, 0 ≤ x[1:2] ≤ 5)
 set_start_value(x[1], 1.0)
 set_start_value(x[2], 1.0)
-
 @objective(model, Min, x[1]*x[2] + 5)
-
 @constraint(model, x[1] + x[2] ≤ 5)
 @constraint(model, x[1]^2 + x[2]^2 == 10)
 
+# Solve the model and show the solution
 optimize!(model)
 @show value.(x)
 ```
