@@ -36,6 +36,24 @@ end
     @test stats.multipliers ≈ [3.277936962780388, 2.905444126051696, -7.747851002665478] rtol = 1.0e-4
 end
 
+# Regression test for Apple Silicon (aarch64).
+#
+# The Algencan callbacks used to be built with the closure form of `@cfunction`,
+# which errors on aarch64 with "closures are not supported on this platform".
+# They are now plain top-level functions that read the active solver from the
+# module-global `_CURRENT_SOLVER` reference. Any solve exercises that the C
+# pointers can now be built; the specific risk this reference introduces is
+# state leaking between solves, so we check that an intervening solve of a
+# different problem does not perturb a repeated solve.
+@testset "aarch64 callbacks: consecutive solves stay independent" begin
+    first = algencan(hs12(); epsfeas=1.0e-13, epsopt=1.0e-13)
+    _ = algencan(hs52(); specfnm=string(@__DIR__) * "/spec.dat")   # different problem in between
+    again = algencan(hs12(); epsfeas=1.0e-13, epsopt=1.0e-13)
+    @test first.status == :first_order
+    @test first.objective ≈ -30.0 rtol = 1.0e-12
+    @test again.solution ≈ first.solution rtol = 1.0e-12
+end
+
 @testset "CUTEst unconstrained test" begin
     nlp = CUTEstModel("BROWNDEN")
     stats = algencan(nlp)
