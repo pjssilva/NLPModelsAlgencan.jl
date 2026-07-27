@@ -151,44 +151,72 @@ function algencan(nlp::AbstractNLPModel; kwargs...)
     return solve!(model, nlp, stats)
 end
 
+# ---------------------------------------------------------------------------
+# Algencan callback trampolines
+#
+# Algencan's C interface (`c_algencan`) does not thread a user-data pointer
+# through to the evaluation callbacks, so `solver` cannot be handed to them
+# directly (the way, e.g., Ipopt passes its problem object). The original
+# implementation captured `solver` in closures and built the C-callable
+# pointers with the closure form of `@cfunction`. That form needs a runtime
+# trampoline that Julia only supports on x86/x86_64, so it fails on Apple
+# Silicon (aarch64) with:
+#     cfunction: closures are not supported on this platform
+#
+# Instead we route `solver` through this reference and build the `@cfunction`s
+# from plain top-level functions, which yields a static, platform-independent
+# C pointer. `solve!` sets `_CURRENT_SOLVER[]` right before the `ccall` and
+# restores it afterwards. Note that, as with Algencan itself, this makes a
+# single solve non-reentrant across threads.
+# ---------------------------------------------------------------------------
+const _CURRENT_SOLVER = Ref{AlgencanSolver}()
+
+function _c_julia_fc(n, x_ptr, obj_ptr, m, g_ptr, flag_ptr)
+    return julia_fc(_CURRENT_SOLVER[], n, x_ptr, obj_ptr, m, g_ptr, flag_ptr)
+end
+
+function _c_julia_gjac(n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr, jval_ptr,
+                       jnnz_ptr, lim, lmem_ptr, flag_ptr)
+    return julia_gjac(_CURRENT_SOLVER[], n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr,
+                      jval_ptr, jnnz_ptr, lim, lmem_ptr, flag_ptr)
+end
+
+function _c_julia_hl(n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, hrow_ptr, hcol_ptr,
+                     hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr)
+    return julia_hl(_CURRENT_SOLVER[], n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr,
+                    hrow_ptr, hcol_ptr, hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr)
+end
+
+function _c_julia_hlp(n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, p_ptr, hp_ptr,
+                      goth_ptr, flag_ptr)
+    return julia_hlp(_CURRENT_SOLVER[], n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr,
+                     p_ptr, hp_ptr, goth_ptr, flag_ptr)
+end
+
 function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
                            stats::GenericExecutionStats; kwargs...)
     start_time = time_ns()
     ###########################################################################
     # Algencan callback function wrappers
     ###########################################################################
-    function local_julia_fc(n, x_ptr, obj_ptr, m, g_ptr, flag_ptr)
-        return julia_fc(solver, n, x_ptr, obj_ptr, m, g_ptr, flag_ptr)
-    end
-    c_julia_fc = @cfunction($local_julia_fc, Nothing,
+    # Build C-callable pointers from the top-level trampolines defined above
+    # `_CURRENT_SOLVER`. Using plain functions (no `$` closure interpolation)
+    # produces static pointers that work on every platform, Apple Silicon
+    # included.
+    c_julia_fc = @cfunction(_c_julia_fc, Nothing,
                             (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64},
                              Ptr{Cint}))
 
-    function local_julia_gjac(n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr, jval_ptr,
-                              jnnz_ptr, lim, lmem_ptr, flag_ptr)
-        return julia_gjac(solver, n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr, jval_ptr,
-                          jnnz_ptr, lim, lmem_ptr, flag_ptr)
-    end
-    c_julia_gjac = @cfunction($local_julia_gjac, Nothing,
+    c_julia_gjac = @cfunction(_c_julia_gjac, Nothing,
                               (Cint, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Cint}, Ptr{Cint},
                                Ptr{Float64}, Ptr{Cint}, Cint, Ptr{UInt8}, Ptr{Cint}))
 
-    function local_julia_hl(n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, hrow_ptr, hcol_ptr,
-                            hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr)
-        return julia_hl(solver, n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, hrow_ptr,
-                        hcol_ptr, hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr)
-    end
-    c_julia_hl = @cfunction($local_julia_hl, Nothing,
+    c_julia_hl = @cfunction(_c_julia_hl, Nothing,
                             (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Float64, Ptr{Float64},
                              Ptr{Cint}, Ptr{Cint}, Ptr{Float64}, Ptr{Cint}, Cint,
                              Ptr{UInt8}, Ptr{Cint}))
 
-    function local_julia_hlp(n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, p_ptr, hp_ptr,
-                             goth_ptr, flag_ptr)
-        return julia_hlp(solver, n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, p_ptr, hp_ptr,
-                         goth_ptr, flag_ptr)
-    end
-    c_julia_hlp = @cfunction($local_julia_hlp, Nothing,
+    c_julia_hlp = @cfunction(_c_julia_hlp, Nothing,
                              (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Float64, Ptr{Float64},
                               Ptr{Float64}, Ptr{Float64}, Ptr{UInt8}, Ptr{Cint}))
 
@@ -281,6 +309,11 @@ function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
     algencandl = Libdl.dlopen(algencan_lib_path)
     @assert algencan_lib_path in Libdl.dllist()
     algencansym = Libdl.dlsym(algencandl, :c_algencan)
+    # Expose `solver` to the callback trampolines for the duration of the
+    # `ccall` (see the note above `_CURRENT_SOLVER`), saving any previous value
+    # so nested solves restore correctly.
+    prev_solver = isassigned(_CURRENT_SOLVER) ? _CURRENT_SOLVER[] : nothing
+    _CURRENT_SOLVER[] = solver
     try
         ccall(algencansym,                                     # function
               Nothing,                                         # Return type
@@ -361,6 +394,9 @@ function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
               nlpsupn,
               inform)
     finally
+        if prev_solver isa AlgencanSolver
+            _CURRENT_SOLVER[] = prev_solver
+        end
         Libdl.dlclose(algencandl)
         @assert !(algencan_lib_path in Libdl.dllist())
     end
