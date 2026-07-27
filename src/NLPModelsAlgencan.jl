@@ -6,19 +6,63 @@ module NLPModelsAlgencan
 
 using LinearAlgebra, SparseArrays, NLPModels, SolverCore
 using Libdl: Libdl
+using Preferences: @load_preference, @set_preferences!
+import Algencan_jll
 
-# Gets the path of the Algencan library
-if "ALGENCAN_LIB_DIR" in keys(ENV)
-    const algencan_lib_path = string(joinpath(ENV["ALGENCAN_LIB_DIR"], "libalgencan.so"))
-elseif isfile(joinpath(dirname(@__FILE__), "..", "deps", "deps.jl"))
-    include("../deps/deps.jl")
-    const algencan_lib_path = libalgencan
-else
-    error("Algencan not properly installed. Please run Pkg.build(\"NLPModelsAlgencan\")")
-    error("or set the ALGENCAN_LIB_DIR enviroment variable.")
+# Location of a user supplied Algencan library, if any. This is read at
+# precompilation time, but Preferences takes care of invalidating the cache when
+# it changes, so it can not go stale (unlike an environment variable).
+const _preferred_lib = @load_preference("libalgencan_path", nothing)
+
+"""
+    algencan_lib_path()
+
+Path of the Algencan shared library that will be used to solve problems.
+
+By default this is the library shipped by `Algencan_jll`, which is built without
+HSL. A different library, for example one you compiled yourself against MA57,
+takes precedence and is selected with [`set_algencan_library!`](@ref).
+"""
+function algencan_lib_path()
+    if _preferred_lib !== nothing
+        return _preferred_lib
+    elseif haskey(ENV, "ALGENCAN_LIB_DIR")
+        return joinpath(ENV["ALGENCAN_LIB_DIR"], "libalgencan.$(Libdl.dlext)")
+    else
+        return Algencan_jll.libalgencan_path
+    end
 end
 
-export algencan, solve!
+"""
+    set_algencan_library!(path)
+
+Use the Algencan shared library found at `path` instead of the one from
+`Algencan_jll`. This is how you take advantage of an Algencan compiled with the
+HSL linear solvers, which is substantially faster. Call with `nothing` to go
+back to the default library.
+
+The choice is stored as a preference of the active project, so it applies to
+that project alone and persists across sessions. Julia has to be restarted for
+it to take effect.
+"""
+function set_algencan_library!(path)
+    @set_preferences!("libalgencan_path" => path === nothing ? nothing : abspath(path))
+    @info "Algencan library set to $(path === nothing ? "Algencan_jll (the default)" : abspath(path)). Restart Julia for this to take effect."
+    return nothing
+end
+
+function __init__()
+    # ALGENCAN_LIB_DIR predates Algencan_jll and is kept so that existing setups
+    # keep working, but it is invisible to precompilation, so warn people off it.
+    if _preferred_lib === nothing && haskey(ENV, "ALGENCAN_LIB_DIR")
+        @warn """The ALGENCAN_LIB_DIR environment variable is deprecated. Prefer
+                 set_algencan_library!("$(joinpath(ENV["ALGENCAN_LIB_DIR"], "libalgencan.$(Libdl.dlext)"))"),
+                 which is recorded per project and understood by precompilation."""
+    end
+    return nothing
+end
+
+export algencan, solve!, set_algencan_library!
 
 "Processes and stores data from an AbstractNLPModel to be used by Algencan
 subroutines"
@@ -312,9 +356,14 @@ function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
     nlpsupn = [0.0]
     inform = Vector{Cint}([0])
 
-    @assert !(algencan_lib_path in Libdl.dllist())
-    algencandl = Libdl.dlopen(algencan_lib_path)
-    @assert algencan_lib_path in Libdl.dllist()
+    # Algencan is Fortran code that keeps state in common blocks, so the library
+    # is loaded and unloaded around every solve to start from a clean slate. The
+    # asserts guard that: Algencan_jll declares its library with dont_dlopen, so
+    # nothing else is holding it open and the dlclose below really does unload it.
+    libpath = algencan_lib_path()
+    @assert !(libpath in Libdl.dllist())
+    algencandl = Libdl.dlopen(libpath)
+    @assert libpath in Libdl.dllist()
     algencansym = Libdl.dlsym(algencandl, :c_algencan)
     # Expose `solver` to the callback trampolines for the duration of the
     # `ccall`, see the note above `_CURRENT_SOLVER`. There is no previous value
@@ -405,7 +454,7 @@ function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
         # the solve.
         _CURRENT_SOLVER[] = nothing
         Libdl.dlclose(algencandl)
-        @assert !(algencan_lib_path in Libdl.dllist())
+        @assert !(libpath in Libdl.dllist())
     end
 
     # Fix sign of objetive function

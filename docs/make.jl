@@ -8,7 +8,8 @@ makedocs(
          "First steps" => "first_steps.md",
          "Optional parameters" => "parameters.md"
       ],
-      "Examples of usage" => "examples.md"
+      "Examples of usage" => "examples.md",
+      "Developer notes" => "developer.md"
    ]
 )
 
