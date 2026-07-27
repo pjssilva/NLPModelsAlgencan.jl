@@ -86,6 +86,17 @@ longer and downloads a compiler toolchain per target.
 Add `--debug` to drop into a shell inside the sandbox when a step fails. Do not
 use it in a non-interactive or backgrounded run — it will wait forever for input.
 
+Building the macOS targets fails locally with `macOS SDK not installable` unless
+you let BinaryBuilder download Apple's SDK, which means accepting Apple's
+license:
+
+```bash
+export BINARYBUILDER_AUTOMATIC_APPLE=true
+```
+
+Yggdrasil's CI already has the SDK, so macOS is built on the pull request either
+way; this only matters if you want to test those targets on your own machine.
+
 ### Checking the result
 
 A successful build is not the same as a usable one. BinaryBuilder reports audit

@@ -14,6 +14,8 @@ jobs:
         version:
           - '1.10'
         os:
+          # Algencan_jll also ships macOS and Windows binaries, so these can be
+          # enabled once the test dependencies are known to work there.
           - ubuntu-latest
           # - macOS-latest
           # - windows-latest
@@ -21,21 +23,6 @@ jobs:
           - x64
     steps:
       - uses: actions/checkout@v1
-      - name: install gfortran and lapack
-        run: |
-            if ${{ contains(matrix.os, 'ubuntu') }}; then
-              sudo apt-get update
-              sudo apt-get install --yes build-essential gfortran liblapack3 liblapack-dev libopenblas0 libopenblas-dev
-            elif ${{ contains(matrix.os, 'macOS') }}; then
-              which gfortran-11
-              brew install gcc@11
-              ln -s /opt/homebrew/bin/gfortran-11 /usr/local/bin/gfortran
-              ln -s /opt/homebrew/bin/gcc-11 /usr/local/bin/gcc
-              brew install openblas
-              export LDFLAGS="-L/opt/homebrew/opt/openblas/lib"
-              export CPPFLAGS="-I/opt/homebrew/opt/openblas/include"
-              export PKG_CONFIG_PATH="/opt/homebrew/opt/openblas/lib/pkgconfig" 
-            fi
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
