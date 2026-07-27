@@ -46,12 +46,16 @@ end
 # state leaking between solves, so we check that an intervening solve of a
 # different problem does not perturb a repeated solve.
 @testset "aarch64 callbacks: consecutive solves stay independent" begin
-    first = algencan(hs12(); epsfeas=1.0e-13, epsopt=1.0e-13)
+    initial = algencan(hs12(); epsfeas=1.0e-13, epsopt=1.0e-13)
     _ = algencan(hs52(); specfnm=string(@__DIR__) * "/spec.dat")   # different problem in between
     again = algencan(hs12(); epsfeas=1.0e-13, epsopt=1.0e-13)
-    @test first.status == :first_order
-    @test first.objective ≈ -30.0 rtol = 1.0e-12
-    @test again.solution ≈ first.solution rtol = 1.0e-12
+    @test initial.status == :first_order
+    @test initial.objective ≈ -30.0 rtol = 1.0e-12
+    @test again.solution ≈ initial.solution rtol = 1.0e-12
+
+    # The reference must not outlive the solve, otherwise the solver, and the
+    # whole problem it holds, stays alive for the rest of the session.
+    @test NLPModelsAlgencan._CURRENT_SOLVER[] === nothing
 end
 
 @testset "CUTEst unconstrained test" begin

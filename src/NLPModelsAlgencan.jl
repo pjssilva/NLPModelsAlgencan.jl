@@ -166,31 +166,38 @@ end
 # Instead we route `solver` through this reference and build the `@cfunction`s
 # from plain top-level functions, which yields a static, platform-independent
 # C pointer. `solve!` sets `_CURRENT_SOLVER[]` right before the `ccall` and
-# restores it afterwards. Note that, as with Algencan itself, this makes a
-# single solve non-reentrant across threads.
+# clears it afterwards, so no solver is kept alive between solves. Note that,
+# as with Algencan itself, this makes a single solve non-reentrant across
+# threads.
+#
+# The reference is only ever read from inside a `ccall` that `solve!` has just
+# set it for, so the `::AlgencanSolver` assertions below always hold. They are
+# there to keep the callbacks type stable despite the `Union` element type.
 # ---------------------------------------------------------------------------
-const _CURRENT_SOLVER = Ref{AlgencanSolver}()
+const _CURRENT_SOLVER = Ref{Union{Nothing,AlgencanSolver}}(nothing)
 
 function _c_julia_fc(n, x_ptr, obj_ptr, m, g_ptr, flag_ptr)
-    return julia_fc(_CURRENT_SOLVER[], n, x_ptr, obj_ptr, m, g_ptr, flag_ptr)
+    return julia_fc(_CURRENT_SOLVER[]::AlgencanSolver, n, x_ptr, obj_ptr, m, g_ptr,
+                    flag_ptr)
 end
 
 function _c_julia_gjac(n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr, jval_ptr,
                        jnnz_ptr, lim, lmem_ptr, flag_ptr)
-    return julia_gjac(_CURRENT_SOLVER[], n, x_ptr, f_grad_ptr, m, jrow_ptr, jcol_ptr,
-                      jval_ptr, jnnz_ptr, lim, lmem_ptr, flag_ptr)
+    return julia_gjac(_CURRENT_SOLVER[]::AlgencanSolver, n, x_ptr, f_grad_ptr, m,
+                      jrow_ptr, jcol_ptr, jval_ptr, jnnz_ptr, lim, lmem_ptr, flag_ptr)
 end
 
 function _c_julia_hl(n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, hrow_ptr, hcol_ptr,
                      hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr)
-    return julia_hl(_CURRENT_SOLVER[], n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr,
-                    hrow_ptr, hcol_ptr, hval_ptr, hnnz_ptr, lim, lmem_ptr, flag_ptr)
+    return julia_hl(_CURRENT_SOLVER[]::AlgencanSolver, n, x_ptr, m, mult_ptr, scale_f,
+                    scale_g_ptr, hrow_ptr, hcol_ptr, hval_ptr, hnnz_ptr, lim, lmem_ptr,
+                    flag_ptr)
 end
 
 function _c_julia_hlp(n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr, p_ptr, hp_ptr,
                       goth_ptr, flag_ptr)
-    return julia_hlp(_CURRENT_SOLVER[], n, x_ptr, m, mult_ptr, scale_f, scale_g_ptr,
-                     p_ptr, hp_ptr, goth_ptr, flag_ptr)
+    return julia_hlp(_CURRENT_SOLVER[]::AlgencanSolver, n, x_ptr, m, mult_ptr, scale_f,
+                     scale_g_ptr, p_ptr, hp_ptr, goth_ptr, flag_ptr)
 end
 
 function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
@@ -310,9 +317,9 @@ function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
     @assert algencan_lib_path in Libdl.dllist()
     algencansym = Libdl.dlsym(algencandl, :c_algencan)
     # Expose `solver` to the callback trampolines for the duration of the
-    # `ccall` (see the note above `_CURRENT_SOLVER`), saving any previous value
-    # so nested solves restore correctly.
-    prev_solver = isassigned(_CURRENT_SOLVER) ? _CURRENT_SOLVER[] : nothing
+    # `ccall`, see the note above `_CURRENT_SOLVER`. There is no previous value
+    # to save: a nested solve would already have tripped the assertion above,
+    # since the outer solve still holds the library open.
     _CURRENT_SOLVER[] = solver
     try
         ccall(algencansym,                                     # function
@@ -394,9 +401,9 @@ function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
               nlpsupn,
               inform)
     finally
-        if prev_solver isa AlgencanSolver
-            _CURRENT_SOLVER[] = prev_solver
-        end
+        # Do not keep the solver, and the problem data it holds, alive after
+        # the solve.
+        _CURRENT_SOLVER[] = nothing
         Libdl.dlclose(algencandl)
         @assert !(algencan_lib_path in Libdl.dllist())
     end
