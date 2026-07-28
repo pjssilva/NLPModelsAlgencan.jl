@@ -27,7 +27,7 @@ version = v"3.1.1"
 # redistribution is permitted by Algencan's GPL-2.0-or-later license.
 sources = [
     ArchiveSource(
-        "https://github.com/pjssilva/NLPModelsAlgencan.jl/releases/download/algencan-3.1.1/algencan-3.1.1.tgz",
+        "https://github.com/pjssilva/NLPModelsAlgencan.jl/releases/download/algencan-$(version)/algencan-$(version).tgz",
         "ab2a5496e9da49c508f68809cc339f9a604407329be24e3299bd7c21f14d6188",
     ),
 ]
@@ -36,7 +36,7 @@ sources = [
 # library that exports `c_algencan` — the C entry point that NLPModelsAlgencan.jl
 # `ccall`s via `dlsym(..., :c_algencan)`.
 script = raw"""
-cd ${WORKSPACE}/srcdir/algencan-3.1.1
+cd ${WORKSPACE}/srcdir/algencan-*
 
 # The bundled top-level Makefile hardcodes CC := gcc-4.9, but only the Fortran
 # compiler and the archiver are used by the `algencan` (library) target. Name the
