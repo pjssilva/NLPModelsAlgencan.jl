@@ -49,4 +49,11 @@ Pkg.status()
 echo
 echo "starting the sweep; results are appended after every problem"
 echo
-exec julia --project="$ENVDIR" "$HERE/run_cutest_check.jl"
+
+# CUTEST_CHECK_JOBS > 1 runs one process per problem, several at a time, with a
+# hard time limit each. See run_parallel.sh.
+if [ "${CUTEST_CHECK_JOBS:-1}" -gt 1 ]; then
+    exec "$HERE/run_parallel.sh"
+else
+    exec julia --project="$ENVDIR" "$HERE/run_cutest_check.jl"
+fi

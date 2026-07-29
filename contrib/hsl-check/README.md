@@ -32,6 +32,30 @@ tmux kill-session -t cutest    # stop it
 
 The machine has to stay awake. A laptop that sleeps suspends the run with it.
 
+## Running it in parallel
+
+```bash
+CUTEST_CHECK_JOBS=8 CUTEST_CHECK_LIMIT=308 ./setup_and_run.sh
+```
+
+Whole problems are handed to separate processes, several at a time. Processes
+and not threads, because Algencan keeps state in Fortran common blocks and the
+library is loaded and unloaded around every solve; and one process per problem
+so that the driver can impose a hard time limit, since a solve stuck inside
+Algencan cannot be interrupted from Julia but the process can be killed.
+`CUTEST_CHECK_TIMEOUT`, 1800 seconds by default, sets that limit, and problems
+that hit it are recorded as `TIMEOUT`.
+
+The parallel run decodes serially first. CUTEst.jl decodes and compiles inside a
+single directory of its own and changes into it to do so, so several processes
+decoding at once trample each other's Fortran scratch files and fail with
+`File cannot be deleted`. Decoding is cached, so this happens once and reruns
+skip it.
+
+Julia startup costs a few seconds per problem, which is negligible against
+solves that take minutes, and buys robustness: a crash or a hang costs one
+problem rather than the run.
+
 ## Settings
 
 Both scripts read their configuration from the environment:
