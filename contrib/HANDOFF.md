@@ -12,8 +12,8 @@ unsupported on aarch64 — the package could not run at all on Apple Silicon or
 ARM Linux — plus a follow up so the callback reference stops keeping the first
 solver alive for the whole session.
 
-**Branch `jll-migration`, 5 commits ahead of origin, not pushed.** Moves from
-compiling Algencan at install time to `Algencan_jll`:
+**Branch `jll-migration`, pushed.** Moves from compiling Algencan at install
+time to `Algencan_jll`:
 
 - `Algencan_jll` and a Preferences based override replace `deps/build.jl`;
   `set_algencan_library!` selects a custom library, `ALGENCAN_LIB_DIR` still
@@ -23,7 +23,7 @@ compiling Algencan at install time to `Algencan_jll`:
 - Docs, CI and the developer notes updated. `deps/build.jl` deleted, the old
   HSL patches moved to `contrib/hsl`.
 - `contrib/hsl-check/` runs a CUTEst sweep, for comparing an HSL build against
-  one without.
+  one without, serially or several problems at a time.
 
 **Yggdrasil PR #14301**, branch `algencan` in the fork clone at
 `~/documentos/programas/Yggdrasil_Algencan`, commit `0a45f6fd`, pushed. Builds
@@ -40,11 +40,21 @@ review; @amontoison offered a 30 minute call.
 4. Push `jll-migration`, merge to master, register 0.9.0.
 5. Optionally enable the macOS and Windows CI matrix entries, now that the JLL
    covers them and no compiler is needed.
-6. Run the wider CUTEst sweep: `contrib/hsl-check/setup_and_run.sh`, ideally
-   with `CUTEST_CHECK_LIMIT=308`. Five problems were never finished —
+6. Run the wider CUTEst sweep, on a machine with cores to spare:
+
+   ```bash
+   cd contrib/hsl-check
+   tmux new-session -d -s cutest \
+     'CUTEST_CHECK_JOBS=8 CUTEST_CHECK_LIMIT=308 ./setup_and_run.sh 2>&1 | tee tmux.log'
+   ```
+
+   One problem per process, dynamically scheduled, with a 30 minute limit each.
+   Results are appended as they finish and reruns resume, so it can be left
+   alone and looked at later. Five problems were never finished here —
    `LAUNCH`, `LHAIFAM`, `NASH`, `OPTPRLOC`, `PALMER5ANE` — and `LAUNCH` in
    particular ran over 40 minutes on an HSL build where a conventional one
-   solves it. Slow or stuck is unknown.
+   solves it. Slow or stuck is unknown; the time limit now bounds it either
+   way, and it will be recorded as `TIMEOUT`.
 
 ## The one thing not to forget
 
