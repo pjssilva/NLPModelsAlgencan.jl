@@ -8,6 +8,7 @@ using LinearAlgebra, SparseArrays, NLPModels, SolverCore
 using Libdl: Libdl
 using Preferences: @load_preference, @set_preferences!
 import Algencan_jll
+import OpenBLAS32_jll
 
 # Location of a user supplied Algencan library, if any. This is read at
 # precompilation time, but Preferences takes care of invalidating the cache when
@@ -48,6 +49,31 @@ it to take effect.
 function set_algencan_library!(path)
     @set_preferences!("libalgencan_path" => path === nothing ? nothing : abspath(path))
     @info "Algencan library set to $(path === nothing ? "Algencan_jll (the default)" : abspath(path)). Restart Julia for this to take effect."
+    return nothing
+end
+
+"""
+    ensure_lp64_blas!()
+
+Make sure libblastrampoline has an LP64 backend, adding one if it does not.
+
+An Algencan built against HSL reaches MA57 through `libhsl_subset`, which is
+LP64: it calls `dgemm_` and friends with 32 bit integers. Julia registers only
+an ILP64 backend, and libblastrampoline answers a call it cannot match by
+writing a line to stderr and returning with the result untouched. The
+factorization then quietly works on stale data, MA57 reports as indefinite
+matrices that are not, and the solver converges to a wrong point without ever
+failing.
+
+This runs before every solve rather than once at load time because loading
+MKL.jl, or anything else that reconfigures the trampoline, clears the
+registration afterwards. An LP64 backend that is already there, MKL's for
+instance, is left alone.
+"""
+function ensure_lp64_blas!()
+    if !any(lib -> lib.interface === :lp64, BLAS.get_config().loaded_libs)
+        BLAS.lbt_forward(OpenBLAS32_jll.libopenblas)
+    end
     return nothing
 end
 
@@ -360,6 +386,11 @@ function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
     # is loaded and unloaded around every solve to start from a clean slate. The
     # asserts guard that: Algencan_jll declares its library with dont_dlopen, so
     # nothing else is holding it open and the dlclose below really does unload it.
+    # An HSL backed Algencan needs an LP64 BLAS, which Julia does not register
+    # on its own. Done here, and not once in __init__, because loading MKL.jl or
+    # anything else that reconfigures libblastrampoline drops the registration.
+    ensure_lp64_blas!()
+
     libpath = algencan_lib_path()
     @assert !(libpath in Libdl.dllist())
     algencandl = Libdl.dlopen(libpath)
