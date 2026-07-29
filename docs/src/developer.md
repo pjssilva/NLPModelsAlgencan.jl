@@ -20,10 +20,12 @@ repository when BinaryBuilder APIs change or new platforms are added, so a local
 copy would silently fall out of date, and edits made to it would never reach
 Yggdrasil anyway.
 
-The recipe builds Algencan *without* HSL, matching what a plain source build of
-Algencan produces. Distributing an HSL-linked binary is not possible, since the
-HSL linear solvers are proprietary. See
-[Using a different Algencan library](@ref) below for how to use your own build.
+The recipe links the *public* `HSL_jll`, whose MA57 is a stub, and patches
+Algencan so that it decides at run time whether a working MA57 is present. One
+binary therefore serves both cases: users without an HSL licence get the
+truncated Newton inner solver, and users who override the `HSL_jll` artifact
+with their licensed build get MA57. No licensed code enters the build or the
+tarballs. See [HSL support](@ref) for how that works and what it requires.
 
 ### The source tarball mirror
 
@@ -167,10 +169,70 @@ platforms = expand_gfortran_versions(platforms)
 each tarball has to be tagged with the version it binds to. Without this line,
 Pkg has no way to hand Julia a matching build.
 
+## HSL support
+
+Algencan solves its subproblems much faster with an HSL linear solver, but HSL
+is licensed and cannot be redistributed. `Algencan_jll` gets around that by
+deciding at run time, so a single binary covers both cases.
+
+### How the run-time switch works
+
+`HSL_jll`'s `libhsl_subset` exports `ma57_available`, a public variable of the
+`hsl_ma57_double` module. It is `.false.` in the freely distributed stub and
+`.true.` in a licensed build. A patch, carried in the recipe's
+`bundled/patches`, changes Algencan's `lss_ma57()` to return that variable
+rather than a compile time constant, which is enough to turn Algencan's own
+solver selection into a run time decision.
+
+The same patch removes Algencan's use of `finfo%pivot`. That field is not part
+of `ma57_finfo` in a standard HSL distribution, it is added by the local MA57
+patch in `contrib/hsl`, so a build against stock HSL does not compile without
+this change. Its only consumer is the More-Sorensen safeguard in `moresor.f90`,
+
+```fortran
+ls = max( l + (d / ueucn2), ls )
+```
+
+which raises the lower bound on the trust region multiplier so that the
+iteration can leave the region where the matrix is indefinite. The value can be
+computed rather than queried: with the vector `u` that `scalcu` already returns,
+the pivot the factorization rejected is the quadratic form `u'(B + lI)u` over
+the leading block. Checked against a patched MA57 that reports the real pivot,
+the two agree to 7 to 11 significant digits.
+
+A licensed user enables MA57 by pointing a `Pkg` artifact override at their own
+`HSL_jll` build, the same way `HSL.jl` and other JuliaSmoothOptimizers packages
+do. Nothing has to be reinstalled or recompiled.
+
+### An LP64 BLAS has to be forwarded
+
+!!! warning "Without this, MA57 silently returns wrong answers"
+    `libhsl_subset` is LP64: it calls `dgemm_` and friends with 32 bit integers.
+    Julia registers only an ILP64 backend, and libblastrampoline answers a call
+    it cannot match by writing a line to stderr and returning with the result
+    untouched. There is no error and no crash. The factorization simply works on
+    stale data, MA57 reports as indefinite matrices that are not, and the solver
+    converges somewhere wrong.
+
+`ensure_lp64_blas!` registers an LP64 backend from `OpenBLAS32_jll` when none is
+present, and runs before every solve. Once at load time is not enough: loading
+MKL.jl, or anything else that reconfigures the trampoline, drops the
+registration afterwards. A backend that is already there, MKL's for instance, is
+left alone. Any LP64 BLAS will do, the interface is what matters and not the
+implementation.
+
+This belongs in this package rather than in the JLL, as it does in `HSL.jl` and
+`Ipopt.jl`: forwarding is a run time decision about the current session, which a
+binary artifact cannot make.
+
+How badly it bites, measured on CUTEst SWOPF: 91629 factorizations and an
+infeasible answer with no LP64 backend, against 659 and the right answer with
+one.
+
 ## Using a different Algencan library
 
-The `Algencan_jll` build has no HSL support, which costs a lot of performance on
-larger problems. To use your own build — typically one linked against MA57:
+If you compiled Algencan yourself, for instance against a patched MA57 in the
+old way, you can use it instead of the one from `Algencan_jll`:
 
 ```julia
 using NLPModelsAlgencan
