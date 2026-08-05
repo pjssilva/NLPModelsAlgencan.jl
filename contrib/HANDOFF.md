@@ -137,12 +137,32 @@ in the ABI, and in METIS. If HSL results ever look wrong again, check
   strongest evidence for the Moré-Sorensen substitution, that being the only
   algorithmic difference between the two builds. It is not spotless: "no status
   regressions" does not survive at this size, four problems go the wrong way.
-  Before reading much into those four, note that the source build pairs
-  Algencan with MA57 5.2.0 while the JLL uses 2025.7.21, and that it was
-  compiled in July 2024 from a tree whose provenance beyond `contrib/hsl` is
-  not established here. An MA57 version difference is not excluded. Settling
-  that means rebuilding the conventional Algencan against libHSL 2025.7.21;
-  the pivot patch does port, every anchor it needs exists in those sources.
+
+- The MA57 version was ruled out as the cause of those four. Rebuilding the
+  conventional Algencan against libHSL 2025.7.21, so that both sides use the
+  same MA57 and the same METIS 5 and only the patch differs, gives **zero**
+  status changes against the 5.2.0 build over all 308, and 6 objectives of 203
+  differing at all, one of them above 1e-5. The eight changes above are
+  therefore the patch, not the library version.
+
+  With that noise removed the remaining disagreement is 199 common solves, 35
+  differing at some level and 2 above 1e-5, `KISSING` at 2e-4 and `POLYGON` at
+  1e-4, the largest gap having come down from 5e-4. `POLYGON` is simply a
+  sensitive problem: it is also the one that moves between the two conventional
+  builds, so most of its earlier disagreement was MA57 version noise rather
+  than the substitution. Objectives differing somewhere in the fifth digit on a
+  third of the problems is what computing the pivot a different way should look
+  like; nothing grows beyond that.
+
+  The recipe, should it be needed again: the pivot patch ports to 2025.7.21
+  unchanged in substance, three `RINFO(20) = PIVOT` in `ma57/ma57d.f` at the
+  `-5`, `-6` and rank deficient sites, and the `pivot` field plus
+  `finfo%pivot = rinfo(20)` in `hsl_ma57/hsl_ma57d.f90`. MA57 needs `mc21`,
+  `mc22`, `mc34`, `mc47`, `mc59`, `mc64`, `mc71`, `hsl_zd11` and one of the
+  `metis/` wrappers, all of which 5.2.0 had bundled in `ddeps.f`. Compile them
+  into `<path>/src`, `ar` them into `<path>/lib/libhsl_ma57.a`, and point
+  `MA57PATH` there; leave `METISPATH` unset and link METIS at the final shared
+  library step instead, which avoids needing a static METIS.
 
 - The computed Moré-Sorensen pivot agrees with a patched MA57's real
   `finfo%pivot` to 7–11 significant digits over 55 samples.
