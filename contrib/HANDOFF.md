@@ -66,8 +66,10 @@ nothing else.
    alone and looked at later. Of the five problems that never finished before
    — `LAUNCH`, `LHAIFAM`, `NASH`, `OPTPRLOC`, `PALMER5ANE` — three now finish
    in seconds, so their earlier non-completion was the old serial run being
-   fragile rather than anything real. `LAUNCH` and `OPTPRLOC` still time out,
-   as does `DMN37143`, and all three finish without HSL.
+   fragile rather than anything real. `LAUNCH` and `OPTPRLOC` timed out on the
+   first sweep and no longer do; that was the patch, see below. What still
+   times out is the `DMN*` family, `DMN37143` in every configuration tried and
+   `DMN15103` in the last one.
 
    One trap, which cost a wasted hour-long run here. Leaving the HSL argument
    off does not disable HSL: `Pkg.develop` on this repo also carries over the
@@ -118,11 +120,11 @@ in the ABI, and in METIS. If HSL results ever look wrong again, check
   status regressions", which was measured against a conventional build with a
   patched MA57 and would need a source build to reproduce at this size.
 
-  The one thing worth returning to is that `LAUNCH` and `OPTPRLOC` time out at
-  30 minutes under MA57 and finish without it. That is a cost question rather
-  than a correctness one. `DMN37143` also times out here, but it does so in
-  every configuration tried, including a conventional build, so it is simply a
-  slow problem and not an MA57 path issue.
+  `LAUNCH` and `OPTPRLOC` time out at 30 minutes here and finish without MA57.
+  That turned out to be a defect in the patch rather than anything about MA57,
+  and is fixed; the entry below has it. `DMN37143` also times out, but it does
+  so in every configuration tried, including conventional builds, so it is
+  simply a slow problem.
 - 308 CUTEst problems, the JLL against the conventional Algencan with the
   locally patched MA57 that the 55 problem comparison used, same selection, 6
   jobs, the library selected through `ALGENCAN_LIB_DIR`. Eight problems change
@@ -137,6 +139,10 @@ in the ABI, and in METIS. If HSL results ever look wrong again, check
   strongest evidence for the Moré-Sorensen substitution, that being the only
   algorithmic difference between the two builds. It is not spotless: "no status
   regressions" does not survive at this size, four problems go the wrong way.
+
+  **Superseded by the entry on the removed fallback below.** Four of those
+  eight, including both timeouts, were an unnecessary safeguard in the patch
+  rather than the substitution, and are gone.
 
 - The MA57 version was ruled out as the cause of those four. Rebuilding the
   conventional Algencan against libHSL 2025.7.21, so that both sides use the
@@ -164,8 +170,51 @@ in the ABI, and in METIS. If HSL results ever look wrong again, check
   `MA57PATH` there; leave `METISPATH` unset and link METIS at the final shared
   library step instead, which avoids needing a static METIS.
 
+- **The dogleg fallback has been removed from the patch, and it is what
+  `LAUNCH` and `OPTPRLOC` were.** The patch used to return `msinfo = 5` when
+  `ls` failed to advance, so that `betra` would take a dogleg direction rather
+  than a null step. That was written when the pivot was left at zero and `ls`
+  therefore could not advance at all; once the pivot is reconstructed it
+  advances normally and the test is redundant. It also pre-empts the
+  `iter > maxit` bound that already terminates the loop: instrumented on
+  `OPTPRLOC` it fired 71,939,942 times in 240 seconds while the iteration limit
+  was reached zero times, a livelock where ALGENCAN had a terminating loop.
+  Removing it leaves the patch doing only run-time MA57 detection and the pivot
+  reconstruction, which is all it was ever meant to do.
+
+  Rebuilt and swept again, against the same conventional build: seven status
+  changes instead of eight, and 203 solved to first order, the same as the
+  conventional build. `LAUNCH` goes from a 30 minute timeout to 3.4 seconds and
+  `OPTPRLOC` to 2.7 seconds, both matching the conventional objective, and
+  `NGONE` returns to `first_order`. `HS106` and `HIMMELBJ`, which the JLL
+  solves and the source build does not, are unaffected. Of the 201 both solve,
+  200 agree to better than 1e-5, `POLYGON` alone above it at 1e-4, down from
+  two problems and 2e-4.
+
+  Two differences appear that were not there before, both mild. `HS99EXP` has
+  the same objective to nine digits in every run and only flips status, like
+  `ACOPR30`, so it is a feasibility tolerance boundary rather than a different
+  answer. `DMN15103` crosses the 30 minute limit, having taken 248 seconds
+  conventionally and 920 with the old patch; without the early exit `moresor`
+  runs to its natural bound, and the `DMN*` family was already the slow corner
+  of this selection.
+
+  What remains, and is genuinely the substitution: `ACOPR30` and `HS99EXP` flip
+  status at an unchanged objective, `AGG` and `CRESC50` move between two
+  failure statuses, and `HS106` and `HIMMELBJ` are solved that were not.
+
 - The computed Moré-Sorensen pivot agrees with a patched MA57's real
-  `finfo%pivot` to 7–11 significant digits over 55 samples.
+  `finfo%pivot` to 7–11 significant digits over 55 samples. Measured again at
+  308 problem scale, by building a conventional Algencan that computes both and
+  prints them, that holds for the early iterations and in the well conditioned
+  range: `NGONE`, `SWOPF` and `EXPFITA` agree to 1e-13 or better, several
+  samples bit identical. It does not hold everywhere. When the true pivot falls
+  to the level where summing the quadratic form cancels, the reconstruction
+  loses it: on `HS106` MA57 reports 5.68e-14 and the formula returns exactly
+  zero. `LAUNCH` sits in between, agreeing to 1e-6 rather than 1e-13. The
+  earlier 55 samples evidently missed both tails. This matters less than it
+  sounds, since a pivot that small leaves the safeguard it feeds inactive, but
+  it is not a formula that reproduces `finfo%pivot` unconditionally.
 - Everything HSL related is verified only on `x86_64-linux-gnu`. CI proves the
   other platforms build, not that MA57 works there. Licensed HSL ships no
   Windows, i686, armv6l/v7l or riscv64 build, so those users get truncated

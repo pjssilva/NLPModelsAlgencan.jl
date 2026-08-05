@@ -127,12 +127,13 @@ what matter.
 
 ## Known slow problems
 
-Three problems hit the 30 minute limit on an HSL enabled build and finish on
-one without it: `LAUNCH`, `OPTPRLOC` and `DMN37143`. Whether they are slow or
-stuck is still unknown, but the limit now bounds them either way and they are
-recorded as `TIMEOUT` instead of holding up the sweep.
+The `DMN*` family is the slow corner of this selection, several taking 900 to
+1500 seconds, and `DMN37143` goes over the 30 minute limit in every
+configuration tried, `DMN15103` in some. They are recorded as `TIMEOUT` and
+bounded rather than holding up the sweep.
 
-`LAUNCH` is the long standing case, over 40 minutes on HSL against a
-conventional build that solves it. `DMN37143` is the least suspicious of the
-three: the whole `DMN*` family is slow here, several of them taking 900 to
-1500 seconds, so it may simply be over the line rather than stuck.
+`LAUNCH` and `OPTPRLOC` used to belong here, `LAUNCH` being the long standing
+case at over 40 minutes against a conventional build that solved it. Both were
+a redundant safeguard in the Algencan patch that livelocked instead of
+terminating, not a property of the problems; with it removed they take 3.4 and
+2.7 seconds. If they reappear, suspect the patch before the problems.
