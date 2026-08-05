@@ -27,8 +27,17 @@ time to `Algencan_jll`:
 
 **Yggdrasil PR #14301**, branch `algencan` in the fork clone at
 `~/documentos/programas/Yggdrasil_Algencan`, commit `0a45f6fd`, pushed. Builds
-Algencan with run time HSL detection. CI green on all platforms. Awaiting
-review; @amontoison offered a 30 minute call.
+Algencan with run time HSL detection. CI green on all platforms, mergeable.
+
+Quiet since 29 July. The description has been rewritten to describe the HSL
+aware recipe, since it still described the original one, and a comment points
+@imciner2 and @odow at what changed. One question is open, asked of
+@amontoison by email rather than in the thread: whether to link `libhsl`
+instead of `libhsl_subset`. Today that does not work, because the public
+`libhsl` exports no `__hsl_ma57_double_MOD_*` symbols and neither build
+exports `ma57_available`, but he could add them to the dummy as he did for
+MA86. Switching would change the link line and one bullet of the description,
+nothing else.
 
 ## What is left
 
@@ -40,7 +49,12 @@ review; @amontoison offered a 30 minute call.
 4. Push `jll-migration`, merge to master, register 0.9.0.
 5. Optionally enable the macOS and Windows CI matrix entries, now that the JLL
    covers them and no compiler is needed.
-6. Run the wider CUTEst sweep, on a machine with cores to spare:
+6. Run the wider CUTEst sweep, on a machine with cores to spare. **Not started.**
+   It was left until the pull request is accepted, because after registration
+   the setup is trivial, but it does not have to wait: deploying the JLL
+   locally, as below, works today, and a clean sweep over a few hundred
+   problems is the strongest evidence the patch is safe. Worth doing sooner if
+   the review stays quiet, since the number can go straight into the PR.
 
    ```bash
    cd contrib/hsl-check
