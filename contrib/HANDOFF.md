@@ -118,10 +118,32 @@ in the ABI, and in METIS. If HSL results ever look wrong again, check
   status regressions", which was measured against a conventional build with a
   patched MA57 and would need a source build to reproduce at this size.
 
-  The one thing worth returning to is that `LAUNCH`, `OPTPRLOC` and `DMN37143`
-  time out at 30 minutes under MA57 and all three finish without it. That is a
-  cost question rather than a correctness one, and `DMN37143` is the least
-  suspicious of the three, the whole `DMN*` family being slow here.
+  The one thing worth returning to is that `LAUNCH` and `OPTPRLOC` time out at
+  30 minutes under MA57 and finish without it. That is a cost question rather
+  than a correctness one. `DMN37143` also times out here, but it does so in
+  every configuration tried, including a conventional build, so it is simply a
+  slow problem and not an MA57 path issue.
+- 308 CUTEst problems, the JLL against the conventional Algencan with the
+  locally patched MA57 that the 55 problem comparison used, same selection, 6
+  jobs, the library selected through `ALGENCAN_LIB_DIR`. Eight problems change
+  status. The JLL solves `HIMMELBJ` and `HS106`, which the source build does
+  not; the source build solves `ACOPR30` and `NGONE`, and `LAUNCH` and
+  `OPTPRLOC`, which the JLL runs into the 30 minute limit. `AGG` and `CRESC50`
+  go from `exception` to `infeasible`. Of the 199 both solve, 197 agree in the
+  objective to better than 1e-5, the exceptions being `KISSING` at 2e-4 and
+  `POLYGON` at 5e-4.
+
+  This is the closest thing to an apples to apples comparison here, and the
+  strongest evidence for the Moré-Sorensen substitution, that being the only
+  algorithmic difference between the two builds. It is not spotless: "no status
+  regressions" does not survive at this size, four problems go the wrong way.
+  Before reading much into those four, note that the source build pairs
+  Algencan with MA57 5.2.0 while the JLL uses 2025.7.21, and that it was
+  compiled in July 2024 from a tree whose provenance beyond `contrib/hsl` is
+  not established here. An MA57 version difference is not excluded. Settling
+  that means rebuilding the conventional Algencan against libHSL 2025.7.21;
+  the pivot patch does port, every anchor it needs exists in those sources.
+
 - The computed Moré-Sorensen pivot agrees with a patched MA57's real
   `finfo%pivot` to 7–11 significant digits over 55 samples.
 - Everything HSL related is verified only on `x86_64-linux-gnu`. CI proves the
