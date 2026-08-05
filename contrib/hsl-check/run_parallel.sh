@@ -27,13 +27,27 @@ if [ ! -f "$OUT" ]; then
         echo "# timeout       ${TIMEOUT}s per problem"
         echo "# started       $(date -Iseconds)"
         julia --project="$ENVDIR" -e '
-            using NLPModelsAlgencan, LinearAlgebra
+            using NLPModelsAlgencan, LinearAlgebra, Libdl
             NLPModelsAlgencan.ensure_lp64_blas!()
-            for (n, u) in (("Algencan_jll","07ede149-d6eb-53b6-8e3c-1a25465d123c"),
-                           ("HSL_jll","017b0a0e-03f4-516a-9b91-836bbd1904dd"))
-                v = try string(pkgversion(Base.require(Base.PkgId(Base.UUID(u), n)))) catch; "none" end
-                println("# ", rpad(n, 13), " ", v)
-            end
+            # Deliberately not a loop: assigning to an outer variable inside a
+            # top level for loop lands in soft scope, so hsl would stay nothing
+            # and the ma57 line below would always read unknown.
+            jll(n, u) = try Base.require(Base.PkgId(Base.UUID(u), n)) catch; nothing end
+            ver(m) = m === nothing ? "none" : string(pkgversion(m))
+            algencan = jll("Algencan_jll", "07ede149-d6eb-53b6-8e3c-1a25465d123c")
+            hsl      = jll("HSL_jll", "017b0a0e-03f4-516a-9b91-836bbd1904dd")
+            println("# ", rpad("Algencan_jll", 13), " ", ver(algencan))
+            println("# ", rpad("HSL_jll", 13), " ", ver(hsl))
+            # The version alone does not say whether MA57 is really there: the
+            # public stub and the licensed release can carry the same version,
+            # and both export the MA57 symbols. Only this module variable is
+            # .true. when the loaded library actually implements MA57, and it
+            # is exactly what Algencan tests at run time to choose between
+            # MA57 and the truncated Newton inner solver.
+            println("# ", rpad("ma57", 13), " ", try
+                s = dlsym(dlopen(hsl.libhsl_subset), :__hsl_ma57_double_MOD_ma57_available)
+                unsafe_load(Ptr{Int32}(s)) != 0
+            catch; "unknown" end)
             println("# BLAS          ", BLAS.get_config())'
         echo -e "# problem\tstatus\tobjective\tseconds"
     } > "$OUT"

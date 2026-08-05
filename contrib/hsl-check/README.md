@@ -72,16 +72,37 @@ Both scripts read their configuration from the environment:
 The licensed HSL is the first argument, defaulting to
 `~/documentos/programas/HSL/HSL_jll.jl/HSL_jll.jl.v2025.7.21`. Without it the
 run still works, but `ma57_available` is false and every problem takes the
-truncated Newton path, which is a useful comparison in its own right.
+truncated Newton path, which is a useful comparison in its own right. Pass a
+path that does not exist, not an empty string: the default fills in for an
+empty argument and you get the licensed HSL back without noticing.
+
+Leaving the argument off is not by itself enough to disable HSL, and used not
+to be handled at all. `Pkg.develop` on this repo also carries over whatever
+`HSL_jll` is developed in its own `Manifest.toml`, so a licensed HSL can enter
+the environment without ever being asked for; a whole sweep then silently
+repeats the HSL run while the script prints a warning saying the opposite.
+`setup_and_run.sh` now calls `Pkg.free("HSL_jll")` in that branch to put it
+back on the public stub. Confirm it worked by reading the `ma57` line of the
+results header rather than the warning.
 
 The whole selection is 308 problems; `CUTEST_CHECK_LIMIT=308` runs all of them.
 
 ## Reading the output
 
 The header records host, Julia version, `Algencan_jll` and `HSL_jll` versions,
-and the BLAS configuration. Check that first: if it shows only an `[ILP64]`
-backend and the run is supposed to be using MA57, the numbers are not
-trustworthy, and `stderr` will be full of
+whether MA57 is really reachable, and the BLAS configuration. Check it first.
+
+The `ma57` line is the one that says which solver actually ran. It reads the
+`ma57_available` module variable out of the `libhsl_subset` that got loaded,
+which is what Algencan itself tests at run time, so `true` means MA57 and
+`false` means truncated Newton. Do not infer this from the `HSL_jll` version:
+the public stub and the licensed release can carry the same version string,
+and both export the MA57 symbols, so neither the version nor `nm` tells them
+apart.
+
+Then check the BLAS line: if it shows only an `[ILP64]` backend and the run is
+supposed to be using MA57, the numbers are not trustworthy, and `stderr` will
+be full of
 
 ```
 Error: no BLAS/LAPACK library loaded for dgemm_()
@@ -104,8 +125,14 @@ gradient criterion, not on function values, so agreement to about 1e-5 in the
 objective is as much as the stopping test guarantees. Changes in `status` are
 what matter.
 
-## Known slow problem
+## Known slow problems
 
-`LAUNCH` did not finish within 40 minutes on an HSL enabled build while a
-conventional one solved it. It was never run to completion, so whether it is
-slow or stuck is unknown. It is worth watching.
+Three problems hit the 30 minute limit on an HSL enabled build and finish on
+one without it: `LAUNCH`, `OPTPRLOC` and `DMN37143`. Whether they are slow or
+stuck is still unknown, but the limit now bounds them either way and they are
+recorded as `TIMEOUT` instead of holding up the sweep.
+
+`LAUNCH` is the long standing case, over 40 minutes on HSL against a
+conventional build that solves it. `DMN37143` is the least suspicious of the
+three: the whole `DMN*` family is slow here, several of them taking 900 to
+1500 seconds, so it may simply be over the line rather than stuck.

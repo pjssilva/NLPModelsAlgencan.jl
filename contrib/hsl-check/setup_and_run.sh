@@ -36,12 +36,26 @@ using Pkg
 repo, hsl, ajll = ARGS[1], ARGS[2], ARGS[3]
 Pkg.develop(path=repo)
 isempty(ajll) || Pkg.develop(path=ajll)
+Pkg.add("CUTEst")
 if !isempty(hsl) && isdir(hsl)
     Pkg.develop(path=hsl)        # licensed HSL, overriding the public stub
 else
+    # Developing the repo above also carries over whatever HSL_jll is
+    # developed in its own Manifest, so a licensed HSL arrives here without
+    # ever being asked for, and the run silently becomes a duplicate of the
+    # HSL one while this branch prints a warning saying the opposite.
+    # Pkg.free puts HSL_jll back on the public stub from the registry, whose
+    # ma57_available is false. Note that no apostrophes may appear anywhere
+    # in this block: it is a single quoted argument to julia -e, and one
+    # would end the string. Check the ma57 line of the results header rather
+    # than trusting the warning below.
+    try
+        Pkg.free("HSL_jll")
+    catch
+        # already on the registry, nothing to detach
+    end
     @warn "no licensed HSL at $hsl; MA57 will be unavailable and Algencan will use truncated Newton"
 end
-Pkg.add("CUTEst")
 Pkg.instantiate()
 Pkg.status()
 ' "$REPO" "$HSL" "$ALGENCAN_JLL"

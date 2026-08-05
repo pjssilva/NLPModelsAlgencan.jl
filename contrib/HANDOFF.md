@@ -49,12 +49,11 @@ nothing else.
 4. Push `jll-migration`, merge to master, register 0.9.0.
 5. Optionally enable the macOS and Windows CI matrix entries, now that the JLL
    covers them and no compiler is needed.
-6. Run the wider CUTEst sweep, on a machine with cores to spare. **Not started.**
-   It was left until the pull request is accepted, because after registration
-   the setup is trivial, but it does not have to wait: deploying the JLL
-   locally, as below, works today, and a clean sweep over a few hundred
-   problems is the strongest evidence the patch is safe. Worth doing sooner if
-   the review stays quiet, since the number can go straight into the PR.
+6. Run the wider CUTEst sweep, on a machine with cores to spare. **Done, on
+   quorra, 5 August 2026**: two runs, 6 jobs, all 308 problems, on a locally
+   deployed JLL, once with MA57 reachable and once without. The result files
+   are scratch output of one machine and are not kept here; see "Numbers worth
+   keeping" below for what came out of them.
 
    ```bash
    cd contrib/hsl-check
@@ -64,11 +63,20 @@ nothing else.
 
    One problem per process, dynamically scheduled, with a 30 minute limit each.
    Results are appended as they finish and reruns resume, so it can be left
-   alone and looked at later. Five problems were never finished here —
-   `LAUNCH`, `LHAIFAM`, `NASH`, `OPTPRLOC`, `PALMER5ANE` — and `LAUNCH` in
-   particular ran over 40 minutes on an HSL build where a conventional one
-   solves it. Slow or stuck is unknown; the time limit now bounds it either
-   way, and it will be recorded as `TIMEOUT`.
+   alone and looked at later. Of the five problems that never finished before
+   — `LAUNCH`, `LHAIFAM`, `NASH`, `OPTPRLOC`, `PALMER5ANE` — three now finish
+   in seconds, so their earlier non-completion was the old serial run being
+   fragile rather than anything real. `LAUNCH` and `OPTPRLOC` still time out,
+   as does `DMN37143`, and all three finish without HSL.
+
+   One trap, which cost a wasted hour-long run here. Leaving the HSL argument
+   off does not disable HSL: `Pkg.develop` on this repo also carries over the
+   `HSL_jll` developed in its own `Manifest.toml`, so the licensed one arrives
+   unasked and the sweep silently repeats the HSL run while printing a warning
+   saying the opposite. `setup_and_run.sh` now calls `Pkg.free("HSL_jll")`, and
+   the results header carries an `ma57` line saying which solver actually ran.
+   Read that line, not the `HSL_jll` version: the public stub and the licensed
+   release can share a version string and both export the MA57 symbols.
 
 ## The one thing not to forget
 
@@ -90,6 +98,30 @@ in the ABI, and in METIS. If HSL results ever look wrong again, check
   patched MA57: no status regressions, one problem the JLL solves that the
   source build does not. Objective differences around 1e-5 are expected,
   Algencan stops on a gradient criterion.
+
+- 308 CUTEst problems, the same JLL with MA57 reachable and with it not, on
+  quorra, 6 jobs. Nothing crashed in either: no `CRASHED` rows, no Julia level
+  exceptions, 308 of 308 recorded both times. MA57 solves 201 to first order
+  against 196, 25 problems change status, and of the 190 both solve, 183 agree
+  in the objective to better than 1e-5. Of the seven that do not, three are
+  marginal and four are plainly different local minima, with MA57 finding the
+  better point on `OET6`, `OET7` and `ROBOT`. `SWOPF`, which is what exposed
+  the ILP64 disaster, now agrees to eight significant figures in 2.6 seconds.
+
+  Read this for what it is. Two sound methods, a trust region over MA57 and
+  truncated Newton, have no reason to agree problem by problem or for either
+  to dominate over a selection this broad, so the 25 changes of status are the
+  expected outcome and not a finding. Eleven problems go the way of MA57 and
+  eight the other way; that split says little on its own. What the sweep is
+  evidence for is narrower and worth more: the HSL path does not crash, does
+  not hang the sweep and does not compute nonsense. It is not evidence of "no
+  status regressions", which was measured against a conventional build with a
+  patched MA57 and would need a source build to reproduce at this size.
+
+  The one thing worth returning to is that `LAUNCH`, `OPTPRLOC` and `DMN37143`
+  time out at 30 minutes under MA57 and all three finish without it. That is a
+  cost question rather than a correctness one, and `DMN37143` is the least
+  suspicious of the three, the whole `DMN*` family being slow here.
 - The computed Moré-Sorensen pivot agrees with a patched MA57's real
   `finfo%pivot` to 7–11 significant digits over 55 samples.
 - Everything HSL related is verified only on `x86_64-linux-gnu`. CI proves the

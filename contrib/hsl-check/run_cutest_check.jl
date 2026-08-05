@@ -17,7 +17,7 @@ const LIST = get(ENV, "CUTEST_CHECK_LIST",
 const LIMIT = parse(Int, get(ENV, "CUTEST_CHECK_LIMIT", "60"))
 const TIME_LIMIT = parse(Float64, get(ENV, "CUTEST_CHECK_TIME_LIMIT", "600"))
 
-using NLPModelsAlgencan, CUTEst, LinearAlgebra
+using NLPModelsAlgencan, CUTEst, LinearAlgebra, Libdl
 
 # Which HSL is in play, and whether MA57 can actually be reached. Without an
 # LP64 backend registered libblastrampoline answers MA57's calls by writing to
@@ -28,10 +28,18 @@ function environment_banner()
     # BLAS line below reports what the solves will actually see rather than the
     # bare ILP64 configuration Julia starts with.
     NLPModelsAlgencan.ensure_lp64_blas!()
-    hsl = "none"
+    hsl, ma57 = "none", "unknown"
     try
         m = Base.require(Base.PkgId(Base.UUID("017b0a0e-03f4-516a-9b91-836bbd1904dd"), "HSL_jll"))
         hsl = string(pkgversion(m))
+        # The version alone does not say whether MA57 is really there: the
+        # public stub and the licensed release can carry the same version, and
+        # both export the MA57 symbols. Only this module variable is .true.
+        # when the loaded library actually implements MA57, and it is exactly
+        # what Algencan tests at run time to choose between MA57 and the
+        # truncated Newton inner solver.
+        s = dlsym(dlopen(m.libhsl_subset), :__hsl_ma57_double_MOD_ma57_available)
+        ma57 = string(unsafe_load(Ptr{Int32}(s)) != 0)
     catch
     end
     algencan = "unknown"
@@ -45,6 +53,7 @@ function environment_banner()
     # julia         $(VERSION)
     # Algencan_jll  $algencan
     # HSL_jll       $hsl
+    # ma57          $ma57
     # BLAS          $(BLAS.get_config())
     # started       $(round(Int, time()))
     """
