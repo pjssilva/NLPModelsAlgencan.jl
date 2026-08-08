@@ -26,22 +26,23 @@ time to `Algencan_jll`:
   one without, serially or several problems at a time.
 
 **Yggdrasil PR #14301**, branch `algencan` in the fork clone at
-`~/documentos/programas/Yggdrasil_Algencan`, commit `0a45f6fd`, pushed. Builds
-Algencan with run time HSL detection. CI green on all platforms, mergeable.
+`~/documentos/programas/Yggdrasil_Algencan`, commit `4ab57f90`, pushed and
+**accepted**. Builds Algencan with run time HSL detection, MA57 only.
 
-Quiet since 29 July. The description has been rewritten to describe the HSL
-aware recipe, since it still described the original one, and a comment points
-@imciner2 and @odow at what changed. One question is open, asked of
-@amontoison by email rather than in the thread: whether to link `libhsl`
-instead of `libhsl_subset`. Today that does not work, because the public
-`libhsl` exports no `__hsl_ma57_double_MOD_*` symbols and neither build
-exports `ma57_available`, but he could add them to the dummy as he did for
-MA86. Switching would change the link line and one bullet of the description,
-nothing else.
+The open question about linking `libhsl` instead of `libhsl_subset` is closed.
+@amontoison: `libhsl_subset` is the right one precisely because Algencan uses
+the Fortran modules; reaching `libhsl` would mean calling the F77 symbols
+directly, which is a refactor of `lssma57.f90` and friends. Ipopt and Uno both
+do exactly that — they declare the structures themselves in C, hold the
+factorization handle as an opaque pointer, dlopen the user's `libhsl` at run
+time and resolve the C API. Neither links HSL at build time and neither uses a
+Fortran module. That is worth knowing for two reasons: it is the reason nobody
+had noticed the module problems described below, and it is the shape of any
+future rewrite, should the module route ever become untenable.
 
 ## What is left
 
-1. Wait for #14301 to merge, then for `Algencan_jll` to appear in General.
+1. #14301 is accepted. Wait for `Algencan_jll` to appear in General.
 2. `Pkg.free("Algencan_jll")` in this repo, re-resolve, re-run the tests. Every
    test so far used a locally deployed JLL, not the registered one.
 3. Delete `contrib/yggdrasil/` — the recipe's home is Yggdrasil, and a copy here
@@ -79,6 +80,99 @@ nothing else.
    the results header carries an `ma57` line saying which solver actually ran.
    Read that line, not the `HSL_jll` version: the public stub and the licensed
    release can share a version string and both export the MA57 symbols.
+
+7. Add MA86 and MA97, once @amontoison has fixed the Fortran modules in the
+   public `HSL_jll`. Agreed with him on 6 August 2026: ship #14301 with MA57
+   only, he fixes the modules over the following weeks, then we try again. See
+   "MA86 and MA97" below for everything needed to pick that up.
+
+## MA86 and MA97
+
+Blocked on the public `HSL_jll`, not on Algencan and not on HSL. The licensed
+`libhsl_subset` implements all three solvers correctly; three of the Fortran
+modules shipped in the public artifact do not match it. Since a JLL is built
+against the public modules and only meets the licensed library at run time,
+those modules are an ABI contract, and MA57 is the only one that honours it.
+
+| module | shipped | faithful | symptom |
+|---|---|---|---|
+| `hsl_mc69_double.mod` | 742 B | ~47 kB | only `mc69_available`; `lssma86.f90` cannot compile |
+| `hsl_ma86_double.mod` | 82324 B | 83928 B | `ma86_factor` returns `info%flag = 1071644672` |
+| `hsl_ma97_double.mod` | `ma97_akeep` 64 bits | 8512 bits | caller allocates 8 bytes, library writes 1064 |
+
+`1071644672` is `0x3FE00000`, the upper half of the double `0.5`, so `info%flag`
+is read at the wrong offset. That is worse than an error: Algencan tests
+`info%flag .ge. 0`, concludes a failed factorization succeeded, and spins in
+`newtd_` forever. `ma97_control` and `ma97_info` are byte exact; only `akeep`
+is truncated.
+
+Reproductions are in `~/documentos/programas/hsl-jll-module-report`, four short
+Fortran programs plus a script that builds each twice against the same licensed
+library, once with the shipped modules and once with modules it generates from
+the `hsl_subset` sources. It needs only gfortran and contains no licensed code;
+this is what was sent to @amontoison. Faithful modules are produced with the
+`hsl_subset` project's own recipe, `gfortran -cpp -E -I src/include` with no
+`-DREAL_32`, which is what its `meson.build` `gen_double` generator does.
+
+Once the modules are fixed, our side is small and was written and tested:
+
+- `lssma86.f90`: `lss_ma86 = .true.` becomes `lss_ma86 = ma86_available`.
+- `lssma97.f90`: the same with `ma97_available`.
+- `build_tarballs.jl`: symlink `hsl_ma86_double.mod` and `hsl_ma97_double.mod`
+  into `hsldetect` beside MA57, and the Makefile picks the real `lssmaNN.o`
+  over the stub for each module it finds there.
+- Do **not** add `-fopenmp`. Both carry `!$omp threadprivate` directives, which
+  are comments unless the compiler is told otherwise, and Algencan keeps state
+  in common blocks. A serial build is the conservative choice and is what was
+  tested.
+- `lssma97.f90` ships with CRLF line endings, so a patch touching it carries
+  CRLF context lines and Yggdrasil's root `.gitattributes` (`* text=auto
+  eol=lf`) will strip them and silently break it. Add a
+  `bundled/patches/.gitattributes` with `<patch name> -text diff`, as
+  `A/algoim/bundled/patches` does.
+
+How to exercise them, which is not obvious. Algencan takes the solver through
+the specification file or `vparam`, as `SOLVER [SCALING]`, two words, the
+scaling optional and defaulting to `MC64`:
+
+| slot | keyword | solvers | scalings |
+|---|---|---|---|
+| trust regions | `LINEAR-SYSTEMS-SOLVER-IN-TRUST-REGIONS` | **MA57 only** | `MC64`, `NONE` |
+| Newton line search | `LINEAR-SYSTEMS-SOLVER-IN-NEWTON-LINE-SEARCH` | MA57, MA86, MA97 | MA57 `MC64`/`NONE`; MA86 adds `MC77`; MA97 adds `MC77`, `MC30` |
+| acceleration | `LINEAR-SYSTEMS-SOLVER-IN-ACCELERATION-PROCESS` | MA57, MA86, MA97 | as above |
+
+The `...-INNER-SOLVER` variants (`TRUST-REGIONS-INNER-SOLVER`,
+`NEWTON-LINE-SEARCH-INNER-SOLVER`) set the inner solver as well as the linear
+one. From Julia any unrecognised keyword argument becomes a `vparam` line with
+underscores turned into dashes, so
+`algencan(nlp; NEWTON_LINE_SEARCH_INNER_SOLVER = "MA86 MC77")` is how you ask.
+
+Three things that cost time when testing this:
+
+- **MA86 and MA97 are never defaults and never reach the trust region.** The
+  cascade in `algencan.f90` gives `lsssubTR` only `MA57` or `NONE`, and
+  `fparam.f90` has exactly one `setalgparam(val_lsssubTR = ...)`, guarded by
+  `MA57`. They are alternatives for the Newton and acceleration systems only,
+  which is consistent with `lssfac_ma86` and `lssfac_ma97` never assigning
+  `pval`, so they cannot feed the Moré-Sorensen safeguard.
+- **Acceleration does not follow the Newton setting.** `algencan.f90` sets
+  `lsssubACC = lsssubNW` before `procpar` reads the specification file, so
+  overriding only the Newton keyword leaves acceleration on MA57. Set both.
+- **`libhsl_subset` resolves BLAS through libblastrampoline.** Outside Julia,
+  with no backend registered, MA86 jumps through a null trampoline and
+  segfaults for reasons that have nothing to do with the solver. Preload a real
+  BLAS or put a Julia `lib/julia` on `LD_LIBRARY_PATH`.
+
+Worth having: with faithful modules, a build of Algencan against the licensed
+`libhsl_subset` solves CUTEst `HS106` with MA86 to the true optimum,
+7049.24802053, where MA57 stops at an infeasible 7239.49565125.
+
+When we do depend on a fixed `HSL_jll`, it needs a version bound, and the
+licensed packages are versioned by date (`2025.7.21`) while the registered one
+is `4.0.6`. Ipopt.jl expresses this as `HSL_jll = "3, 4, 2023, 2024, 2025"`.
+Our floor is higher than theirs: `2023.11.7` ships no `libhsl_subset` at all
+and exports no `*_available` symbols, so a licensee on it gets a hard
+`libhsl_subset.so => not found` rather than a fallback to truncated Newton.
 
 ## The one thing not to forget
 
