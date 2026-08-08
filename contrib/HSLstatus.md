@@ -7,7 +7,7 @@ still true into the manual and delete the rest.
 
 For how the pieces actually work, read the "Developer notes" page in the manual
 instead; for the full HSL investigation,
-`contrib/yggdrasil/patched_algencan_for_jll.md`.
+`contrib/patched_algencan_for_jll.md`.
 
 ## What was done
 
@@ -49,8 +49,13 @@ future rewrite, should the module route ever become untenable.
 1. #14301 is accepted. Wait for `Algencan_jll` to appear in General.
 2. `Pkg.free("Algencan_jll")` in this repo, re-resolve, re-run the tests. Every
    test so far used a locally deployed JLL, not the registered one.
-3. Delete `contrib/yggdrasil/` — the recipe's home is Yggdrasil, and a copy here
-   would go stale. Keep `contrib/hsl` and `contrib/hsl-check`.
+3. **Done.** `contrib/yggdrasil/` is gone. The recipe's home is the Yggdrasil
+   fork at `~/documentos/programas/Yggdrasil_Algencan`, and a second copy here
+   could silently drift from the one that actually ships: during the August
+   2026 work both copies were edited and were briefly out of step, with a
+   broken patch in one of them. The investigation writeup it contained was
+   worth keeping and is now `contrib/patched_algencan_for_jll.md`. Old
+   revisions of the recipe copy remain in git history if ever needed.
 4. Push `jll-migration`, merge to master, register 0.9.0.
 5. Optionally enable the macOS and Windows CI matrix entries, now that the JLL
    covers them and no compiler is needed.
