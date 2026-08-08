@@ -1,9 +1,13 @@
-# Where things stand — session notes, 2026-07-29
+# Reaching HSL from NLPModelsAlgencan: where things stand
 
-Working notes for picking this up on another machine. Temporary: delete once
-`Algencan_jll` is registered and 0.9.0 is out. For how the pieces actually work,
-read the "Developer notes" page in the manual instead; for the full HSL
-investigation, `contrib/yggdrasil/patched_algencan_for_jll.md`.
+Status of the work to reach HSL's linear solvers through `Algencan_jll`: what
+is done, what is left, and what MA86 and MA97 are still waiting on. Last
+updated 7 August 2026. Keep until that work is finished, then fold whatever is
+still true into the manual and delete the rest.
+
+For how the pieces actually work, read the "Developer notes" page in the manual
+instead; for the full HSL investigation,
+`contrib/yggdrasil/patched_algencan_for_jll.md`.
 
 ## What was done
 
@@ -82,7 +86,7 @@ future rewrite, should the module route ever become untenable.
    release can share a version string and both export the MA57 symbols.
 
 7. Add MA86 and MA97, once @amontoison has fixed the Fortran modules in the
-   public `HSL_jll`. Agreed with him on 6 August 2026: ship #14301 with MA57
+   public `HSL_jll`. Agreed with him on 7 August 2026: ship #14301 with MA57
    only, he fixes the modules over the following weeks, then we try again. See
    "MA86 and MA97" below for everything needed to pick that up.
 
