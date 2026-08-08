@@ -46,9 +46,17 @@ future rewrite, should the module route ever become untenable.
 
 ## What is left
 
-1. #14301 is accepted. Wait for `Algencan_jll` to appear in General.
-2. `Pkg.free("Algencan_jll")` in this repo, re-resolve, re-run the tests. Every
-   test so far used a locally deployed JLL, not the registered one.
+1. **Done.** #14301 is accepted and `Algencan_jll` 3.1.1+0 is in General.
+2. **Done, 7 August 2026.** `Pkg.free("Algencan_jll")` here and in the sweep
+   environment, re-resolved, tests pass against the registered build rather
+   than a locally deployed one.
+
+   Worth having checked, since the registry carries a single build and it was
+   not obvious whether it predated the fix: it does not. With the registered
+   JLL and a licensed HSL, `OPTPRLOC` solves in 1.6 s and `LAUNCH` in 2.3 s,
+   to the same objectives as the local build, so the merged recipe includes
+   `4ab57f90` and the dogleg fallback is gone from what users get. Had it
+   timed out instead, the recipe would have needed rebuilding.
 3. **Done.** `contrib/yggdrasil/` is gone. The recipe's home is the Yggdrasil
    fork at `~/documentos/programas/Yggdrasil_Algencan`, and a second copy here
    could silently drift from the one that actually ships: during the August
