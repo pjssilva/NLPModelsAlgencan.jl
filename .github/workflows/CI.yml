@@ -10,17 +10,24 @@ jobs:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
+      # Report every platform rather than cancelling the rest on the first
+      # failure; the point of the macOS and Windows jobs is to find out what
+      # breaks there.
+      fail-fast: false
       matrix:
-        version:
-          - '1.10'
-        os:
-          # Algencan_jll also ships macOS and Windows binaries, so these can be
-          # enabled once the test dependencies are known to work there.
-          - ubuntu-latest
-          # - macOS-latest
-          # - windows-latest
-        arch:
-          - x64
+        # Spelled out per platform because the architectures differ:
+        # GitHub's macOS runners are Apple Silicon, and Algencan has had an
+        # aarch64 specific bug before, so that is the interesting one to test.
+        include:
+          - os: ubuntu-latest
+            arch: x64
+            version: '1.10'
+          - os: macOS-latest
+            arch: aarch64
+            version: '1.10'
+          - os: windows-latest
+            arch: x64
+            version: '1.10'
     steps:
       - uses: actions/checkout@v1
       - uses: julia-actions/setup-julia@latest
@@ -29,10 +36,16 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
+      # Documentation and coverage are published once, from Linux. Running them
+      # on every platform would have the three jobs racing to deploy the same
+      # docs and uploading three coverage reports for one commit.
       - uses: julia-actions/julia-docdeploy@latest
+        if: matrix.os == 'ubuntu-latest'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: julia-actions/julia-processcoverage@v1
+        if: matrix.os == 'ubuntu-latest'
       - uses: codecov/codecov-action@v1
+        if: matrix.os == 'ubuntu-latest'
         with:
           file: lcov.info
