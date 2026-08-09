@@ -84,13 +84,11 @@ involved. Algencan reports what it found in its own output:
  lsslvr in TR           =            MA57/NONE
 ```
 
-Only MA57 is supported at the moment. MA86 and MA97 are waiting on a fix to the
-Fortran modules shipped in the public `HSL_jll`.
+Only MA57 is supported at the moment. MA86 and MA97 will be added in the future.
 
-### Using your own Algencan build
+### Building Algencan yourself
 
-If you would rather build Algencan yourself — for instance against a locally
-patched MA57 — point the package at your shared library:
+Fully supported. Point the package at your own shared library:
 
 ```julia
 using NLPModelsAlgencan
@@ -100,8 +98,14 @@ set_algencan_library!("/path/to/libalgencan.so")
 Then restart Julia. The path is stored as a preference of the active project, so
 it applies to that project alone and survives restarts. Call
 `set_algencan_library!(nothing)` to go back to the library from `Algencan_jll`.
-The patches that build applies live in [`contrib/hsl`](contrib/hsl), and the
-[wiki page on compiling HSL
+
+We must recall that such a library has to be built using a patched version of
+MA57 from HSL as suggested in the original Algencan installation instructions.
+This would avoid an extra (sparse) matrix times vector operation that the
+patched version of libAlgencan_jll uses to avoid touching the HSL code. 
+
+The patches are in [`contrib/hsl`](contrib/hsl), and the [wiki page on compiling
+HSL
 libraries](https://github.com/pjssilva/NLPModelsAlgencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-NLPModelsAlgencan.jl)
 documents the process.
 

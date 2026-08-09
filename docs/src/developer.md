@@ -197,8 +197,20 @@ which raises the lower bound on the trust region multiplier so that the
 iteration can leave the region where the matrix is indefinite. The value can be
 computed rather than queried: with the vector `u` that `scalcu` already returns,
 the pivot the factorization rejected is the quadratic form `u'(B + lI)u` over
-the leading block. Checked against a patched MA57 that reports the real pivot,
-the two agree to 7 to 11 significant digits.
+the leading block.
+
+Checked against a patched MA57 that reports the real pivot, by building an
+Algencan that computes both and prints them, the two agree to eight or more
+significant digits in the early iterations and in the well conditioned range —
+on CUTEst `NGONE`, `SWOPF` and `EXPFITA` to 1e-13 or better, several samples
+bit identical. It is not unconditional. When the true pivot falls to the level
+where summing the quadratic form cancels, the reconstruction loses it: on
+`HS106` MA57 reports `5.68e-14` and the formula returns exactly zero. That
+matters less than it sounds, since a pivot that small leaves the safeguard it
+feeds inactive, but it is a reconstruction rather than a reproduction, and it
+costs a pass over the matrix entries each time a pivot is rejected. A build
+against a locally patched MA57 avoids both, which is one reason
+`set_algencan_library!` remains supported.
 
 A licensed user enables MA57 by pointing a `Pkg` artifact override at their own
 `HSL_jll` build, the same way `HSL.jl` and other JuliaSmoothOptimizers packages
