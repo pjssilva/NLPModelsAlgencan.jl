@@ -34,6 +34,21 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+      # CUTEst, a test dependency, compiles decoded SIF problems at run time and
+      # so needs a Fortran compiler on the machine. The Linux runners ship one
+      # and CUTEst supplies its own on Windows, but macOS has neither. This is a
+      # requirement of the test harness only: the package itself needs no
+      # compiler, which is the point of taking the binary from Algencan_jll.
+      - name: Install gfortran (macOS only)
+        if: runner.os == 'macOS'
+        run: |
+          brew install gcc
+          # CUTEst looks for `gfortran`; Homebrew may only provide gfortran-NN.
+          if ! command -v gfortran >/dev/null; then
+            latest=$(ls "$(brew --prefix)"/bin/gfortran-* | sort -V | tail -1)
+            ln -sf "$latest" "$(brew --prefix)/bin/gfortran"
+          fi
+          gfortran --version
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
       # Documentation and coverage are published once, from Linux. Running them
