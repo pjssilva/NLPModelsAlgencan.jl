@@ -123,17 +123,14 @@ permanent; this one is not, so the details live there.
 
 ## The one thing not to forget
 
-`libhsl_subset` is LP64. Julia registers only an ILP64 BLAS backend, and
-libblastrampoline answers a call it cannot match by writing a line to stderr and
-returning **with the output untouched**. No error, no crash: MA57 factorizes
-stale data, healthy matrices come back indefinite, and the solver stops
-somewhere wrong. On CUTEst SWOPF that was 91629 factorizations and an infeasible
-answer, against 659 and the right one with an LP64 backend forwarded.
+`libhsl_subset` is LP64 and Julia registers only an ILP64 BLAS backend. An
+unmatched call returns **with the output untouched**, no error and no crash, so
+MA57 factorizes stale data and the solver stops somewhere wrong. If HSL results
+ever look wrong again, check `BLAS.get_config()` for an `[LP64]` entry and grep
+stderr for `no BLAS/LAPACK library loaded` before suspecting anything else.
 
-This cost most of a day and looked, in turn, like a bug in the patch, in MA57,
-in the ABI, and in METIS. If HSL results ever look wrong again, check
-`BLAS.get_config()` for an `[LP64]` entry and grep stderr for
-`no BLAS/LAPACK library loaded` before suspecting anything else.
+The full account, and the rest of the traps, are under "Pitfalls" in
+`contrib/patched_algencan_for_jll.md`.
 
 ## Numbers worth keeping
 
