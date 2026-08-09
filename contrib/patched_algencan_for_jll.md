@@ -5,7 +5,6 @@ time, and without a licensed HSL ever entering a build.
 
 This describes the solution as it ships. The history of how it was arrived at,
 including several approaches that were tried and abandoned, is in the git log.
-`contrib/HSLstatus.md` tracks what is still outstanding.
 
 ## The problem
 

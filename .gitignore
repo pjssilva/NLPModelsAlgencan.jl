@@ -5,3 +5,7 @@ cutest_selection.old
 cutest_selection.txt
 Manifest.toml
 docs/build
+
+# Maintainer notes on the HSL work. Kept locally, deliberately not tracked, so
+# that a temporary working document does not ship in a registered release.
+contrib/HSLstatus.md
