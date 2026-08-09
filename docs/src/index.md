@@ -27,19 +27,40 @@ toolchain or a BLAS/LAPACK development environment.
 ### Getting the most out of Algencan: using HSL
 
 Algencan solves the sparse linear systems that arise in its subproblems much
-faster when it is linked against an HSL linear solver. The binary in
-`Algencan_jll` is *not*: the HSL solvers are proprietary and cannot be
-redistributed, so the packaged build uses Algencan's own routines instead.
+faster when it can use an HSL linear solver. The binary in `Algencan_jll` is
+built to do so: it looks for MA57 when it starts a solve and falls back to
+Algencan's own truncated Newton solver when it does not find it. The choice is
+made at run time, so one binary covers both cases and **nothing has to be
+recompiled**.
 
-If you work on large or very sparse problems, it is worth compiling Algencan
-yourself against HSL. We only support MA57 at this point. Grab your copy from
-[HSL](http://www.hsl.rl.ac.uk/catalogue/hsl_ma57.html) — it has a free academic
-license — and follow the [wiki page on compiling HSL
-libraries](https://github.com/pjssilva/NLPModelsAlgencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-NLPModelsAlgencan.jl),
-which documents the whole process. The patches it refers to live in
-`contrib/hsl` in this repository.
+HSL is proprietary and cannot be redistributed, so it is not included. To enable
+MA57, obtain a licensed `libHSL` — it is free for academic use — from the [STFC
+licences portal](https://licences.stfc.ac.uk/products/Software/HSL/LibHSL), and
+install the `HSL_jll.jl` package that comes with it:
 
-Once you have your own shared library, point the package at it:
+```julia
+import Pkg
+Pkg.develop(path = "/full/path/to/HSL_jll.jl")
+```
+
+Restart Julia and Algencan will use MA57 by itself. There is nothing to
+configure and no compiler, Fortran toolchain or BLAS development environment is
+involved. Algencan reports what it found in its own output:
+
+```
+ Available HSL subroutines = MA57
+ lsslvr in TR           =            MA57/NONE
+```
+
+Only MA57 is supported at the moment. MA86 and MA97 are waiting on a fix to the
+Fortran modules shipped in the public `HSL_jll`. How the run-time switch works,
+and what MA86 and MA97 still need, are described in the [developer
+notes](developer.md).
+
+### Using your own Algencan build
+
+If you would rather build Algencan yourself — for instance against a locally
+patched MA57 — point the package at your shared library:
 
 ```julia
 using NLPModelsAlgencan
@@ -49,6 +70,10 @@ set_algencan_library!("/path/to/libalgencan.so")
 Then restart Julia. The path is stored as a preference of the active project, so
 it applies to that project alone and survives restarts. Call
 `set_algencan_library!(nothing)` to go back to the library from `Algencan_jll`.
+The patches that build applies live in `contrib/hsl` in this repository, and the
+[wiki page on compiling HSL
+libraries](https://github.com/pjssilva/NLPModelsAlgencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-NLPModelsAlgencan.jl)
+documents the process.
 
 !!! note "The ALGENCAN\\_LIB\\_DIR environment variable"
     Earlier versions selected a custom library through the `ALGENCAN_LIB_DIR`
