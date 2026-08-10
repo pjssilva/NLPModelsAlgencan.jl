@@ -40,6 +40,18 @@ If your work uses Gencan, the suggested references are:
    with negative curvature directions and spectral projected gradients",
    Computing [Suppl] 15, pp. 49-60, 2001.
 
+## Affiliation
+
+NLPModelsAlgencan.jl is developed and maintained by Paulo J. S. Silva (@pjssilva). It is not a product of the Tango Project, which develops
+Algencan itself. For the Algencan developers, see [How to cite](#how-to-cite)
+above.
+
+## Getting help
+
+Open an issue on the [issue
+tracker](https://github.com/pjssilva/NLPModelsAlgencan.jl/issues) for bugs,
+feature requests and other questions.
+
 ## Status
 
 At this point this is beta software. It requires Julia 1.10 or later.
@@ -114,6 +126,49 @@ works, so existing setups keep running, but it is deprecated and warns on load.
 Prefer `set_algencan_library!`: environment variables are invisible to
 precompilation, so changing one does not invalidate the cached module and can be
 silently ignored.
+
+## Use with JuMP
+
+Algencan is an NLPModels solver, so JuMP reaches it through
+[NLPModelsJuMP.jl](https://github.com/JuliaSmoothOptimizers/NLPModelsJuMP.jl),
+the generic MathOptInterface wrapper for NLPModels solvers. Install it alongside
+this package and pass `AlgencanSolver` as the `solver` attribute:
+
+```julia
+using JuMP, NLPModelsJuMP, NLPModelsAlgencan
+
+model = Model(NLPModelsJuMP.Optimizer)
+set_attribute(model, "solver", NLPModelsAlgencan.AlgencanSolver)
+
+@variable(model, 0 <= x[1:2] <= 5)
+set_start_value.(x, 1.0)
+@objective(model, Min, x[1] * x[2] + 5)
+@constraint(model, x[1] + x[2] <= 5)
+@constraint(model, x[1]^2 + x[2]^2 == 10)
+
+optimize!(model)
+@show termination_status(model), objective_value(model), value.(x)
+```
+
+Solver options are set the same way, using the names from
+[`docs/src/parameters.md`](docs/src/parameters.md):
+
+```julia
+set_attribute(model, "epsfeas", 1.0e-10)
+set_attribute(model, "epsopt", 1.0e-10)
+```
+
+Two things to know about this path:
+
+* `set_silent(model)` suppresses the iteration table but not Algencan's banner
+  and parameter listing, which Algencan 3.1.1 always writes to standard output.
+* Constraint duals are not yet mapped onto MathOptInterface. Algencan does
+  compute the multipliers; they are available from the NLPModels interface via
+  `stats.multipliers`.
+
+To use Algencan directly on an `AbstractNLPModel`, without JuMP, see [First
+steps](https://pjssilva.github.io/NLPModelsAlgencan.jl/dev/first_steps/) in the
+documentation.
 
 ## Contributing
 
