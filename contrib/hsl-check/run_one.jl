@@ -23,7 +23,12 @@ function main(name, out)
         # library. Decoding here would put every process into CUTEst.jl's single
         # shared build directory at once, which fails.
         nlp = CUTEstModel(name; decode=false)
-        stats = algencan(nlp)
+        # CUTEST_CHECK_SOLVER picks the linear solver for the Newton line
+        # search, as "MA86" or "MA86 MC64". Unset leaves Algencan's own choice,
+        # which is MA57 whenever it is available.
+        solver = get(ENV, "CUTEST_CHECK_SOLVER", "")
+        stats = isempty(solver) ? algencan(nlp) :
+                algencan(nlp; NEWTON_LINE_SEARCH_INNER_SOLVER=solver)
         status, obj = string(stats.status), stats.objective
     catch e
         status = "EXCEPTION:" * replace(first(sprint(showerror, e), 40), r"[\t\n]" => " ")
