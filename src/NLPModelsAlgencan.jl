@@ -382,10 +382,16 @@ function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
     nlpsupn = [0.0]
     inform = Vector{Cint}([0])
 
-    # Algencan is Fortran code that keeps state in common blocks, so the library
-    # is loaded and unloaded around every solve to start from a clean slate. The
-    # asserts guard that: Algencan_jll declares its library with dont_dlopen, so
-    # nothing else is holding it open and the dlclose below really does unload it.
+    # Algencan 3.1.1 leaks its MA57 linear system: lssana_ma57 allocates it
+    # unconditionally and the error paths of its callers return without reaching
+    # lssend, after which every later solve in the process is told there is no
+    # memory and silently runs without MA57. The library is therefore loaded and
+    # unloaded around every solve. That clears it because the state is
+    # !$omp threadprivate and so goes with the module's thread-local block.
+    # Reported upstream; once it is fixed this can go, see contrib/HSLstatus.md.
+    # The asserts guard the unload: Algencan_jll declares its library with
+    # dont_dlopen, so nothing else is holding it open and the dlclose below
+    # really does unload it.
     # An HSL backed Algencan needs an LP64 BLAS, which Julia does not register
     # on its own. Done here, and not once in __init__, because loading MKL.jl or
     # anything else that reconfigures libblastrampoline drops the registration.

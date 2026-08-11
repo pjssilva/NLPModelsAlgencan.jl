@@ -177,10 +177,6 @@ Once the modules are fixed, the work here is small and has been tested:
 - `lssma97.f90`: the same with `ma97_available`.
 - `build_tarballs.jl`: symlink `hsl_ma86_double.mod` and `hsl_ma97_double.mod`
   into `hsldetect` beside MA57.
-- Do **not** add `-fopenmp`. Both carry `!$omp threadprivate` directives, which
-  are comments unless the compiler is told otherwise, and Algencan keeps state
-  in common blocks. A serial build is the conservative choice and is what was
-  tested.
 - `lssma97.f90` ships with CRLF line endings, so a patch touching it carries
   CRLF context lines, and Yggdrasil's root `.gitattributes` (`* text=auto
   eol=lf`) will strip them and silently break it. Add a
@@ -224,6 +220,30 @@ theirs — `2023.11.7` ships no `libhsl_subset` at all and exports no
 `libhsl_subset.so => not found` rather than a fallback to truncated Newton.
 
 ## Pitfalls
+
+**Algencan leaks its MA57 linear system, and that is why the library is
+unloaded after every solve.** `lssana_ma57` allocates `msys%row`, `msys%col` and
+`msys%val` unconditionally, and `lssend_ma57` is what frees them. A caller that
+abandons the system after `lssana` has succeeded returns without reaching its
+`lssend`: `newtonkkt` calls `lssana` at line 663 and `lssfac` at line 690, and
+its error branches jump to label 500 at line 892, past the `lssend` at line 784.
+The next `lssana` then allocates arrays that are already allocated, which fails,
+and the failure is reported as `lssinfo = 6`, insufficient space. From that point
+MA57 is unusable for the rest of the process, with no message: Algencan simply
+proceeds without it and converges somewhere else. `moresor` has the same shape at
+its `memfail` returns, and `lssma86` has the same unguarded allocate, untested.
+
+Solve CUTEst POLAK6 and then ROBOT in one process to see it — ROBOT alone gives
+5.4628, after POLAK6 it gives 6.5933. This is a defect in upstream 3.1.1, not in
+the patch, and was reported to Birgin in August 2026 with a fix.
+
+The `dlclose` after each solve is the workaround. It works because the state is
+`!$omp threadprivate` and so lives in the module's thread-local block, which is
+released when the library is unloaded; resetting ordinary module variables does
+not reach it. With the leak fixed, 297 CUTEst problems run library-resident and
+run with the unload agree exactly, so the unload can be deleted once the fix is
+upstream — and until then it must stay, at a cost of 37 µs against a 445 µs
+solve.
 
 **The LP64 BLAS trap.** This is the one that matters most. `libhsl_subset` is
 LP64 and calls `dgemm_`, `dgemv_` and `dtpsv_` with 32-bit integer arguments.
