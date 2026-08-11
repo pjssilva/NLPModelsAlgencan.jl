@@ -153,31 +153,23 @@ the path.
 
 ## MA86 and MA97
 
-Not shipped, and blocked on the public HSL_jll rather than on Algencan or HSL.
-The licensed `libhsl_subset` implements all three solvers correctly; three of
-the Fortran modules in the public artifact do not match it. Since a JLL is built
-against those modules and only meets the licensed library at run time, they are
-an ABI contract, and MA57 is the only one that currently honours it.
+Not shipped yet, waiting on a release of `HSL_jll`.
 
-| module | shipped | faithful | symptom |
-|---|---|---|---|
-| `hsl_mc69_double.mod` | 742 B | ~47 kB | exports only `mc69_available`; `lssma86.f90` cannot compile |
-| `hsl_ma86_double.mod` | 82324 B | 83928 B | `ma86_factor` returns `info%flag = 1071644672` |
-| `hsl_ma97_double.mod` | `ma97_akeep` 64 bits | 8512 bits | caller allocates 8 bytes, library writes 1064 |
+A JLL is compiled against the public artifact's Fortran modules and only meets
+the licensed library at run time, which makes those modules an ABI contract.
+For MA86 and MA97 they did not honour it, and a build against them corrupted
+memory rather than failing: over 308 CUTEst problems MA86 segfaulted on 107 and
+MA97 on 293. The derived types were wrong first, and once those were corrected
+the routine interfaces still differed — five MA86 routines missing a trailing
+`scale`, and three MA97 mismatches in both directions. Both rounds were fixed
+upstream in `ralna/libHSL`.
 
-`1071644672` is `0x3FE00000`, the upper half of the double `0.5`, so `info%flag`
-is being read at the wrong offset. That is worse than an error: Algencan tests
-`info%flag .ge. 0`, concludes a failed factorization succeeded, and spins in
-`newtd_` forever. For MA97, `ma97_control` and `ma97_info` are byte exact and
-only `akeep` is truncated.
-
-Reported to @amontoison on 7 August 2026, acknowledged, fix expected. The
-reproduction is in `~/documentos/programas/hsl-jll-module-report`: four short
-Fortran programs and a script that builds each twice against the same licensed
-library, once with the shipped modules and once with modules generated from the
-`hsl_subset` sources. Faithful modules come from that project's own recipe,
-`gfortran -cpp -E -I src/include` with no `-DREAL_32`, which is what its
-`meson.build` `gen_double` generator does.
+The lesson worth keeping is how to check it. Compare the argument lists and
+intents of every routine in the dummy `hsl_subset` sources against the ones in
+the licensed libHSL tarball; they must agree exactly, and MA57 agreeing while
+MA86 did not is what localised the fault. Then run something large: a 500x500
+solve fails where a 3x3 succeeds, because a shifted argument only crashes when
+the address it lands on happens to matter.
 
 Once the modules are fixed, the work here is small and has been tested:
 
