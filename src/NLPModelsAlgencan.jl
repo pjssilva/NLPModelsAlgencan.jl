@@ -382,13 +382,11 @@ function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
     nlpsupn = [0.0]
     inform = Vector{Cint}([0])
 
-    # Algencan 3.1.1 leaks its MA57 linear system: lssana_ma57 allocates it
-    # unconditionally and the error paths of its callers return without reaching
-    # lssend, after which every later solve in the process is told there is no
-    # memory and silently runs without MA57. The library is therefore loaded and
-    # unloaded around every solve. That clears it because the state is
-    # !$omp threadprivate and so goes with the module's thread-local block.
-    # Reported upstream; once it is fixed this can go, see contrib/HSLstatus.md.
+    # Algencan 3.1.1 leaks the linear system it hands to MA57, after which every
+    # later solve in the process silently runs without MA57. The library is
+    # therefore loaded and unloaded around every solve, which clears it. A fix is
+    # waiting to be merged upstream; once this package moves to the fixed
+    # Algencan the unload can go. See contrib/HSLstatus.md.
     # The asserts guard the unload: Algencan_jll declares its library with
     # dont_dlopen, so nothing else is holding it open and the dlclose below
     # really does unload it.
