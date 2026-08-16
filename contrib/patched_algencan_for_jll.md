@@ -177,11 +177,13 @@ Once the modules are fixed, the work here is small and has been tested:
 - `lssma97.f90`: the same with `ma97_available`.
 - `build_tarballs.jl`: symlink `hsl_ma86_double.mod` and `hsl_ma97_double.mod`
   into `hsldetect` beside MA57.
-- `lssma97.f90` ships with CRLF line endings, so a patch touching it carries
+- `lssma97.f90` ships with CRLF line endings, so a patch touching it would carry
   CRLF context lines, and Yggdrasil's root `.gitattributes` (`* text=auto
-  eol=lf`) will strip them and silently break it. Add a
-  `bundled/patches/.gitattributes` containing `<patch name> -text diff`, as
-  `A/algoim/bundled/patches` does.
+  eol=lf`) strips them, after which the patch fails with "different line
+  endings". The recipe therefore normalises the file before patching, with
+  `sed -i 's/\r$//' sources/algencan/lssma97.f90`, and the patch is plain LF.
+  Marking the patch `-text` in a `bundled/patches/.gitattributes` also works and
+  several recipes do it, but it stores bytes that no diff shows.
 
 How to reach them, which is not obvious. The solver is chosen through the
 specification file or `vparam`, as `SOLVER [SCALING]` — two words, the scaling
@@ -211,13 +213,23 @@ With faithful modules, a build against the licensed `libhsl_subset` solves
 CUTEst `HS106` with MA86 to the true optimum, 7049.24802053, where MA57 stops at
 an infeasible 7239.49565125.
 
-Depending on a fixed HSL_jll will also need a version bound, which is awkward
-because the two distributions use different schemes: the licensed packages are
-versioned by date (`2025.7.21`) and the registered one is `4.0.6`. Ipopt.jl
-expresses this as `HSL_jll = "3, 4, 2023, 2024, 2025"`. Our floor is higher than
-theirs — `2023.11.7` ships no `libhsl_subset` at all and exports no
-`*_available` symbols, so a licensee on it gets a hard
-`libhsl_subset.so => not found` rather than a fallback to truncated Newton.
+`Algencan_jll` depends on HSL_jll without a version bound, deliberately. A JLL's
+compat is frozen into the registered version at build time and cannot be
+loosened later, so a bound there would lock users out of future HSL_jll releases
+and could only be lifted by a new Algencan version. It also cannot vary between
+build numbers of one version: nothing in the General registry does that.
+
+The bound is not needed for correctness. The interface mismatch that once
+corrupted memory was a property of the modules the binary was *compiled*
+against, which the recipe controls; at run time what matters is the library the
+user overrides in. The one case a floor would catch is a licensee on
+`2023.11.7`, which ships no `libhsl_subset` at all and exports no `*_available`
+symbols, so they get a hard `libhsl_subset.so => not found` rather than a
+fallback to truncated Newton. That is a loud failure on a release from years
+before this package could use it, and it is not guarded against. If it ever does
+come up, the place to express it is `NLPModelsAlgencan.jl`, which would have to
+take HSL_jll as a direct dependency to do so, and which can be revised in a
+release rather than a rebuild.
 
 ## Pitfalls
 
