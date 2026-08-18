@@ -80,11 +80,22 @@ configure and no compiler, Fortran toolchain or BLAS development environment is
 involved. Algencan reports what it found in its own output:
 
 ```
- Available HSL subroutines = MA57
+ Available HSL subroutines = MA57 MA86 MA97
  lsslvr in TR           =            MA57/NONE
 ```
 
-Only MA57 is supported at the moment. MA86 and MA97 will be added in the future.
+MA57 is the default and needs no configuration. MA86 and MA97 are alternatives
+for the Newton line search and for the acceleration process, selected with a
+keyword argument and set independently of each other:
+
+```julia
+algencan(nlp; NEWTON_LINE_SEARCH_INNER_SOLVER = "MA86 MC64",
+              LINEAR_SYSTEMS_SOLVER_IN_ACCELERATION_PROCESS = "MA97 MC64")
+```
+
+The trust region accepts MA57 alone. See the
+[documentation](https://pjssilva.github.io/NLPModelsAlgencan.jl/dev/) for
+details.
 
 ### Building Algencan yourself
 

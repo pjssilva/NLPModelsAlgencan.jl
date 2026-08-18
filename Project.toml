@@ -1,7 +1,7 @@
 name = "NLPModelsAlgencan"
 uuid = "04216931-dc08-4b80-8a27-8a88dc4b9604"
 authors = ["Paulo J. S. Silva <pjssilva@gmail.com>", "Ilan Francisco da Silva <ilanfsilva@gmail.com>"]
-version = "0.9.0"
+version = "0.10.0"
 
 [deps]
 Algencan_jll = "07ede149-d6eb-53b6-8e3c-1a25465d123c"
