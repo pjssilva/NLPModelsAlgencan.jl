@@ -52,8 +52,46 @@ involved. Algencan reports what it found in its own output:
  lsslvr in TR           =            MA57/NONE
 ```
 
-Only MA57 is supported at the moment. MA86 and MA97 will be added in the future.
+MA86 and MA97 are found the same way, and a licensed library reports all three:
+
+```
+ Available HSL subroutines = MA57 MA86 MA97
+```
+
 How the run-time switch works is described in the [developer notes](developer.md).
+
+#### Choosing a linear solver
+
+MA57 is the default and needs no configuration. MA86 and MA97 are alternatives
+for the Newton line search and for the acceleration process, selected with a
+keyword argument:
+
+```julia
+algencan(nlp; NEWTON_LINE_SEARCH_INNER_SOLVER = "MA86")
+```
+
+The value is the solver, optionally followed by a scaling, as in `"MA86 MC64"`.
+The two systems are set independently, and the acceleration process does not
+follow the Newton setting:
+
+```julia
+algencan(nlp; NEWTON_LINE_SEARCH_INNER_SOLVER = "MA86 MC64",
+              LINEAR_SYSTEMS_SOLVER_IN_ACCELERATION_PROCESS = "MA97 MC64")
+```
+
+Algencan reports what it settled on, which is worth reading back: an
+unrecognised keyword is passed through as a specification file line and quietly
+ignored, so a misspelling looks like nothing happened.
+
+```
+ lsslvr in TR           =            MA57/NONE
+ lsslvr in NW           =            MA86/MC64
+ lsslvr in ACCPROC      =            MA97/MC64
+```
+
+The trust region accepts MA57 alone, whatever is asked for. Do not expect MA86
+or MA97 to be faster in general, but they are worth trying on a problem where
+MA57 struggles.
 
 ### Building Algencan yourself
 

@@ -144,11 +144,15 @@ products = [
 ]
 ```
 
-Algencan is Fortran code that keeps state in common blocks, so this package
-loads the library and unloads it around *every* solve to start from a clean
-state. A JLL that opened the library in its own `__init__` would keep it
-resident and defeat that, and the `@assert`s guarding the load/unload cycle in
+Algencan 3.1.1 leaks the linear system it hands to MA57, and once that happens
+every later solve in the same process quietly runs without MA57. This package
+therefore loads the library and unloads it around *every* solve, which clears the
+leak. A JLL that opened the library in its own `__init__` would keep it resident
+and defeat that, and the `@assert`s guarding the load/unload cycle in
 `src/NLPModelsAlgencan.jl` would fail immediately. Do not remove this flag.
+
+A fix for the leak has been sent upstream; once it is merged and this package
+moves to the fixed Algencan, the unload can be dropped and this flag with it.
 
 ### Command-line triplets bypass the `platforms` variable
 
