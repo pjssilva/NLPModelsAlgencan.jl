@@ -63,15 +63,17 @@ reviewer — follow the same route:
 ## Building and testing the recipe locally
 
 BinaryBuilder runs the build in a sandbox. On Linux it uses unprivileged user
-namespaces directly; Docker is only needed on macOS. These notes were written
-against Julia 1.10 and BinaryBuilder 0.6.6 on `x86_64-linux`.
+namespaces directly; Docker is only needed on macOS. It needs Julia 1.12 or
+newer.
 
-Create a scratch environment with BinaryBuilder in it — keep it separate from
-this package's environment:
+Build from the Yggdrasil clone's own environment, which pins the BinaryBuilder
+version the recipe builds under. Instantiate it after cloning, and again after
+updating to a newer upstream master; otherwise the build fails on missing
+dependencies, which looks like a broken recipe and is not:
 
 ```bash
-mkdir -p ~/tmp/bb && cd ~/tmp/bb
-julia --project=. -e 'using Pkg; Pkg.add("BinaryBuilder")'
+cd /path/to/Yggdrasil
+julia --project=. -e 'using Pkg; Pkg.instantiate()'
 ```
 
 Then build a single platform, running from the directory holding the recipe so
@@ -79,8 +81,17 @@ that `build/` and `products/` land beside it:
 
 ```bash
 cd /path/to/Yggdrasil/A/Algencan
-julia --project=~/tmp/bb build_tarballs.jl --verbose x86_64-linux-gnu-libgfortran5
+julia --project=/path/to/Yggdrasil build_tarballs.jl --verbose x86_64-linux-gnu-libgfortran5
 ```
+
+On Ubuntu and derivatives the sandbox is blocked by default, and BinaryBuilder
+falls back to asking for `sudo`:
+
+```bash
+sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+```
+
+That reverts on reboot.
 
 Omit the triplet to build every platform in the recipe, which takes considerably
 longer and downloads a compiler toolchain per target.
@@ -149,10 +160,8 @@ every later solve in the same process quietly runs without MA57. This package
 therefore loads the library and unloads it around *every* solve, which clears the
 leak. A JLL that opened the library in its own `__init__` would keep it resident
 and defeat that, and the `@assert`s guarding the load/unload cycle in
-`src/NLPModelsAlgencan.jl` would fail immediately. Do not remove this flag.
-
-A fix for the leak has been sent upstream; once it is merged and this package
-moves to the fixed Algencan, the unload can be dropped and this flag with it.
+`src/NLPModelsAlgencan.jl` would fail immediately. Do not remove this flag while
+the unload is there; both go together, once Algencan itself is fixed.
 
 ### Command-line triplets bypass the `platforms` variable
 
@@ -203,15 +212,10 @@ computed rather than queried: with the vector `u` that `scalcu` already returns,
 the pivot the factorization rejected is the quadratic form `u'(B + lI)u` over
 the leading block.
 
-Checked against a patched MA57 that reports the real pivot, by building an
-Algencan that computes both and prints them, the two agree to eight or more
-significant digits in the early iterations and in the well conditioned range —
-on CUTEst `NGONE`, `SWOPF` and `EXPFITA` to 1e-13 or better, several samples
-bit identical. It is not unconditional. When the true pivot falls to the level
-where summing the quadratic form cancels, the reconstruction loses it: on
-`HS106` MA57 reports `5.68e-14` and the formula returns exactly zero. That
-matters less than it sounds, since a pivot that small leaves the safeguard it
-feeds inactive, but it is a reconstruction rather than a reproduction, and it
+This is a reconstruction rather than a reproduction. It matches the real
+`finfo%pivot` to eight or more significant digits while the pivot is well
+scaled, and loses it once the pivot falls to where summing the quadratic form
+cancels — at which point the safeguard it feeds is inactive anyway. It also
 costs a pass over the matrix entries each time a pivot is rejected. A build
 against a locally patched MA57 avoids both, which is one reason
 `set_algencan_library!` remains supported.
@@ -241,10 +245,6 @@ This belongs in this package rather than in the JLL, as it does in `HSL.jl` and
 `Ipopt.jl`: forwarding is a run time decision about the current session, which a
 binary artifact cannot make.
 
-How badly it bites, measured on CUTEst SWOPF: 91629 factorizations and an
-infeasible answer with no LP64 backend, against 659 and the right answer with
-one.
-
 ## Using a different Algencan library
 
 If you compiled Algencan yourself, for instance against a patched MA57 in the
@@ -259,16 +259,14 @@ The path is stored as a preference of the active project, so it applies to that
 project alone and survives restarts. Julia must be restarted for the change to
 take effect. Pass `nothing` to go back to the library from `Algencan_jll`.
 
-The `ALGENCAN_LIB_DIR` environment variable is still honoured, so setups
-predating `Algencan_jll` keep working, but it is deprecated and warns on load:
-environment variables are invisible to precompilation, so a change to one does
-not invalidate the cached module and can be silently ignored.
+The `ALGENCAN_LIB_DIR` environment variable is honoured too, but it is deprecated
+and warns on load: environment variables are invisible to precompilation, so a
+change to one does not invalidate the cached module and can be silently ignored.
 
 ### The HSL patches in `contrib/hsl`
 
-These are the patches the old, pre-`Algencan_jll` build script applied when
-compiling Algencan against HSL. They are kept because they are still needed for
-a manual HSL build; nothing applies them automatically any more. The
+These are needed to compile Algencan against HSL by hand, for the library
+`set_algencan_library!` then points at. Nothing applies them automatically. The
 [wiki page on compiling HSL libraries](https://github.com/pjssilva/NLPModelsAlgencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-NLPModelsAlgencan.jl)
 walks through the whole process.
 
