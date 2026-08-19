@@ -11,6 +11,25 @@ is tests, docs and maintainer material. The package compiles nothing: the binary
 comes from `Algencan_jll`, built by a Yggdrasil recipe that lives outside this
 repository.
 
+## My preferences
+
+After dealing with Claude Code I have noticed two biases that I consider
+really annoying:
+
+1. Claude likes to document the history of a change. Something along the
+   lines: "we changed this to solve that bug" or "the new implementation based
+   on X is faster than the older implementation that used Y". I don't like
+   this. History belongs to `git`. I commit that comment may refer to the old
+   implementation, to the old bug, but *documentation and code comments should
+   always reflect the current, actual, code*. It should explain what, why, and
+   how. But it should not refer to the past, to how it was. If, when making a
+   change or fixing a bug, we learn about a pitfall that should be avoided in
+   the future, probably the right way to put it is in `docs/src/developer.md`.
+
+2. Claude likes to add comments to git commits that are way too long. They
+   look like a prose that tells the story of the commit. I prefer shorter,
+   direct comments that describe what changed. Avoid long comments. 
+
 ## Commands
 
 ```bash
@@ -62,14 +81,13 @@ are passed as `C_NULL`.
 ### Three things in `solve!` are load-bearing — read the comments before touching
 
 1. **`_CURRENT_SOLVER` and the `_c_julia_*` trampolines.** `c_algencan` has no
-   user-data pointer, so the solver cannot be passed to the callbacks. It used
-   to be captured in closures built with the closure form of `@cfunction`; that
-   form needs a runtime trampoline Julia only has on x86, so it fails on Apple
-   Silicon with "closures are not supported on this platform". The callbacks are
-   now plain top-level functions reading a module-global `Ref`, set immediately
-   before the `ccall` and cleared in a `finally`. Consequences: a solve is not
-   reentrant or thread-safe, and the `Ref` must not outlive the solve (there is
-   a regression test for both).
+   user-data pointer, so the solver cannot be passed to the callbacks: they are
+   plain top-level functions reading a module-global `Ref`, set immediately
+   before the `ccall` and cleared in a `finally`. They have to stay plain — the
+   closure form of `@cfunction` needs a runtime trampoline Julia only has on
+   x86, so it fails on Apple Silicon with "closures are not supported on this
+   platform". Consequences: a solve is not reentrant or thread-safe, and the
+   `Ref` must not outlive the solve (there is a regression test for both).
 
 2. **dlopen/dlclose around every solve.** Algencan 3.1.1 leaks the linear system
    it hands to MA57, after which every later solve in the process silently runs
