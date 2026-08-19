@@ -20,12 +20,13 @@ repository when BinaryBuilder APIs change or new platforms are added, so a local
 copy would silently fall out of date, and edits made to it would never reach
 Yggdrasil anyway.
 
-The recipe links the *public* `HSL_jll`, whose MA57 is a stub, and patches
-Algencan so that it decides at run time whether a working MA57 is present. One
-binary therefore serves both cases: users without an HSL licence get the
-truncated Newton inner solver, and users who override the `HSL_jll` artifact
-with their licensed build get MA57. No licensed code enters the build or the
-tarballs. See [HSL support](@ref) for how that works and what it requires.
+The recipe links the *public* `HSL_jll`, whose solvers are stubs, and patches
+Algencan so that it decides at run time which of MA57, MA86 and MA97 are really
+present. One binary therefore serves both cases: users without an HSL licence
+get the truncated Newton inner solver, and users who override the `HSL_jll`
+artifact with their licensed build get the solvers that build provides. No
+licensed code enters the build or the tarballs. See [HSL support](@ref) for how
+that works and what it requires.
 
 ### The source tarball mirror
 
@@ -143,7 +144,7 @@ Pkg.test()
 
 ## Recipe details worth knowing
 
-Three things in the recipe are easy to get wrong or to "clean up" by mistake.
+These are easy to get wrong or to "clean up" by mistake.
 
 ### `dont_dlopen=true` is load-bearing
 
@@ -172,6 +173,31 @@ build then falls back to BinaryBuilder's default toolchain, which links
 producing a library that cannot be `dlopen`ed. Always name the tagged triplet,
 `x86_64-linux-gnu-libgfortran5`, when testing a single platform.
 
+### `lssma97.f90` has CRLF line endings
+
+The recipe normalises them before applying the patch:
+
+```bash
+sed -i 's/\r$//' sources/algencan/lssma97.f90
+```
+
+Without it the patch fails with "different line endings", because Yggdrasil's
+root `.gitattributes` (`* text=auto eol=lf`) rewrites the CRLF context lines out
+of the stored patch on checkout. Keep the patch plain LF and let the recipe do
+the normalising.
+
+### `HSL_jll` carries no version bound
+
+```julia
+Dependency("HSL_jll"),
+```
+
+A JLL's `[compat]` is frozen into the registered version at build time and
+cannot differ between build numbers of one version, so a bound here would lock
+users out of future HSL_jll releases and force a new Algencan version to lift.
+If a bound is ever genuinely needed, it belongs in this package's
+`Project.toml`, which can be revised in an ordinary release.
+
 ### libgfortran ABI tagging
 
 ```julia
@@ -190,12 +216,21 @@ deciding at run time, so a single binary covers both cases.
 
 ### How the run-time switch works
 
-`HSL_jll`'s `libhsl_subset` exports `ma57_available`, a public variable of the
-`hsl_ma57_double` module. It is `.false.` in the freely distributed stub and
-`.true.` in a licensed build. A patch, carried in the recipe's
-`bundled/patches`, changes Algencan's `lss_ma57()` to return that variable
-rather than a compile time constant, which is enough to turn Algencan's own
-solver selection into a run time decision.
+`HSL_jll`'s `libhsl_subset` exports `ma57_available`, `ma86_available` and
+`ma97_available`, public variables of the `hsl_maNN_double` modules. Each is
+`.false.` in the freely distributed stub and `.true.` in a licensed build that
+implements that solver. A patch, carried in the recipe's `bundled/patches`,
+changes Algencan's `lss_ma57()`, `lss_ma86()` and `lss_ma97()` to return the
+matching variable rather than a compile time constant, which is enough to turn
+Algencan's own solver selection into a run time decision.
+
+MA57 stays the default and is the only solver the trust region accepts. MA86 and
+MA97 are reachable for the Newton line search and the acceleration process
+through the specification file, which from Julia means a keyword argument; the
+[main page](index.md) shows the form. The recipe symlinks all three
+`hsl_maNN_double.mod` files into the directory `sources/algencan/Makefile`
+searches, which is what makes it compile the real `lssmaNN.o` for each rather
+than the stub.
 
 The same patch removes Algencan's use of `finfo%pivot`. That field is not part
 of `ma57_finfo` in a standard HSL distribution, it is added by the local MA57
