@@ -226,19 +226,18 @@ end
 #
 # Algencan's C interface (`c_algencan`) does not thread a user-data pointer
 # through to the evaluation callbacks, so `solver` cannot be handed to them
-# directly (the way, e.g., Ipopt passes its problem object). The original
-# implementation captured `solver` in closures and built the C-callable
-# pointers with the closure form of `@cfunction`. That form needs a runtime
-# trampoline that Julia only supports on x86/x86_64, so it fails on Apple
-# Silicon (aarch64) with:
+# directly (the way, e.g., Ipopt passes its problem object). It is routed
+# through this reference instead, and the `@cfunction`s are built from plain
+# top-level functions, which yields a static, platform-independent C pointer.
+#
+# The callbacks have to stay plain functions. The closure form of `@cfunction`
+# needs a runtime trampoline that Julia only supports on x86/x86_64, and fails
+# on Apple Silicon (aarch64) with:
 #     cfunction: closures are not supported on this platform
 #
-# Instead we route `solver` through this reference and build the `@cfunction`s
-# from plain top-level functions, which yields a static, platform-independent
-# C pointer. `solve!` sets `_CURRENT_SOLVER[]` right before the `ccall` and
-# clears it afterwards, so no solver is kept alive between solves. Note that,
-# as with Algencan itself, this makes a single solve non-reentrant across
-# threads.
+# `solve!` sets `_CURRENT_SOLVER[]` right before the `ccall` and clears it
+# afterwards, so no solver is kept alive between solves. As with Algencan
+# itself, this makes a single solve non-reentrant across threads.
 #
 # The reference is only ever read from inside a `ccall` that `solve!` has just
 # set it for, so the `::AlgencanSolver` assertions below always hold. They are
