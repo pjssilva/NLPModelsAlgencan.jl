@@ -37,14 +37,17 @@ really annoying:
 julia --project=. -e 'using Pkg; Pkg.test()'
 
 # Iterating on tests: Pkg.test resolves test/Project.toml into a temp env, so it
-# reprecompiles CUTEst/JuMP each run. For a faster loop, build the test env once
-# and reuse it (Manifest.toml files are untracked, so this costs nothing):
-julia --project=test -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate()'
-julia --project=test test/runtests.jl
+# reprecompiles CUTEst/JuMP each run. For a faster loop, build a reusable env
+# OUTSIDE the repo. Do not run Pkg.develop against --project=test: it adds
+# NLPModelsAlgencan to test/Project.toml, which is tracked.
+ENV_DIR=~/.julia/environments/nlpalg-test
+mkdir -p $ENV_DIR && cp test/Project.toml $ENV_DIR/    # refresh when deps change
+julia --project=$ENV_DIR -e "using Pkg; Pkg.develop(path=\"$PWD\"); Pkg.instantiate()"
+julia --project=$ENV_DIR test/runtests.jl
 
 # There is no per-file test split and no test_args filtering: to run one
 # testset, use the reusable env above and include just what you need, e.g.
-julia --project=test -e '
+julia --project=$ENV_DIR -e '
     using NLPModelsAlgencan, ADNLPModels, Test
     include("test/problems/autodiff/hs12.jl")
     @test algencan(hs12()).status == :first_order'
