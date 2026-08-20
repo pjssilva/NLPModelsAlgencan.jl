@@ -156,10 +156,10 @@ mutable struct AlgencanSolver <: AbstractOptimizationSolver
                               :eostain => (atol)^1.5, :efacc => sqrt(atol),
                               :eoacc => sqrt(atol), :outputfnm => "", :specfnm => specfnm)
         if verbose != 10
-            solver.options["iterations_output_detail"] = verbose
+            solver.options[:iterations_output_detail] = verbose
         end
         if max_iter != Int(typemax(Int32))
-            solver.options["outer_iterations_limit"] = max_iter
+            solver.options[:outer_iterations_limit] = max_iter
         end
         for k in keys(kwargs)
             solver.options[k] = kwargs[k]

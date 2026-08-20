@@ -36,6 +36,24 @@ end
     @test stats.multipliers ≈ [3.277936962780388, 2.905444126051696, -7.747851002665478] rtol = 1.0e-4
 end
 
+# Regression test for the `verbose` and `max_iter` keyword arguments.
+#
+# `solver.options` is a `Dict{Symbol,Any}`, but both were stored under `String`
+# keys, so any non-default value threw
+#     MethodError: Cannot `convert` an object of type String to an object of type Symbol
+# Nothing exercised them, which is how it went unnoticed.
+@testset "verbose and max_iter keyword arguments" begin
+    stats = algencan(hs12(); verbose=0)
+    @test stats.status == :first_order
+    @test stats.objective ≈ -30.0 rtol = 1.0e-6
+
+    solver = NLPModelsAlgencan.AlgencanSolver(hs12(); verbose=0)
+    @test solver.options[:iterations_output_detail] == 0
+
+    solver = (@test_logs (:warn,) (:warn,) NLPModelsAlgencan.AlgencanSolver(hs12(); max_iter=5))
+    @test solver.options[:outer_iterations_limit] == 5
+end
+
 # Regression test for Apple Silicon (aarch64).
 #
 # The Algencan callbacks used to be built with the closure form of `@cfunction`,
@@ -219,4 +237,8 @@ end
     @objective(model, Min, (x - center)^2)
     optimize!(model)
     @test value.(x) ≈ center
+end
+
+@testset "MathOptInterface conformance tests" begin
+    include("MOI_wrapper.jl")
 end
