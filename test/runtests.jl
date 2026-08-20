@@ -36,12 +36,10 @@ end
     @test stats.multipliers ≈ [3.277936962780388, 2.905444126051696, -7.747851002665478] rtol = 1.0e-4
 end
 
-# Regression test for the `verbose` and `max_iter` keyword arguments.
-#
-# `solver.options` is a `Dict{Symbol,Any}`, but both were stored under `String`
-# keys, so any non-default value threw
-#     MethodError: Cannot `convert` an object of type String to an object of type Symbol
-# Nothing exercised them, which is how it went unnoticed.
+# Every key in `solver.options` has to be a `Symbol`; a `String` key raises a
+# `MethodError` before the solve starts. `verbose` and `max_iter` reach the
+# dictionary indirectly, through the constructor's translation to
+# `:iterations_output_detail` and `:outer_iterations_limit`.
 @testset "verbose and max_iter keyword arguments" begin
     stats = algencan(hs12(); verbose=0)
     @test stats.status == :first_order
