@@ -127,7 +127,9 @@ MA57 from HSL as suggested in the original Algencan installation instructions.
 This would avoid an extra (sparse) matrix times vector operation that the
 patched version of libAlgencan_jll uses to avoid touching the HSL code. 
 
-The patches are in [`contrib/hsl`](contrib/hsl), and the [wiki page on compiling
+The patches are in
+[`contrib/hsl`](https://github.com/pjssilva/NLPModelsAlgencan.jl/tree/master/contrib/hsl),
+and the [wiki page on compiling
 HSL
 libraries](https://github.com/pjssilva/NLPModelsAlgencan.jl/wiki/Compiling-HSL-Libraries-for-use-with-NLPModelsAlgencan.jl)
 documents the process.
@@ -162,7 +164,7 @@ optimize!(model)
 ```
 
 Solver options are set the same way, using the names from
-[`docs/src/parameters.md`](docs/src/parameters.md):
+[Solver parameters](https://pjssilva.github.io/NLPModelsAlgencan.jl/dev/parameters/):
 
 ```julia
 set_attribute(model, "epsfeas", 1.0e-10)
