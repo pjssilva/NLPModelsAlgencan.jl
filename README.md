@@ -189,4 +189,8 @@ See the [developer
 notes](https://pjssilva.github.io/NLPModelsAlgencan.jl/dev/developer/) for how
 the `Algencan_jll` binary is built and how to change its Yggdrasil recipe.
 
+The Julia sources are formatted with
+[JuliaFormatter](https://github.com/domluna/JuliaFormatter.jl) v2, configured by
+`.JuliaFormatter.toml`.
+
 

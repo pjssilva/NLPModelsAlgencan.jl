@@ -13,25 +13,22 @@ using NLPModels
 using CUTEst
 using NLPModelsAlgencan
 
-
 function cutest_bench(name, solver)
     nlp = CUTEstModel(name)
     bench_data = @timed stats = solver(nlp)
     etime = bench_data[2]
     flag = stats.status
     objval = obj(nlp, stats.solution)
-    n_fc, n_ggrad, n_hl, n_hlp = (
-        stats.solver_specific[:nfc], stats.solver_specific[:ngjac], 
-        stats.solver_specific[:nhl], stats.solver_specific[:nhlp]
-    )
+    n_fc, n_ggrad, n_hl, n_hlp = (stats.solver_specific[:nfc],
+                                  stats.solver_specific[:ngjac],
+                                  stats.solver_specific[:nhl], stats.solver_specific[:nhlp])
     finalize(nlp)
     return flag, etime, n_fc, n_ggrad, n_hl, n_hlp, objval
 end
 
-
 function run_tests()
     # Algencan tolerances
-    solver(model) = algencan(model, epsfeas=1.0e-5, epsopt=1.0e-5, specfnm="algencan.dat")
+    solver(model) = algencan(model; epsfeas=1.0e-5, epsopt=1.0e-5, specfnm="algencan.dat")
     solver_name = "algencan_hsl_accel"
 
     # First run to compile
@@ -44,7 +41,7 @@ function run_tests()
 
     # Run tests
     report = open(string(solver_name, "_cutest.txt"), "w")
-    for i = 1:n_tests
+    for i in 1:n_tests
         name = test_problems[i]
         println("\nSolving Problem $name - $i of $n_tests.\n")
         s, t, fc, ggrad, hl, hlp, v = cutest_bench(name, solver)
@@ -56,7 +53,7 @@ function run_tests()
         println("Obj value = ", v)
         println("*************************************************************\n")
         line = @sprintf("%-14s%-14s%12.4e\t%10.4d\t%10.4d\t%10.4d\t%10.4d\t%12.4e\n",
-            name, s, t, fc, ggrad, hl, hlp, v)
+                        name, s, t, fc, ggrad, hl, hlp, v)
         write(report, line)
         flush(report)
     end

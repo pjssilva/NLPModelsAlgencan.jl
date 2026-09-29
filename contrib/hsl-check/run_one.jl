@@ -33,7 +33,10 @@ function main(name, out)
     catch e
         status = "EXCEPTION:" * replace(first(sprint(showerror, e), 40), r"[\t\n]" => " ")
     finally
-        nlp === nothing || (try finalize(nlp) catch end)
+        nlp === nothing || (try
+                                finalize(nlp)
+                            catch
+                            end)
     end
     # A private file, which the driver appends to the shared results. Writing
     # to the shared file from here looked atomic and was not: buffered IO

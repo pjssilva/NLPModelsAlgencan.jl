@@ -48,7 +48,8 @@ end
     solver = NLPModelsAlgencan.AlgencanSolver(hs12(); verbose=0)
     @test solver.options[:iterations_output_detail] == 0
 
-    solver = (@test_logs (:warn,) (:warn,) NLPModelsAlgencan.AlgencanSolver(hs12(); max_iter=5))
+    solver = (@test_logs (:warn,) (:warn,) NLPModelsAlgencan.AlgencanSolver(hs12();
+                                                                            max_iter=5))
     @test solver.options[:outer_iterations_limit] == 5
 end
 

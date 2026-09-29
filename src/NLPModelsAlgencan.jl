@@ -7,8 +7,8 @@ module NLPModelsAlgencan
 using LinearAlgebra, SparseArrays, NLPModels, SolverCore
 using Libdl: Libdl
 using Preferences: @load_preference, @set_preferences!
-import Algencan_jll
-import OpenBLAS32_jll
+using Algencan_jll: Algencan_jll
+using OpenBLAS32_jll: OpenBLAS32_jll
 
 # Location of a user supplied Algencan library, if any. This is read at
 # precompilation time, but Preferences takes care of invalidating the cache when

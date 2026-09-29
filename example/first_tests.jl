@@ -11,7 +11,7 @@ println("Create the bridge to NLPModels..\n")
 nlp = MathOptNLPModel(m)
 
 println("Solving...")
-status = algencan(nlp, epsfeas=1.0e-5, epsopt=1.0e-5)
+status = algencan(nlp; epsfeas=1.0e-5, epsopt=1.0e-5)
 println("Solution status: $status.")
 print("(Primal) Solution to first problem: ")
 println(status.solution, "\n\n")
@@ -27,7 +27,7 @@ println("Create the bridge to NLPModels..\n")
 cnlp = MathOptNLPModel(m2)
 
 println("Solving...")
-status = algencan(cnlp, epsfeas=1.0e-8, epsopt=1.0e-6)
+status = algencan(cnlp; epsfeas=1.0e-8, epsopt=1.0e-6)
 
 println("Solution status: $status.")
 print("Primal solution to second problem: ")

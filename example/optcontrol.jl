@@ -23,18 +23,20 @@ solver = algencan #ipopt
 #   "The non-linear beam via optimal control with bound state variables",
 #   Optimal Control Applications and Methods 12, pp. 19-31, 1991.
 let
-    N     = 1000
-    ni    = N
-    h     = 1/ni
+    N = 1000
+    ni = N
+    h = 1/ni
     alpha = 350
 
     m = Model()
 
-    @variable(m, -1 <= t[1:(ni+1)] <= 1)
-    @variable(m, -0.05 <= x[1:(ni+1)] <= 0.05)
-    @variable(m, u[1:(ni+1)])
+    @variable(m, -1 <= t[1:(ni + 1)] <= 1)
+    @variable(m, -0.05 <= x[1:(ni + 1)] <= 0.05)
+    @variable(m, u[1:(ni + 1)])
 
-    @NLobjective(m, Min, sum( 0.5*h*(u[i+1]^2 + u[i]^2) + 0.5*alpha*h*(cos(t[i+1]) + cos(t[i])) for i = 1:ni))
+    @NLobjective(m, Min,
+                 sum(0.5*h*(u[i+1]^2 + u[i]^2) + 0.5*alpha*h*(cos(t[i+1]) + cos(t[i]))
+                     for i in 1:ni))
 
     # cons1
     for i in 1:ni

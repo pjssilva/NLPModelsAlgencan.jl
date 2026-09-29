@@ -30,7 +30,8 @@ function environment_banner()
     NLPModelsAlgencan.ensure_lp64_blas!()
     hsl, ma57 = "none", "unknown"
     try
-        m = Base.require(Base.PkgId(Base.UUID("017b0a0e-03f4-516a-9b91-836bbd1904dd"), "HSL_jll"))
+        m = Base.require(Base.PkgId(Base.UUID("017b0a0e-03f4-516a-9b91-836bbd1904dd"),
+                                    "HSL_jll"))
         hsl = string(pkgversion(m))
         # The version alone does not say whether MA57 is really there: the
         # public stub and the licensed release can carry the same version, and
@@ -44,7 +45,8 @@ function environment_banner()
     end
     algencan = "unknown"
     try
-        m = Base.require(Base.PkgId(Base.UUID("07ede149-d6eb-53b6-8e3c-1a25465d123c"), "Algencan_jll"))
+        m = Base.require(Base.PkgId(Base.UUID("07ede149-d6eb-53b6-8e3c-1a25465d123c"),
+                                    "Algencan_jll"))
         algencan = string(pkgversion(m))
     catch
     end
@@ -59,8 +61,10 @@ function environment_banner()
     """
 end
 
-already_done() = isfile(OUT) ?
+function already_done()
+    isfile(OUT) ?
     Set(split(l, '\t')[1] for l in eachline(OUT) if !startswith(l, "#")) : Set{String}()
+end
 
 function main()
     problems = [strip(l) for l in eachline(LIST) if !isempty(strip(l))]
@@ -86,7 +90,10 @@ function main()
         catch e
             status = "EXCEPTION:" * first(sprint(showerror, e), 40)
         finally
-            nlp === nothing || (try finalize(nlp) catch end)
+            nlp === nothing || (try
+                                    finalize(nlp)
+                                catch
+                                end)
         end
         el = time() - t0
         open(OUT, "a") do io
