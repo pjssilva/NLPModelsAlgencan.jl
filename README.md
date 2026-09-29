@@ -174,7 +174,7 @@ set_attribute(model, "epsopt", 1.0e-10)
 Two things to know about this path:
 
 * `set_silent(model)` suppresses the iteration table but not Algencan's banner
-  and parameter listing, which Algencan 3.1.1 always writes to standard output.
+  and parameter listing, which Algencan always writes to standard output.
 * Constraint duals are not yet mapped onto MathOptInterface. Algencan does
   compute the multipliers; they are available from the NLPModels interface via
   `stats.multipliers`.

@@ -45,9 +45,9 @@ moment the library loads — there is no init call to order against.
 
 ## The patch
 
-`algencan-3.1.1-runtime-hsl.patch` in the Yggdrasil recipe. Upstream 3.1.1 is
+`algencan-3.1.2-runtime-hsl.patch` in the Yggdrasil recipe. Upstream 3.1.2 is
 not forked: the recipe fetches the pristine tarball and applies one patch,
-**2 files, 8 hunks, nothing deleted**.
+**4 files, 10 hunks, nothing deleted**.
 
 `sources/algencan/lssma57.f90` (3 hunks)
 
@@ -57,6 +57,16 @@ not forked: the recipe fetches the pristine tarball and applies one patch,
   of `ma57_finfo` in any standard HSL distribution — it is added by a local
   patch to MA57 that cannot be redistributed — so `lssma57.f90` will not
   compile against stock HSL until this changes.
+
+`sources/algencan/lssma86.f90` (1 hunk)
+
+- `lss_ma86 = .true.` becomes `lss_ma86 = ma86_available`, the same run-time
+  choice as MA57.
+
+`sources/algencan/lssma97.f90` (1 hunk)
+
+- `lss_ma97 = .true.` becomes `lss_ma97 = ma97_available`. This file ships with
+  CRLF line endings, which the recipe normalises before patching.
 
 `sources/algencan/moresor.f90` (5 hunks)
 
@@ -233,17 +243,16 @@ release rather than a rebuild.
 
 ## Pitfalls
 
-**Algencan leaks the linear system it hands to MA57, and that is why the library
-is unloaded after every solve.** Once it happens, every later solve in the same
-process is told there is no memory and runs without MA57, converging somewhere
-else with no message. Solve CUTEst POLAK6 and then ROBOT in one process to see
-it: ROBOT alone gives 5.4628, after POLAK6 it gives 6.5933.
+**Algencan 3.1.1 leaks the linear system it hands to MA57.** Every later solve
+in the same process is then told there is no memory and runs without MA57,
+converging somewhere else with no message. Solve CUTEst POLAK6 and then ROBOT in
+one process to see it: ROBOT alone gives 5.4628, after POLAK6 it gives 6.5933.
 
-This is a defect in upstream 3.1.1, not in the patch. A fix has been sent to
-Birgin and is waiting to be merged; when it is, this package updates to the fixed
-Algencan and the unload goes. The `dlclose` works as a workaround because the
-leaked state is `!$omp threadprivate` and so goes with the library's thread-local
-block; resetting ordinary module variables does not reach it.
+Upstream fixes this in 3.1.2, which is what the recipe builds, so nothing here
+works around it. It still bites anyone compiling 3.1.1 by hand, as the patches
+under `contrib/hsl/` do — the leaked state is `!$omp threadprivate`, so it goes
+with the library's thread-local block and unloading the library clears it, while
+resetting ordinary module variables does not reach it.
 
 **The LP64 BLAS trap.** This is the one that matters most. `libhsl_subset` is
 LP64 and calls `dgemm_`, `dgemv_` and `dtpsv_` with 32-bit integer arguments.

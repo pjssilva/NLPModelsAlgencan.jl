@@ -81,7 +81,7 @@ Four evaluation callbacks are wired up (`coded[7]`, `[8]`, `[10]`): `julia_fc`
 (Hessian of the Lagrangian) and `julia_hlp` (Hessian-vector product). The rest
 are passed as `C_NULL`.
 
-### Three things in `solve!` are load-bearing — read the comments before touching
+### Two things in `solve!` are load-bearing — read the comments before touching
 
 1. **`_CURRENT_SOLVER` and the `_c_julia_*` trampolines.** `c_algencan` has no
    user-data pointer, so the solver cannot be passed to the callbacks: they are
@@ -92,15 +92,7 @@ are passed as `C_NULL`.
    platform". Consequences: a solve is not reentrant or thread-safe, and the
    `Ref` must not outlive the solve (there is a regression test for both).
 
-2. **dlopen/dlclose around every solve.** Algencan 3.1.1 leaks the linear system
-   it hands to MA57, after which every later solve in the process silently runs
-   without MA57. Loading and unloading the library each solve clears it. This
-   only works because `Algencan_jll` declares the product with
-   `dont_dlopen=true`; the `@assert`s on `Libdl.dllist()` guard that invariant.
-   A fix is pending upstream — the unload and the JLL flag come out together,
-   not separately.
-
-3. **`ensure_lp64_blas!()` before every solve.** An HSL-backed Algencan reaches
+2. **`ensure_lp64_blas!()` before every solve.** An HSL-backed Algencan reaches
    MA57 through `libhsl_subset`, which is LP64. Julia registers only an ILP64
    backend, and libblastrampoline answers an unmatched call by writing to stderr
    and returning the result *untouched* — no error, no crash, just a
@@ -142,6 +134,10 @@ by `set_algencan_library!`, read at precompile time so Preferences invalidates
 the cache), the deprecated `ALGENCAN_LIB_DIR` environment variable (warns in
 `__init__`), then `Algencan_jll`. Prefer the preference in anything new —
 environment variables are invisible to precompilation.
+
+`Algencan_jll` declares its product with `dont_dlopen=true`, so the package
+opens the library itself: `algencan_symbol()` opens it on the first solve and
+keeps the `c_algencan` pointer.
 
 ## Maintainer material
 

@@ -14,7 +14,7 @@ SolverCore = "ff4d7338-4cf1-434d-91df-b86cb86fb843"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
-Algencan_jll = "3.1.1"
+Algencan_jll = "3.1.2"
 Libdl = "1"
 LinearAlgebra = "1"
 NLPModels = "0.18 - 0.21"

@@ -32,15 +32,24 @@ that works and what it requires.
 
 The recipe does not download Algencan from
 `https://www.ime.usp.br/~egbirgin/tango/sources/`. It fetches a byte-identical
-copy (same SHA256) published as an asset of the `algencan-3.1.1` release of this
-repository, because Yggdrasil rebuilds recipes years after they are merged and a
-personal academic URL is not a dependable long-term build input. Redistributing
-the tarball this way is permitted: Algencan is GPL-2.0-or-later.
+copy (same SHA256) published as an asset of the matching `algencan-<version>`
+release of this repository, because Yggdrasil rebuilds recipes years after they
+are merged and a personal academic URL is not a dependable long-term build
+input. Redistributing the tarball this way is permitted: Algencan is
+GPL-2.0-or-later.
 
-!!! warning "Do not delete the `algencan-3.1.1` release"
-    That release is a permanent build input of `Algencan_jll`. Every Yggdrasil
-    rebuild refetches the asset and verifies its SHA256. Deleting the release,
-    removing the asset, or renaming the tag makes `Algencan_jll` unbuildable.
+Publish each of these as a **pre-release**. Every other release here is a
+package version, and GitHub gives the repository's "Latest release" badge to the
+most recent release that is neither a draft nor a pre-release, so a plain
+release would advertise an Algencan source tarball as the latest release of the
+package. The flag costs nothing on the build side: Yggdrasil fetches
+`releases/download/<tag>/<file>`, which serves pre-release assets identically.
+
+!!! warning "Do not delete the `algencan-*` releases"
+    Each one is a permanent build input of the `Algencan_jll` version built from
+    it, including older versions still in the registry. Every Yggdrasil rebuild
+    refetches the asset and verifies its SHA256. Deleting a release, removing
+    its asset, or renaming a tag makes that `Algencan_jll` unbuildable.
 
 ## Changing the recipe
 
@@ -64,8 +73,25 @@ reviewer — follow the same route:
 ## Building and testing the recipe locally
 
 BinaryBuilder runs the build in a sandbox. On Linux it uses unprivileged user
-namespaces directly; Docker is only needed on macOS. It needs Julia 1.12 or
-newer.
+namespaces directly; Docker is only needed on macOS.
+
+It has to run under the exact Julia that Yggdrasil's build machines use, and
+that version moves. Read it from the clone rather than assuming: `julia_version`
+at the top of `Manifest.toml`, and the `version:` field of
+`.github/workflows/update_manifest.yml`, whose comment marks it as the build
+machines' version. The two agree. Install that version and select it per
+command, for instance `juliaup add 1.12` and then `julia +1.12`.
+
+A newer Julia fails while merely loading `Pkg`, with
+
+```
+ERROR: Precompiled image Zstd_jll not available with flags CacheFlags(...)
+```
+
+That is the manifest declining a Julia it was not resolved for, not a corrupt
+depot cache. Do not let `Pkg` re-resolve the manifest to make it go away:
+`Manifest.toml` is tracked upstream and has to stay clean in a recipe pull
+request.
 
 Build from the Yggdrasil clone's own environment, which pins the BinaryBuilder
 version the recipe builds under. Instantiate it after cloning, and again after
@@ -156,13 +182,12 @@ products = [
 ]
 ```
 
-Algencan 3.1.1 leaks the linear system it hands to MA57, and once that happens
-every later solve in the same process quietly runs without MA57. This package
-therefore loads the library and unloads it around *every* solve, which clears the
-leak. A JLL that opened the library in its own `__init__` would keep it resident
-and defeat that, and the `@assert`s guarding the load/unload cycle in
-`src/NLPModelsAlgencan.jl` would fail immediately. Do not remove this flag while
-the unload is there; both go together, once Algencan itself is fixed.
+This package resolves the library path itself — the preference written by
+`set_algencan_library!`, the deprecated environment variable, or the JLL — and
+`dlopen`s what it finds, so nothing is gained by the JLL opening it too. Keep
+the flag: versions of this package still in the registry open the library and
+assert that it is not already resident, so a JLL that opened it in its own
+`__init__` would break them on their first solve.
 
 ### Command-line triplets bypass the `platforms` variable
 

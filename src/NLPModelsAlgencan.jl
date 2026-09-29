@@ -34,6 +34,18 @@ function algencan_lib_path()
     end
 end
 
+# `Algencan_jll` declares its library with `dont_dlopen`, so nothing loads it on
+# our behalf. The library is opened on the first solve and the entry point kept,
+# rather than reopened per solve.
+const _ALGENCAN_SYMBOL = Ref{Ptr{Cvoid}}(C_NULL)
+
+function algencan_symbol()
+    if _ALGENCAN_SYMBOL[] == C_NULL
+        _ALGENCAN_SYMBOL[] = Libdl.dlsym(Libdl.dlopen(algencan_lib_path()), :c_algencan)
+    end
+    return _ALGENCAN_SYMBOL[]
+end
+
 """
     set_algencan_library!(path)
 
@@ -381,28 +393,15 @@ function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
     nlpsupn = [0.0]
     inform = Vector{Cint}([0])
 
-    # Algencan 3.1.1 leaks the linear system it hands to MA57, after which every
-    # later solve in the process silently runs without MA57. The library is
-    # therefore loaded and unloaded around every solve, which clears it. A fix is
-    # waiting to be merged upstream; once this package moves to the fixed
-    # Algencan the unload can go. See contrib/HSLstatus.md.
-    # The asserts guard the unload: Algencan_jll declares its library with
-    # dont_dlopen, so nothing else is holding it open and the dlclose below
-    # really does unload it.
     # An HSL backed Algencan needs an LP64 BLAS, which Julia does not register
     # on its own. Done here, and not once in __init__, because loading MKL.jl or
     # anything else that reconfigures libblastrampoline drops the registration.
     ensure_lp64_blas!()
 
-    libpath = algencan_lib_path()
-    @assert !(libpath in Libdl.dllist())
-    algencandl = Libdl.dlopen(libpath)
-    @assert libpath in Libdl.dllist()
-    algencansym = Libdl.dlsym(algencandl, :c_algencan)
+    algencansym = algencan_symbol()
     # Expose `solver` to the callback trampolines for the duration of the
-    # `ccall`, see the note above `_CURRENT_SOLVER`. There is no previous value
-    # to save: a nested solve would already have tripped the assertion above,
-    # since the outer solve still holds the library open.
+    # `ccall`, see the note above `_CURRENT_SOLVER`. A solve is therefore
+    # neither reentrant nor thread safe.
     _CURRENT_SOLVER[] = solver
     try
         ccall(algencansym,                                     # function
@@ -487,8 +486,6 @@ function SolverCore.solve!(solver::AlgencanSolver, nlp::AbstractNLPModel,
         # Do not keep the solver, and the problem data it holds, alive after
         # the solve.
         _CURRENT_SOLVER[] = nothing
-        Libdl.dlclose(algencandl)
-        @assert !(libpath in Libdl.dllist())
     end
 
     # Fix sign of objetive function
