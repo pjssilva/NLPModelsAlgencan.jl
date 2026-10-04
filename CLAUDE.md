@@ -143,7 +143,7 @@ keeps the `c_algencan` pointer.
 
 - `docs/src/developer.md` is the real reference for the `Algencan_jll` build:
   the Yggdrasil recipe, why the source tarball is mirrored as a release asset of
-  this repo (do not delete the `algencan-3.1.1` release), the run-time HSL
+  this repo (do not delete the `algencan-*` releases), the run-time HSL
   detection patch, and the recipe details that are easy to break.
 - `contrib/hsl/` holds patches for compiling Algencan against HSL by hand; the
   wiki page walks through it. Nothing applies them automatically.

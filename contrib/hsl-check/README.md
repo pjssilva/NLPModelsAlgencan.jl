@@ -39,10 +39,10 @@ CUTEST_CHECK_JOBS=8 CUTEST_CHECK_LIMIT=308 ./setup_and_run.sh
 ```
 
 Whole problems are handed to separate processes, several at a time. Processes
-and not threads, because Algencan keeps state in Fortran common blocks and the
-library is loaded and unloaded around every solve; and one process per problem
-so that the driver can impose a hard time limit, since a solve stuck inside
-Algencan cannot be interrupted from Julia but the process can be killed.
+and not threads, because Algencan keeps state in Fortran common blocks and is
+not thread safe; and one process per problem so that the driver can impose a
+hard time limit, since a solve stuck inside Algencan cannot be interrupted from
+Julia but the process can be killed.
 `CUTEST_CHECK_TIMEOUT`, 1800 seconds by default, sets that limit, and problems
 that hit it are recorded as `TIMEOUT`.
 
@@ -69,8 +69,8 @@ Both scripts read their configuration from the environment:
 | `CUTEST_CHECK_ENV` | `~/.julia/environments/cutest-check` | environment to build |
 | `ALGENCAN_JLL_PATH` | unset | dev an unregistered `Algencan_jll` instead of taking it from the registry |
 
-The licensed HSL is the first argument, defaulting to
-`~/documentos/programas/HSL/HSL_jll.jl/HSL_jll.jl.v2025.7.21`. Without it the
+The licensed HSL is the first argument, defaulting to the newest
+`HSL_jll.jl*` directory under `~/documentos/programas/HSL`. Without it the
 run still works, but `ma57_available` is false and every problem takes the
 truncated Newton path, which is a useful comparison in its own right. Pass a
 path that does not exist, not an empty string: the default fills in for an

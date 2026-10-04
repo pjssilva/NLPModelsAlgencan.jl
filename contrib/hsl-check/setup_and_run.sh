@@ -17,7 +17,12 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
-HSL="${1:-$HOME/documentos/programas/HSL/HSL_jll.jl/HSL_jll.jl.v2025.7.21}"
+# Newest licensed HSL_jll checkout, so that a new HSL release is picked up
+# without editing this script. `|| true` keeps `set -e` from killing the run
+# when there is none: the empty default then takes the public stub path.
+HSL_DEFAULT="$(find "$HOME/documentos/programas/HSL" -maxdepth 1 -type d \
+                    -name 'HSL_jll.jl*' 2>/dev/null | sort -V | tail -1 || true)"
+HSL="${1:-$HSL_DEFAULT}"
 ENVDIR="${CUTEST_CHECK_ENV:-$HOME/.julia/environments/cutest-check}"
 
 # A dev'd Algencan_jll, for testing a build that is not registered yet. Leave
